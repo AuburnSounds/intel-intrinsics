@@ -37,7 +37,7 @@ public import inteli.emmintrin;
 
 package:
 @nogc @trusted:
-pragma(inline,true):
+// pragma(inline,true):
 
 /* Additional bits in the MXCSR.  */
 enum int _MM_DENORMALS_ZERO_MASK	=	0x0040;
@@ -58,29 +58,64 @@ auto _MM_GET_DENORMALS_ZERO_MODE()
 __m128 _mm_addsub_ps(__m128 a, __m128 b) 
 {
     version(LDC) return __asm!__m128("addsubps $2,$0","=x,0,x",a,b);
+    else{
+        a.array[0] =a.array[0]-b.array[0];
+        a.array[1] =a.array[1]+b.array[1];
+        a.array[2] =a.array[2]-b.array[2];
+        a.array[3] =a.array[3]+b.array[3];
+        return a;
+    }
 }
 
 
 __m128 _mm_hadd_ps (__m128 a, __m128 b) 
 {
     version(LDC) return __asm!__m128("haddps $2,$0","=x,0,x",a,b);
+    else{
+        a.array[0] =a.array[0]+a.array[1];
+        a.array[1] =a.array[2]+a.array[3];
+        a.array[2] =b.array[0]+b.array[1];
+        a.array[3] =b.array[2]+b.array[3];
+        return a;
+    }
 }
 
 
 __m128 _mm_hsub_ps (__m128 a, __m128 b) 
 {
     version(LDC) return __asm!__m128("hsubps $2,$0","=x,0,x",a,b);
+    else{
+        a.array[0] =a.array[0]-a.array[1];
+        a.array[1] =a.array[2]-a.array[3];
+        a.array[2] =b.array[0]-b.array[1];
+        a.array[3] =b.array[2]-b.array[3];
+        return a;
+    }
 }
 
 __m128 _mm_movehdup_ps (__m128 a) 
 {
     version(LDC) return __asm!__m128("movshdup $1,$0","=x,x",a);
+    else{
+        a.array[0] =a.array[1];
+        a.array[1] =a.array[1];
+        a.array[2] =a.array[3];
+        a.array[3] =a.array[3];
+        return a;
+    }
 }
 
 
 __m128 _mm_moveldup_ps (__m128 a) 
 {
     version(LDC) return __asm!__m128("movsldup $1,$0","=x,x",a);
+    else{
+        a.array[0] =a.array[0];
+        a.array[1] =a.array[0];
+        a.array[2] =a.array[2];
+        a.array[3] =a.array[2];
+        return a;
+    }
 }
 
 unittest{
@@ -96,18 +131,33 @@ unittest{
 __m128d _mm_addsub_pd (__m128d a, __m128d b) 
 {
     version(LDC) return __asm!__m128d("addsubpd $2,$0","=x,0,x",a,b);
+    else{
+        a.array[0] =a.array[0]-b.array[0];
+        a.array[1] =a.array[1]+b.array[1];
+        return a;
+    }
 }
 
 
 __m128d _mm_hadd_pd (__m128d a, __m128d b) 
 {
     version(LDC) return __asm!__m128d("haddpd $2,$0","=x,0,x",a,b);
+    else{
+        a.array[0] =a.array[0]+a.array[1];
+        a.array[1] =b.array[0]+b.array[1];
+        return a;
+    }
 }
 
 
 __m128d _mm_hsub_pd (__m128d a, __m128d b) 
 {
     version(LDC) return __asm!__m128d("hsubpd $2,$0","=x,0,x",a,b);
+    else{
+        a.array[0] =a.array[0]-a.array[1];
+        a.array[1] =b.array[0]-b.array[1];
+        return a;
+    }
 }
 
 
@@ -132,6 +182,9 @@ unittest{
 __m128i _mm_lddqu_si128 (const(__m128i)  * a) 
 {
     version(LDC) return __asm!__m128("lddqu $1,$0","=x,*m",a);
+    else{
+        return _mm_loadu_si128(a);
+    }
 }
 
 unittest{
@@ -147,14 +200,24 @@ unittest{
 }
 
 
-// void _mm_monitor (void const * __P, unsigned int __E, unsigned int __H)
-// {
-//   __builtin_ia32_monitor (__P, __E, __H);
-// }
+void _mm_monitor (const(void)  * __P, uint __E, uint __H)
+{
+    asm @nogc nothrow pure
+    {
+        mov RAX, __P;
+        mov ECX, __E;
+        mov EDX, __H;
+        monitor ;
+    }
+}
 
-// extern __inline void __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-// _mm_mwait (unsigned int __E, unsigned int __H)
-// {
-//   __builtin_ia32_mwait (__E, __H);
-// }
+void _mm_mwait (uint __E, uint __H)
+{
+    asm @nogc nothrow pure
+    {
+        mov EAX, __H;
+        mov ECX, __E;
+        mwait ;
+    }
+}
 
