@@ -169,79 +169,48 @@ unittest
 /// Concatenate 16-byte blocks in `a` and `b` into a 32-byte temporary result, shift the result right by `count` bytes, and return the low 16 bytes.
 __m128i _mm_alignr_epi8(ubyte count)(__m128i a, __m128i b) @trusted
 {
-    static assert(count < 32);
-
     // PERF DMD
     static if (GDC_with_SSSE3)
     {
         return cast(__m128i)__builtin_ia32_palignr128(cast(long2)a, cast(long2)b, count * 8);
     }
-    else version(LDC)
+    else
     {
-        static if (count < 16)
+        static if (count > 32)
         {
-            // Generates palignr since LDC 1.1 -O1
-            // Also generates a single ext instruction on arm64.
-            return cast(__m128i) shufflevector!(byte16, ( 0 + count) % 32,
-                                                        ( 1 + count) % 32,
-                                                        ( 2 + count) % 32,
-                                                        ( 3 + count) % 32,
-                                                        ( 4 + count) % 32,
-                                                        ( 5 + count) % 32,
-                                                        ( 6 + count) % 32,
-                                                        ( 7 + count) % 32,
-                                                        ( 8 + count) % 32,
-                                                        ( 9 + count) % 32,
-                                                        (10 + count) % 32,
-                                                        (11 + count) % 32,
-                                                        (12 + count) % 32,
-                                                        (13 + count) % 32,
-                                                        (14 + count) % 32,
-                                                        (15 + count) % 32)(cast(byte16)b, cast(byte16)a);
+            // Emit zero if shifting by a size greater than both inputs combined.
+            return _mm_set1_epi8(0);
+        }
+        else static if (count > 16)
+        {
+            // Set first input to zero if shifting by a size greater than it.
+            immutable shift = count - 16;
+            b = a;
+            a = _mm_set1_epi8(0);
         }
         else
         {
-            return cast(__m128i) shufflevector!(byte16, ( 0 + count) % 32,
-                                                        ( 1 + count) % 32,
-                                                        ( 2 + count) % 32,
-                                                        ( 3 + count) % 32,
-                                                        ( 4 + count) % 32,
-                                                        ( 5 + count) % 32,
-                                                        ( 6 + count) % 32,
-                                                        ( 7 + count) % 32,
-                                                        ( 8 + count) % 32,
-                                                        ( 9 + count) % 32,
-                                                        (10 + count) % 32,
-                                                        (11 + count) % 32,
-                                                        (12 + count) % 32,
-                                                        (13 + count) % 32,
-                                                        (14 + count) % 32,
-                                                        (15 + count) % 32)(cast(byte16)_mm_setzero_si128(), cast(byte16)a);
+            immutable shift = count;
         }
-    }
-    else
-    {
-        byte16 ab = cast(byte16)a;
-        byte16 bb = cast(byte16)b;
-        byte16 r;
 
-        for (int i = 0; i < 16; ++i)
-        {
-            const int srcpos = count + cast(int)i;
-            if (srcpos > 31) 
-            {
-                r.ptr[i] = 0;
-            } 
-            else if (srcpos > 15) 
-            {
-                r.ptr[i] = ab[(srcpos) & 15];
-            } 
-            else 
-            {
-                r.ptr[i] = bb[srcpos];
-            }
-       }
-       return cast(__m128i)r;
+        // Generates palignr since LDC 1.1 -O1
+        // Also generates a single ext instruction on arm64.
+        return cast(__m128i) shufflevector!(byte16, ( 0 + shift),
+                                                    ( 1 + shift),
+                                                    ( 2 + shift),
+                                                    ( 3 + shift),
+                                                    ( 4 + shift),
+                                                    ( 5 + shift),
+                                                    ( 6 + shift),
+                                                    ( 7 + shift),
+                                                    ( 8 + shift),
+                                                    ( 9 + shift),
+                                                    (10 + shift),
+                                                    (11 + shift),
+                                                    (12 + shift),
+                                                    (13 + shift),
+                                                    (14 + shift),
+                                                    (15 + shift))(cast(byte16)b, cast(byte16)a);
     }
 }
 unittest
@@ -255,9 +224,18 @@ unittest
         assert(C.array == correct);
     }
     {
+        byte16 C = cast(byte16)_mm_alignr_epi8!7(A ,B);
+        byte[16] correct = [24, 25, 26, 27, 28, 29, 30, 31, 32, 1, 2, 3, 4, 5, 6, 7];
+        assert(C.array == correct);
+    }
+    {
         byte16 C = cast(byte16)_mm_alignr_epi8!20(A ,B);
-        _mm_print_epi8(_mm_alignr_epi8!20(A ,B));
         byte[16] correct = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 0, 0, 0, 0];
+        assert(C.array == correct);
+    }
+    {
+        byte16 C = cast(byte16)_mm_alignr_epi8!33(A ,B);
+        byte[16] correct = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         assert(C.array == correct);
     }
 
