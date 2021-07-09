@@ -252,20 +252,37 @@ __m64 _mm_alignr_pi8(ubyte count)(__m64 a, __m64 b) @trusted
     // PERF DMD
     static if (GDC_with_SSSE3)
     {
-        return cast(__m64)__builtin_ia32_palignr(cast(long)a, cast(long)b, count * 8);
+        return cast(__m64)__builtin_ia32_palignr(cast(long1)a, cast(long1)b, count * 8);
     }
     else
     {
+        static if (count > 16)
+        {
+            // Emit zero if shifting by a size greater than both inputs combined.
+            return _mm_set1_pi8(0);
+        }
+        else static if (count > 8)
+        {
+            // Set first input to zero if shifting by a size greater than it.
+            immutable shift = count - 8;
+            b = a;
+            a = _mm_set1_pi8(0);
+        }
+        else
+        {
+            immutable shift = count;
+        }
+
         // Note: in LDC x86 this uses a pshufb.
         // Generates ext in arm64.
-        return cast(__m64) shufflevector!(byte8, (0 + count) % 16,
-                                                 (1 + count) % 16,
-                                                 (2 + count) % 16,
-                                                 (3 + count) % 16,
-                                                 (4 + count) % 16,
-                                                 (5 + count) % 16,
-                                                 (6 + count) % 16,
-                                                 (7 + count) % 16)(cast(byte8)a, cast(byte8)b);
+        return cast(__m64) shufflevector!(byte8, (0 + shift),
+                                                 (1 + shift),
+                                                 (2 + shift),
+                                                 (3 + shift),
+                                                 (4 + shift),
+                                                 (5 + shift),
+                                                 (6 + shift),
+                                                 (7 + shift))(cast(byte8)a, cast(byte8)b);
     }
 }
 unittest
@@ -274,13 +291,23 @@ unittest
     __m64 B = _mm_setr_pi8(17, 18, 19, 20, 21, 22, 23, 24);
 
     {
+        byte8 C = cast(byte8)_mm_alignr_pi8!0(A ,B);
+        byte[8] correct = [17, 18, 19, 20, 21, 22, 23, 24];
+        assert(C.array == correct);
+    }
+    {
         byte8 C = cast(byte8)_mm_alignr_pi8!3(A ,B);
-        byte[8] correct = [4, 5, 6, 7, 8, 17, 18, 19];
+        byte[8] correct = [20, 21, 22, 23, 24, 1, 2, 3];
         assert(C.array == correct);
     }
     {
         byte8 C = cast(byte8)_mm_alignr_pi8!10(A ,B);
-        byte[8] correct = [19, 20, 21, 22, 23, 24, 1, 2];
+        byte[8] correct = [3, 4, 5, 6, 7, 8, 0, 0];
+        assert(C.array == correct);
+    }
+    {
+        byte8 C = cast(byte8)_mm_alignr_pi8!17(A ,B);
+        byte[8] correct = [0, 0, 0, 0, 0, 0, 0, 0];
         assert(C.array == correct);
     }
 }
