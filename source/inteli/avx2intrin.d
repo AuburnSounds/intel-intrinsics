@@ -2274,8 +2274,32 @@ unittest
     assert(R.array == correct);
 }
 
+/// Create mask from the most significant bit of each 8-bit element in `a`.
+int _mm256_movemask_epi8 (__m256i a) pure @trusted
+{
+    static if (GDC_with_AVX2)
+    {
+        return __builtin_ia32_pmovmskb256(cast(ubyte32)a);
+    }
+    else static if (LDC_with_AVX2)
+    {
+        return __builtin_ia32_pmovmskb256(cast(byte32)a);
+    }
+    else
+    {
+        // ARM64 splitting makes it 33 inst instead of 48 for naive version.
+        //       PERF not sure if there is something better, sounds likely
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        return (_mm_movemask_epi8(a_hi) << 16) | _mm_movemask_epi8(a_lo);
+    }
+}
+unittest
+{
+    assert(0x9D37_9C36 == _mm256_movemask_epi8(_mm256_set_epi8(-1, 1, 2, -3, -1, -1, 4,-8, 127, 0, -1, -1, 0, -1, -1, -1,
+                                                               -1, 1, 2, -3, -1, -1, 4, 8, 127, 0, -1, -1, 0, -1, -1, 0)));
+}
 
-// TODO int _mm256_movemask_epi8 (__m256i a) pure @safe
 // TODO __m256i _mm256_mpsadbw_epu8 (__m256i a, __m256i b, const int imm8) pure @safe
 
 /// Multiply the low signed 32-bit integers from each packed 64-bit element in `a` and `b`, and 
