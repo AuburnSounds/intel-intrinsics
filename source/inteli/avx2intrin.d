@@ -2417,8 +2417,49 @@ __m256i _mm256_mullo_epi16 (__m256i a, __m256i b) pure @safe
         return _mm256_set_m128i(r_hi, r_lo);
     }
 }
+unittest
+{
+    __m256i A = _mm256_setr_epi16(16384, -16, 0,      3, 4, 1, 16, 7, 16384, -16, 0,      3, 4, 1, 16, 7);
+    __m256i B = _mm256_set1_epi16(16384);
+    short16 R = cast(short16)_mm256_mullo_epi16(A, B);
+    short[16] correct = [0, 0, 0, -16384, 0, 16384, 0, -16384, 0, 0, 0, -16384, 0, 16384, 0, -16384];
+    assert(R.array == correct);
+}
 
-// TODO __m256i _mm256_mullo_epi32 (__m256i a, __m256i b) pure @safe
+/// Multiply the packed signed 32-bit integers in `a` and `b`, producing intermediate 64-bit integers,
+/// and store the low 32 bits of the intermediate integer.
+__m256i _mm256_mullo_epi32 (__m256i a, __m256i b) pure @safe
+{
+    // PERF D_SIMD
+    static if (GDC_with_AVX)
+    {
+        return cast(__m256i)(cast(int8)a * cast(int8)b);
+    }
+    else version(LDC)
+    {
+        return cast(__m256i)(cast(int8)a * cast(int8)b);
+    }
+    else
+    {
+        // split
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i b_lo = _mm256_extractf128_si256!0(b);
+        __m128i b_hi = _mm256_extractf128_si256!1(b);
+        __m128i r_lo = _mm_mullo_epi32(a_lo, b_lo);
+        __m128i r_hi = _mm_mullo_epi32(a_hi, b_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m256i A = _mm256_setr_epi32(61616461, 1915324654, 4564061, 3, 61616461, 1915324654, 4564061, 3);
+    __m256i B = _mm256_setr_epi32(49716422, -915616216, -121144, 0, 49716422, -915616216, -121144, 1);
+    int8 R = cast(int8) _mm256_mullo_epi32(A, B);
+    int[8] correct = [cast(int)0xBF370D8E, cast(int)(1915324654 * -915616216), cast(int)(4564061 * -121144), 0,
+                      cast(int)0xBF370D8E, cast(int)(1915324654 * -915616216), cast(int)(4564061 * -121144), 3];
+    assert(R.array == correct);
+}
 
 /// Compute the bitwise OR of 256 bits (representing integer data) in `a` and `b`.
 __m256i _mm256_or_si256 (__m256i a, __m256i b) pure @safe
