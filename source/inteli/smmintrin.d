@@ -1678,7 +1678,7 @@ unittest
 
 /// Multiply the packed 32-bit integers in `a` and `b`, producing intermediate 64-bit integers, 
 /// return the low 32 bits of the intermediate integers.
-__m128i _mm_mullo_epi32 (__m128i a, __m128i b) @trusted
+__m128i _mm_mullo_epi32 (__m128i a, __m128i b) pure @trusted
 {
     // PERF DMD
     // PERF GDC without SSE4.1 could be better
