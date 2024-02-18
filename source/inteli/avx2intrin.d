@@ -2289,6 +2289,7 @@ int _mm256_movemask_epi8 (__m256i a) pure @trusted
     {
         // ARM64 splitting makes it 33 inst instead of 48 for naive version.
         //       PERF not sure if there is something better, sounds likely
+        // Otherwise, beneficial for every case.
         __m128i a_lo = _mm256_extractf128_si256!0(a);
         __m128i a_hi = _mm256_extractf128_si256!1(a);
         return (_mm_movemask_epi8(a_hi) << 16) | _mm_movemask_epi8(a_lo);
@@ -2390,7 +2391,33 @@ unittest
 // TODO __m256i _mm256_mulhi_epi16 (__m256i a, __m256i b) pure @safe
 // TODO __m256i _mm256_mulhi_epu16 (__m256i a, __m256i b) pure @safe
 // TODO __m256i _mm256_mulhrs_epi16 (__m256i a, __m256i b) pure @safe
-// TODO __m256i _mm256_mullo_epi16 (__m256i a, __m256i b) pure @safe
+
+/// Multiply the packed signed 16-bit integers in `a` and `b`, producing intermediate 32-bit integers, 
+/// and return the low 16 bits of the intermediate integers.
+__m256i _mm256_mullo_epi16 (__m256i a, __m256i b) pure @safe
+{
+    // PERF D_SIMD
+    static if (GDC_with_AVX)
+    {
+        return cast(__m256i)(cast(short16)a * cast(short16)b);
+    }
+    else version(LDC)
+    {
+        return cast(__m256i)(cast(short16)a * cast(short16)b);
+    }
+    else
+    {
+        // split
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i b_lo = _mm256_extractf128_si256!0(b);
+        __m128i b_hi = _mm256_extractf128_si256!1(b);
+        __m128i r_lo = _mm_mullo_epi16(a_lo, b_lo);
+        __m128i r_hi = _mm_mullo_epi16(a_hi, b_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+
 // TODO __m256i _mm256_mullo_epi32 (__m256i a, __m256i b) pure @safe
 
 /// Compute the bitwise OR of 256 bits (representing integer data) in `a` and `b`.
