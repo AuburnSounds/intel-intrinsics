@@ -1801,7 +1801,7 @@ __m128d _mm_round_pd(int rounding)(__m128d a) @trusted
             // Convert back to double to achieve the rounding
             // The problem is that a 64-bit double can't represent all the values 
             // a 64-bit integer can (and vice-versa). So this function won't work for
-            // large values. (TODO: what range exactly?)
+            // large values. (MAYDO: what range exactly?)
             _MM_SET_ROUNDING_MODE(old);
             return _mm_setr_pd(lo, hi);
         }
@@ -1847,7 +1847,7 @@ __m128 _mm_round_ps(int rounding)(__m128 a) @trusted
             // Convert back to float to achieve the rounding
             // The problem is that a 32-float can't represent all the values 
             // a 32-bit integer can (and vice-versa). So this function won't work for
-            // large values. (TODO: what range exactly?)
+            // large values. (MAYDO: what range exactly?)
             __m128 result = _mm_cvtepi32_ps(integers);
 
             return result;
@@ -1902,7 +1902,7 @@ __m128d _mm_round_sd(int rounding)(__m128d a, __m128d b) @trusted
             // Convert back to double to achieve the rounding
             // The problem is that a 64-bit double can't represent all the values 
             // a 64-bit integer can (and vice-versa). So this function won't work for
-            // large values. (TODO: what range exactly?)
+            // large values. (MAYDO: what range exactly?)
             _MM_SET_ROUNDING_MODE(old);
             return a;
         }
@@ -1957,7 +1957,7 @@ __m128 _mm_round_ss(int rounding)(__m128 a, __m128 b) @trusted
                 // Convert back to double to achieve the rounding
                 // The problem is that a 32-bit float can't represent all the values 
                 // a 32-bit integer can (and vice-versa). So this function won't work for
-                // large values. (TODO: what range exactly?)
+                // large values. (MAYDO: what range exactly?)
                 _MM_SET_ROUNDING_MODE(old);
                 return a;
             }
@@ -1975,7 +1975,7 @@ __m128 _mm_round_ss(int rounding)(__m128 a, __m128 b) @trusted
             // Convert back to double to achieve the rounding
             // The problem is that a 32-bit float can't represent all the values 
             // a 32-bit integer can (and vice-versa). So this function won't work for
-            // large values. (TODO: what range exactly?)
+            // large values. (MAYDO: what range exactly?)
             _MM_SET_ROUNDING_MODE(old);
             return a;
         }

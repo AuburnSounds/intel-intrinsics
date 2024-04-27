@@ -3780,6 +3780,7 @@ unittest
     assert(B.array == expectedB);
 }
 
+// TODO: undeprecate
 /// Shift packed 32-bit integers in `a` left by `count` while shifting in zeros.
 deprecated("Use _mm_slli_epi32 instead.") __m128i _mm_sll_epi32 (__m128i a, __m128i count) pure @trusted
 {
@@ -3813,6 +3814,7 @@ deprecated("Use _mm_slli_epi32 instead.") __m128i _mm_sll_epi32 (__m128i a, __m1
     }
 }
 
+// TODO: undeprecate
 /// Shift packed 64-bit integers in `a` left by `count` while shifting in zeros.
 deprecated("Use _mm_slli_epi64 instead.") __m128i _mm_sll_epi64 (__m128i a, __m128i count) pure @trusted
 {
@@ -3849,6 +3851,7 @@ deprecated("Use _mm_slli_epi64 instead.") __m128i _mm_sll_epi64 (__m128i a, __m1
     }
 }
 
+// TODO: undeprecate
 /// Shift packed 16-bit integers in `a` left by `count` while shifting in zeros.
 deprecated("Use _mm_slli_epi16 instead.") __m128i _mm_sll_epi16 (__m128i a, __m128i count) pure @trusted
 {
@@ -4149,6 +4152,7 @@ unittest
     assert(R.array == correct);
 }
 
+// TODO: undeprecate
 /// Shift packed 16-bit integers in `a` right by `count` while shifting in sign bits.
 deprecated("Use _mm_srai_epi16 instead.") __m128i _mm_sra_epi16 (__m128i a, __m128i count) pure @trusted
 {
@@ -4172,6 +4176,7 @@ deprecated("Use _mm_srai_epi16 instead.") __m128i _mm_sra_epi16 (__m128i a, __m1
     }
 }
 
+// TODO: undeprecate
 /// Shift packed 32-bit integers in `a` right by `count` while shifting in sign bits.
 deprecated("Use _mm_srai_epi32 instead.") __m128i _mm_sra_epi32 (__m128i a, __m128i count) pure @trusted
 {
@@ -4297,8 +4302,10 @@ unittest
     assert(D.array == expectedD);
 }
 
+// TODO: undeprecate
 deprecated("Use _mm_srli_epi16 instead.") __m128i _mm_srl_epi16 (__m128i a, __m128i count) pure @trusted
 {
+    // PERF ARM64
     static if (LDC_with_SSE2)
     {
         return cast(__m128i) __builtin_ia32_psrlw128(cast(short8)a, cast(short8)count);
@@ -4319,13 +4326,13 @@ deprecated("Use _mm_srli_epi16 instead.") __m128i _mm_srl_epi16 (__m128i a, __m1
     }
 }
 
-deprecated("Use _mm_srli_epi32 instead.") __m128i _mm_srl_epi32 (__m128i a, __m128i count) pure @trusted
+/// Shift packed 32-bit integers in `a` right by `count` while shifting in zeros.
+/// Bit-shift is in the low-order 64-bit of `count`. 
+/// If bit-shift > 31, result is defined to be all zeroes.
+/// Note: prefer `_mm_srli_epi32` if you can.
+__m128i _mm_srl_epi32 (__m128i a, __m128i count) pure @trusted
 {
-    static if (LDC_with_SSE2)
-    {
-        return __builtin_ia32_psrld128(a, count);
-    }
-    else static if (GDC_with_SSE2)
+    static if (GDC_or_LDC_with_SSE2)
     {
         return __builtin_ia32_psrld128(a, count);
     }
@@ -4333,15 +4340,34 @@ deprecated("Use _mm_srli_epi32 instead.") __m128i _mm_srl_epi32 (__m128i a, __m1
     {
         int4 r = void;
         long2 lc = cast(long2)count;
-        int bits = cast(int)(lc.array[0]);
+        ulong bits = cast(ulong)(lc.array[0]);
         r.ptr[0] = cast(uint)(a.array[0]) >> bits;
         r.ptr[1] = cast(uint)(a.array[1]) >> bits;
         r.ptr[2] = cast(uint)(a.array[2]) >> bits;
         r.ptr[3] = cast(uint)(a.array[3]) >> bits;
+        if (bits > 31) // Same semantics as x86 instruction
+            r = int4(0);
         return r;
     }
 }
+unittest
+{
+    __m128i shift0 = _mm_setzero_si128();
+    __m128i shiftX = _mm_set1_epi64x(0x8000_0000_0000_0000); // too large shift
+    __m128i shift2 = _mm_setr_epi32(2, 0, 4, 5);
+    __m128i A = _mm_setr_epi32(4, -8, 11, -0x80000000);
+    int[4] correct0  = A.array;
+    int[4] correctX  = [0, 0, 0, 0]; 
+    int[4] correct2  = [1, 1073741822, 2, 536870912];
+    int4 B0 = cast(int4) _mm_srl_epi32(A, shift0);
+    int4 BX = cast(int4) _mm_srl_epi32(A, shiftX);
+    int4 B2 = cast(int4) _mm_srl_epi32(A, shift2);
+    assert(B0.array == correct0);
+    assert(BX.array == correctX);
+    assert(B2.array == correct2);
+}
 
+// TODO: undeprecate
 deprecated("Use _mm_srli_epi64 instead.") __m128i _mm_srl_epi64 (__m128i a, __m128i count) pure @trusted
 {
     static if (LDC_with_SSE2)
