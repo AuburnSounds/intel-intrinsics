@@ -2942,7 +2942,35 @@ unittest
 // TODO __m128i _mm_srlv_epi64 (__m128i a, __m128i count) pure @safe
 // TODO __m256i _mm256_srlv_epi64 (__m256i a, __m256i count) pure @safe
 
-// TODO __m256i _mm256_stream_load_si256 (__m256i const* mem_addr) pure @safe
+/// Load 256-bits of integer data from memory using a non-temporal memory hint.
+/// `mem_addr` must be aligned on a 32-byte boundary or a general-protection exception may be generated.
+__m256i _mm256_stream_load_si256 (const(__m256i)* mem_addr) pure @trusted
+{
+    // PERF DMD D_SIMD
+    static if (GDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_movntdqa256(cast(__m256i*)mem_addr); // const_cast
+    }
+    else static if (LDC_with_InlineIREx && LDC_with_optimizations)
+    {
+        enum prefix = `!0 = !{ i32 1 }`;
+        enum ir = `
+            %r = load <4 x i64>, <4 x i64>* %0, !nontemporal !0
+            ret <4 x i64> %r`;
+        return cast(__m256i) LDCInlineIREx!(prefix, ir, "", long4, const(long4)*)(mem_addr);
+    }
+    else
+    {
+        return *mem_addr; // regular move instead
+    }
+}
+unittest
+{
+    align(32) static immutable int[8] correct = [1, 2, 3, 4, 5, 6, 7, 8];
+    __m256i A = _mm256_stream_load_si256(cast(__m256i*)correct.ptr);
+    _mm_mfence();
+    assert((cast(int8)A).array == correct);
+}
 
 /// Subtract packed 16-bit integers in `b` from packed 16-bit integers in `a`.
 __m256i _mm256_sub_epi16 (__m256i a, __m256i b) pure @safe
