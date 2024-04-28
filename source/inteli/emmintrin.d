@@ -3784,11 +3784,7 @@ unittest
 /// Shift packed 32-bit integers in `a` left by `count` while shifting in zeros.
 deprecated("Use _mm_slli_epi32 instead.") __m128i _mm_sll_epi32 (__m128i a, __m128i count) pure @trusted
 {
-    static if (LDC_with_SSE2)
-    {
-        return __builtin_ia32_pslld128(a, count);
-    }
-    else static if (GDC_with_SSE2)
+    static if (GDC_or_LDC_with_SSE2)
     {
         return __builtin_ia32_pslld128(a, count);
     }
@@ -3818,11 +3814,7 @@ deprecated("Use _mm_slli_epi32 instead.") __m128i _mm_sll_epi32 (__m128i a, __m1
 /// Shift packed 64-bit integers in `a` left by `count` while shifting in zeros.
 deprecated("Use _mm_slli_epi64 instead.") __m128i _mm_sll_epi64 (__m128i a, __m128i count) pure @trusted
 {
-    static if (LDC_with_SSE2)
-    {
-        return cast(__m128i) __builtin_ia32_psllq128(cast(long2)a, cast(long2)count);
-    }
-    else static if (GDC_with_SSE2)
+    static if (GDC_or_LDC_with_SSE2)
     {
         return cast(__m128i) __builtin_ia32_psllq128(cast(long2)a, cast(long2)count);
     }
@@ -4156,11 +4148,7 @@ unittest
 /// Shift packed 16-bit integers in `a` right by `count` while shifting in sign bits.
 deprecated("Use _mm_srai_epi16 instead.") __m128i _mm_sra_epi16 (__m128i a, __m128i count) pure @trusted
 {
-    static if (GDC_with_SSE2)
-    {
-        return cast(__m128i) __builtin_ia32_psraw128(cast(short8)a, cast(short8)count);
-    }
-    else static if (LDC_with_SSE2)
+    static if (GDC_or_LDC_with_SSE2)
     {
         return cast(__m128i) __builtin_ia32_psraw128(cast(short8)a, cast(short8)count);
     }
@@ -4180,11 +4168,7 @@ deprecated("Use _mm_srai_epi16 instead.") __m128i _mm_sra_epi16 (__m128i a, __m1
 /// Shift packed 32-bit integers in `a` right by `count` while shifting in sign bits.
 deprecated("Use _mm_srai_epi32 instead.") __m128i _mm_sra_epi32 (__m128i a, __m128i count) pure @trusted
 {
-    static if (LDC_with_SSE2)
-    {
-        return __builtin_ia32_psrad128(a, count);
-    }
-    else static if (GDC_with_SSE2)
+    static if (GDC_or_LDC_with_SSE2)
     {
         return __builtin_ia32_psrad128(a, count);
     }
@@ -4306,11 +4290,7 @@ unittest
 deprecated("Use _mm_srli_epi16 instead.") __m128i _mm_srl_epi16 (__m128i a, __m128i count) pure @trusted
 {
     // PERF ARM64
-    static if (LDC_with_SSE2)
-    {
-        return cast(__m128i) __builtin_ia32_psrlw128(cast(short8)a, cast(short8)count);
-    }
-    else static if (GDC_with_SSE2)
+    static if (GDC_or_LDC_with_SSE2)
     {
         return cast(__m128i) __builtin_ia32_psrlw128(cast(short8)a, cast(short8)count);
     }
@@ -4370,11 +4350,7 @@ unittest
 // TODO: undeprecate
 deprecated("Use _mm_srli_epi64 instead.") __m128i _mm_srl_epi64 (__m128i a, __m128i count) pure @trusted
 {
-    static if (LDC_with_SSE2)
-    {
-        return cast(__m128i) __builtin_ia32_psrlq128(cast(long2)a, cast(long2)count);
-    }
-    else static if (GDC_with_SSE2)
+    static if (GDC_or_LDC_with_SSE2)
     {
         return cast(__m128i) __builtin_ia32_psrlq128(cast(long2)a, cast(long2)count);
     }
