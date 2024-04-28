@@ -4176,12 +4176,11 @@ deprecated("Use _mm_srai_epi16 instead.") __m128i _mm_sra_epi16 (__m128i a, __m1
     }
 }
 
-// TODO: undeprecate
 /// Shift packed 32-bit integers in `a` right by `count` while shifting in sign bits.
 /// Bit-shift is a single value in the low-order 64-bit of `count`. 
 /// If bit-shift > 31, result is defined to be all zeroes or all ones.
 /// Note: prefer `_mm_srai_epi32`, less of a trap.
-deprecated("Use _mm_srai_epi32 instead.") __m128i _mm_sra_epi32 (__m128i a, __m128i count) pure @trusted
+__m128i _mm_sra_epi32 (__m128i a, __m128i count) pure @trusted
 {
     static if (GDC_or_LDC_with_SSE2)
     {
@@ -4191,7 +4190,9 @@ deprecated("Use _mm_srai_epi32 instead.") __m128i _mm_sra_epi32 (__m128i a, __m1
     {    
         int4 r = void;
         long2 lc = cast(long2)count;
-        int bits = cast(int)(lc.array[0]);
+        ulong bits = cast(ulong)(lc.array[0]);
+        if (bits > 31)
+            bits = 31;
         r.ptr[0] = (a.array[0] >> bits);
         r.ptr[1] = (a.array[1] >> bits);
         r.ptr[2] = (a.array[2] >> bits);
@@ -4199,7 +4200,22 @@ deprecated("Use _mm_srai_epi32 instead.") __m128i _mm_sra_epi32 (__m128i a, __m1
         return r;
     }
 }
-
+unittest
+{
+    __m128i shift0 = _mm_setzero_si128();
+    __m128i shiftX = _mm_set1_epi64x(0x8000_0000_0000_0000); // too large shift
+    __m128i shift2 = _mm_setr_epi32(2, 0, 4, 5);
+    __m128i A = _mm_setr_epi32(4, -9, 11, -2147483648);
+    int[4] correct0  = A.array;
+    int[4] correctX  = [0, -1, 0, -1]; 
+    int[4] correct2  = [1, -3, 2, -536870912];
+    int4 B0 = cast(int4) _mm_sra_epi32(A, shift0);
+    int4 BX = cast(int4) _mm_sra_epi32(A, shiftX);
+    int4 B2 = cast(int4) _mm_sra_epi32(A, shift2);
+    assert(B0.array == correct0);
+    assert(BX.array == correctX);
+    assert(B2.array == correct2);
+}
 
 /// Shift packed 16-bit integers in `a` right by `imm8` while shifting in sign bits.
 __m128i _mm_srai_epi16 (__m128i a, int imm8) pure @trusted
