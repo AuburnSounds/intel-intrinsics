@@ -4383,12 +4383,11 @@ unittest
     assert(B2.array == correct2);
 }
 
-// TODO undeprecate
-/// Shift packed 64-bit integers in `a` right by `count` while shifting in zeros.
+/// Shift packed 64-bit integers in `a` right by `count` while shifting in zeroes.
 /// Bit-shift is a single value in the low-order 64-bit of `count`. 
 /// If bit-shift > 63, result is defined to be all zeroes.
 /// Note: prefer `_mm_srli_epi64`, less of a trap.
-deprecated("Use _mm_srli_epi64 instead.") __m128i _mm_srl_epi64 (__m128i a, __m128i count) pure @trusted
+__m128i _mm_srl_epi64 (__m128i a, __m128i count) pure @trusted
 {
     static if (GDC_or_LDC_with_SSE2)
     {
@@ -4396,16 +4395,32 @@ deprecated("Use _mm_srli_epi64 instead.") __m128i _mm_srl_epi64 (__m128i a, __m1
     }
     else
     {
-        // Workaround for https://issues.dlang.org/show_bug.cgi?id=23047
-        // => avoid void initialization.
         long2 r;
         long2 sa = cast(long2)a;
         long2 lc = cast(long2)count;
-        int bits = cast(int)(lc.array[0]);
+        ulong bits = cast(ulong)(lc.array[0]);
         r.ptr[0] = cast(ulong)(sa.array[0]) >> bits;
         r.ptr[1] = cast(ulong)(sa.array[1]) >> bits;
+        if (bits > 63)
+            r = long2(0);
         return cast(__m128i)r;
     }
+}
+unittest
+{
+    __m128i shift0 = _mm_setzero_si128();
+    __m128i shiftX = _mm_set1_epi64x(0x8000_0000_0000_0000); // too large shift
+    __m128i shift2 = _mm_setr_epi32(2, 0, 4, 5);
+    __m128i A = _mm_setr_epi64(4, -9);
+    long[2] correct0  = [4, -9];
+    long[2] correctX  = [0,  0];
+    long[2] correct2  = [1, 4611686018427387901];
+    long2 B0 = cast(long2) _mm_srl_epi64(A, shift0);
+    long2 BX = cast(long2) _mm_srl_epi64(A, shiftX);
+    long2 B2 = cast(long2) _mm_srl_epi64(A, shift2);
+    assert(B0.array == correct0);
+    assert(BX.array == correctX);
+    assert(B2.array == correct2);
 }
 
 /// Shift packed 16-bit integers in `a` right by `imm8` while shifting in zeros.
