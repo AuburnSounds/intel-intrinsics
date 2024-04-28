@@ -4318,12 +4318,11 @@ unittest
     assert(D.array == expectedD);
 }
 
-// TODO: undeprecate
 /// Shift packed 16-bit integers in `a` right by `count` while shifting in zeros.
 /// Bit-shift is a single value in the low-order 64-bit of `count`. 
 /// If bit-shift > 15, result is defined to be all zeroes.
 /// Warning: prefer `_mm_srli_epi16`, less of a trap.
-deprecated("Use _mm_srli_epi16 instead.") __m128i _mm_srl_epi16 (__m128i a, __m128i count) pure @trusted
+__m128i _mm_srl_epi16 (__m128i a, __m128i count) pure @trusted
 {
     // PERF ARM64
     static if (GDC_or_LDC_with_SSE2)
@@ -4334,12 +4333,30 @@ deprecated("Use _mm_srli_epi16 instead.") __m128i _mm_srl_epi16 (__m128i a, __m1
     {
         short8 sa = cast(short8)a;
         long2 lc = cast(long2)count;
-        int bits = cast(int)(lc.array[0]);
+        ulong bits = cast(ulong)(lc.array[0]);
         short8 r = void;
         foreach(i; 0..8)
             r.ptr[i] = cast(short)(cast(ushort)(sa.array[i]) >> bits);
-        return cast(int4)r;
+        if (bits > 15)
+            r = short8(0);
+        return cast(__m128i)r;
     }
+}
+unittest
+{
+    __m128i shift0 = _mm_setzero_si128();
+    __m128i shiftX = _mm_set1_epi64x(0x8000_0000_0000_0000); // too large shift
+    __m128i shift2 = _mm_setr_epi32(2, 0, 4, 5);
+    __m128i A = _mm_setr_epi16(4, -8, 11, -32768, 4, -8, 11, -32768);
+    short[8] correct0  = (cast(short8)A).array;
+    short[8] correctX  = [0, 0, 0, 0, 0, 0, 0, 0]; 
+    short[8] correct2  = [1, 16382, 2, 8192, 1, 16382, 2, 8192];
+    short8 B0 = cast(short8) _mm_srl_epi16(A, shift0);
+    short8 BX = cast(short8) _mm_srl_epi16(A, shiftX);
+    short8 B2 = cast(short8) _mm_srl_epi16(A, shift2);
+    assert(B0.array == correct0);
+    assert(BX.array == correctX);
+    assert(B2.array == correct2);
 }
 
 /// Shift packed 32-bit integers in `a` right by `count` while shifting in zeros.
