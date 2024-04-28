@@ -3790,17 +3790,6 @@ __m128i _mm_sll_epi32 (__m128i a, __m128i count) pure @trusted
     {
         return __builtin_ia32_pslld128(a, count);
     }
-    else static if (DMD_with_32bit_asm)
-    {
-        asm pure nothrow @nogc @trusted
-        {
-            movdqu XMM0, a;
-            movdqu XMM1, count;
-            pslld XMM0, XMM1;
-            movdqu a, XMM0;
-        }
-        return a;
-    }
     else
     {
         int4 r = void;
@@ -3841,17 +3830,6 @@ deprecated("Use _mm_slli_epi64 instead.") __m128i _mm_sll_epi64 (__m128i a, __m1
     {
         return cast(__m128i) __builtin_ia32_psllq128(cast(long2)a, cast(long2)count);
     }
-    else static if (DMD_with_32bit_asm)
-    {
-        asm pure nothrow @nogc @trusted
-        {
-            movdqu XMM0, a;
-            movdqu XMM1, count;
-            psllq XMM0, XMM1;
-            movdqu a, XMM0;
-        }
-        return a;
-    }
     else
     {
         // ARM: good since LDC 1.12 -O2
@@ -3876,17 +3854,6 @@ deprecated("Use _mm_slli_epi16 instead.") __m128i _mm_sll_epi16 (__m128i a, __m1
     static if (GDC_or_LDC_with_SSE2)
     {
         return cast(__m128i)__builtin_ia32_psllw128(cast(short8)a, cast(short8)count);
-    }
-    else static if (DMD_with_32bit_asm)
-    {
-        asm pure nothrow @nogc @trusted
-        {
-            movdqu XMM0, a;
-            movdqu XMM1, count;
-            psllw XMM0, XMM1;
-            movdqu a, XMM0;
-        }
-        return a;
     }
     else
     {
