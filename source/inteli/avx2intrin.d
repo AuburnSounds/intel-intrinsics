@@ -2679,7 +2679,43 @@ unittest
 // TODO __m256i _mm256_sign_epi16 (__m256i a, __m256i b) pure @safe
 // TODO __m256i _mm256_sign_epi32 (__m256i a, __m256i b) pure @safe
 // TODO __m256i _mm256_sign_epi8 (__m256i a, __m256i b) pure @safe
-// TODO __m256i _mm256_sll_epi16 (__m256i a, __m128i count) pure @safe
+
+/// Shift packed 16-bit integers in `a` left by `count` while shifting in zeroes.
+/// Bit-shift is a single value in the low-order 64-bit of `count`. 
+/// If bit-shift > 15, result is defined to be all zeroes.
+/// Note: prefer `_mm256_slli_epi16`, less of a trap.
+__m256i _mm256_sll_epi16 (__m256i a, __m128i count) pure @trusted
+{
+    static if (GDC_or_LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_psllw256(cast(short16)a, cast(short8)count);
+    }
+    else
+    {
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i r_lo = _mm_sll_epi16(a_lo, count);
+        __m128i r_hi = _mm_sll_epi16(a_hi, count);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m128i shift0 = _mm_setzero_si128();
+    __m128i shiftX = _mm_set1_epi64x(0x8000_0000_0000_0000); // too large shift
+    __m128i shift2 = _mm_setr_epi32(2, 0, 4, 5);
+    __m256i A = _mm256_setr_epi16(4, -8, 11, -32768, 4, -8, 11, -32768, 4, -8, 11, -32768, 4, -8, 11, -32768);
+    short[16] correct0  = (cast(short16)A).array;
+    short[16] correctX  = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; 
+    short[16] correct2  = [16, -32, 44, 0, 16, -32, 44, 0, 16, -32, 44, 0, 16, -32, 44, 0];
+    short16 B0 = cast(short16) _mm256_sll_epi16(A, shift0);
+    short16 BX = cast(short16) _mm256_sll_epi16(A, shiftX);
+    short16 B2 = cast(short16) _mm256_sll_epi16(A, shift2);
+    assert(B0.array == correct0);
+    assert(BX.array == correctX);
+    assert(B2.array == correct2);
+}
+
 // TODO __m256i _mm256_sll_epi32 (__m256i a, __m128i count) pure @safe
 // TODO __m256i _mm256_sll_epi64 (__m256i a, __m128i count) pure @safe
 
@@ -2861,8 +2897,8 @@ unittest
 
 /// Shift packed 16-bit integers in `a` right by `count` while shifting in zeroes.
 /// Bit-shift is a single value in the low-order 64-bit of `count`. 
-/// If bit-shift > 31, result is defined to be all zeroes.
-/// Note: prefer `_mm256_srli_epi32`, less of a trap.
+/// If bit-shift > 15, result is defined to be all zeroes.
+/// Note: prefer `_mm256_srli_epi16`, less of a trap.
 __m256i _mm256_srl_epi16 (__m256i a, __m128i count) pure @trusted
 {
     static if (GDC_or_LDC_with_AVX2)
