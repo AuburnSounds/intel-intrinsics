@@ -25,16 +25,16 @@
 
 |       | DMD x86/x86_64        | LDC x86/x86_64         | LDC arm64            | GDC x86_64              |
 |-------|-----------------------|------------------------|----------------------|-------------------------|
-| MMX   | Yes but slow ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes                      | Yes    | Yes |
+| MMX   | Yes but ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes                      | Yes    | Yes |
 | SSE   | Yes | Yes                      | Yes    | Yes |
-| SSE2  | Yes but slow ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes                      | Yes    | Yes |
-| SSE3  | Yes but slow ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes (use `-mattr=+sse3`)   | Yes    | Yes (use `-msse3`) |
-| SSSE3 | Yes (use `-mcpu`) | Yes (use `-mattr=+ssse3`)  | Yes    | Yes  (use `-mssse3`) |
-| SSE4.1| Yes but slow ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes (use `-mattr=+sse4.1`) | Yes    | Yes  (use `-msse4.1`) |
-| SSE4.2| Yes but slow ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes (use `-mattr=+sse4.2`) | Yes (use `-mattr=+crc`)   | Yes (use `-msse4.2`) |
-| BMI2  | Yes but slow ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes (use `-mattr=+bmi2`)   | Yes | Yes (use `-mbmi2`)  |
-| AVX   | Yes but slow ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes (use `-mattr=+avx`) | Yes | Yes (use `-mavx`) |
-| AVX2  | Partly and slow ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Partly (use `-mattr=+avx2`) | Partly | Partly (use `-mavx2`) |
+| SSE2  | Yes but ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes                      | Yes    | Yes |
+| SSE3  | Yes but ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes (`-mattr=+sse3`)   | Yes    | Yes (`-msse3`) |
+| SSSE3 | Yes (`-mcpu`) | Yes (`-mattr=+ssse3`)  | Yes    | Yes  (`-mssse3`) |
+| SSE4.1| Yes but ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes (`-mattr=+sse4.1`) | Yes    | Yes  (`-msse4.1`) |
+| SSE4.2| Yes but ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes (`-mattr=+sse4.2`) | Yes (`-mattr=+crc`)   | Yes (`-msse4.2`) |
+| BMI2  | Yes but ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes (`-mattr=+bmi2`)   | Yes | Yes (`-mbmi2`)  |
+| AVX   | Yes but ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes (`-mattr=+avx`) | Yes | Yes (`-mavx`) |
+| AVX2  | WIP and ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | WIP (`-mattr=+avx2`) | WIP | WIP (`-mavx2`) |
 
 The intrinsics implemented follow the syntax and semantics at: https://software.intel.com/sites/landingpage/IntrinsicsGuide/
 
