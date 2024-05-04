@@ -2,7 +2,7 @@
 * AVX2 intrinsics.
 * https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#techs=AVX2
 *
-* Copyright: Guillaume Piolat 2022.
+* Copyright: Guillaume Piolat 2022-2024.
 *            Johan Engelen 2022.
 * License:   $(LINK2 http://www.boost.org/LICENSE_1_0.txt, Boost License 1.0)
 */
@@ -2686,6 +2686,7 @@ unittest
 /// Note: prefer `_mm256_slli_epi16`, less of a trap.
 __m256i _mm256_sll_epi16 (__m256i a, __m128i count) pure @trusted
 {
+    // PERF ARM64
     static if (GDC_or_LDC_with_AVX2)
     {
         return cast(__m256i) __builtin_ia32_psllw256(cast(short16)a, cast(short8)count);
@@ -2722,6 +2723,7 @@ unittest
 /// Note: prefer `_mm256_slli_epi32`, less of a trap.
 __m256i _mm256_sll_epi32 (__m256i a, __m128i count) pure @trusted
 {
+    // PERF ARM64
     static if (GDC_or_LDC_with_AVX2)
     {
         return cast(__m256i) __builtin_ia32_pslld256(cast(int8)a, count);
@@ -2752,8 +2754,42 @@ unittest
     assert(B2.array == correct2);
 }
 
-
-// TODO __m256i _mm256_sll_epi64 (__m256i a, __m128i count) pure @safe
+/// Shift packed 64-bit integers in `a` left by `count` while shifting in zeroes.
+/// Bit-shift is a single value in the low-order 64-bit of `count`. 
+/// If bit-shift > 63, result is defined to be all zeroes.
+/// Note: prefer `_mm256_sll_epi64`, less of a trap.
+__m256i _mm256_sll_epi64 (__m256i a, __m128i count) pure @trusted
+{
+    // PERF ARM64
+    static if (GDC_or_LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_psllq256(cast(long4)a, cast(long2)count);
+    }
+    else
+    {
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i r_lo = _mm_sll_epi64(a_lo, count);
+        __m128i r_hi = _mm_sll_epi64(a_hi, count);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m128i shift0 = _mm_setzero_si128();
+    __m128i shiftX = _mm_set1_epi64x(0x8000_0000_0000_0000); // too large shift
+    __m128i shift2 = _mm_setr_epi32(2, 0, 4, 5);
+    __m256i A = _mm256_setr_epi64(4, -9, 5, -8);
+    long[4] correct0  = [ 4,  -9, 5, -8];
+    long[4] correctX  = [ 0,   0,  0, 0];
+    long[4] correct2  = [16, -36, 20, -32];
+    long4 B0 = cast(long4) _mm256_sll_epi64(A, shift0);
+    long4 BX = cast(long4) _mm256_sll_epi64(A, shiftX);
+    long4 B2 = cast(long4) _mm256_sll_epi64(A, shift2);
+    assert(B0.array == correct0);
+    assert(BX.array == correctX);
+    assert(B2.array == correct2);
+}
 
 /// Shift packed 16-bit integers in `a` left by `imm8` while shifting in zeros.
 __m256i _mm256_slli_epi16(__m256i a, int imm8) pure @safe
@@ -2937,6 +2973,7 @@ unittest
 /// Note: prefer `_mm256_srli_epi16`, less of a trap.
 __m256i _mm256_srl_epi16 (__m256i a, __m128i count) pure @trusted
 {
+    // PERF ARM64
     static if (GDC_or_LDC_with_AVX2)
     {
         return cast(__m256i) __builtin_ia32_psrlw256(cast(short16)a, cast(short8)count);
@@ -2973,6 +3010,7 @@ unittest
 /// Note: prefer `_mm256_srli_epi32`, less of a trap.
 __m256i _mm256_srl_epi32 (__m256i a, __m128i count) pure @trusted
 {
+    // PERF ARM64
     static if (GDC_or_LDC_with_AVX2)
     {
         return cast(__m256i) __builtin_ia32_psrld256(cast(int8)a, count);
@@ -3003,8 +3041,54 @@ unittest
     assert(B2.array == correct2);
 }
 
-
-// TODO __m256i _mm256_srl_epi64 (__m256i a, __m128i count) pure @safe
+/// Shift packed 64-bit integers in `a` right by `count` while shifting in zeroes.
+/// Bit-shift is a single value in the low-order 64-bit of `count`. 
+/// If bit-shift > 63, result is defined to be all zeroes.
+/// Note: prefer `_mm256_srli_epi64`, less of a trap.
+__m256i _mm256_srl_epi64 (__m256i a, __m128i count) pure @trusted
+{
+    // PERF ARM64
+    /*
+    static if (LDC_with_ARM64)
+    { 
+        long bs = (cast(long2)count).array[0];
+        if (bs > 63)
+            return long4(0);
+        else 
+        {
+            a <<= long4(bs);
+            return a;
+        }
+    }
+    else*/  static if (GDC_or_LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_psrlq256(cast(long4)a, cast(long2)count);
+    }
+    else
+    {
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i r_lo = _mm_srl_epi64(a_lo, count);
+        __m128i r_hi = _mm_srl_epi64(a_hi, count);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m128i shift0 = _mm_setzero_si128();
+    __m128i shiftX = _mm_set1_epi64x(0x8000_0000_0000_0000); // too large shift
+    __m128i shift2 = _mm_setr_epi32(2, 0, 4, 5);
+    __m256i A = _mm256_setr_epi64(4, -9, 8, -9);
+    long[4] correct0  = [ 4,  -9, 8, -9];
+    long[4] correctX  = [ 0,   0,  0, 0];
+    long[4] correct2  = [ 1,  4611686018427387901,  2, 4611686018427387901];
+    long4 B0 = cast(long4) _mm256_srl_epi64(A, shift0);
+    long4 BX = cast(long4) _mm256_srl_epi64(A, shiftX);
+    long4 B2 = cast(long4) _mm256_srl_epi64(A, shift2);
+    assert(B0.array == correct0);
+    assert(BX.array == correctX);
+    assert(B2.array == correct2);
+}
 
 /// Shift packed 16-bit integers in `a` right by `imm8` while shifting in zeros.
 __m256i _mm256_srli_epi16 (__m256i a, int imm8) pure @trusted
@@ -3802,8 +3886,6 @@ int8 __builtin_ia32_psignd256(int8, int8) pure @safe;
 pragma(LDC_intrinsic, "llvm.x86.avx2.psign.w")
 short16 __builtin_ia32_psignw256(short16, short16) pure @safe;
 
-pragma(LDC_intrinsic, "llvm.x86.avx2.psll.d")
-int8 __builtin_ia32_pslld256(int8, int4) pure @safe;
 
 pragma(LDC_intrinsic, "llvm.x86.avx2.psll.q")
 long4 __builtin_ia32_psllq256(long4, long2) pure @safe;
