@@ -2934,9 +2934,44 @@ unittest
     assert(B2.array == correct2);
 }
 
-// TODO __m256i _mm256_sra_epi32 (__m256i a, __m128i count) pure @safe
+/// Shift packed 32-bit integers in `a` right by `count` while shifting in sign bits.
+/// Bit-shift is a single value in the low-order 64-bit of `count`. 
+/// If bit-shift > 31, result is defined to be all sign bits.
+/// Warning: prefer `_mm256_sra_epi32`, less of a trap.
+__m256i _mm256_sra_epi32 (__m256i a, __m128i count) pure @trusted
+{
+    static if (GDC_or_LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_psrad256(cast(int8)a, cast(int4)count);
+    }
+    else
+    {
+        // split
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i r_lo = _mm_sra_epi32(a_lo, count);
+        __m128i r_hi = _mm_sra_epi32(a_hi, count);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m128i shift0 = _mm_setzero_si128();
+    __m128i shiftX = _mm_set1_epi64x(0x8000_0000_0000_0000); // too large shift
+    __m128i shift2 = _mm_setr_epi32(2, 0, 4, 5);
+    __m256i A = _mm256_setr_epi32(4, -9, 11, -2147483648, 8, -9, 11, -2147483648);
+    int[8] correct0  = (cast(int8)A).array;
+    int[8] correctX  = [0, -1, 0, -1, 0, -1, 0, -1]; 
+    int[8] correct2  = [1, -3, 2, -536870912, 2, -3, 2, -536870912];
+    int8 B0 = cast(int8) _mm256_sra_epi32(A, shift0);
+    int8 BX = cast(int8) _mm256_sra_epi32(A, shiftX);
+    int8 B2 = cast(int8) _mm256_sra_epi32(A, shift2);
+    assert(B0.array == correct0);
+    assert(BX.array == correctX);
+    assert(B2.array == correct2);
+}
 
-/// Shift packed 32-bit integers in `a` right by `imm8` while shifting in sign bits.
+/// Shift packed 16-bit integers in `a` right by `imm8` while shifting in sign bits.
 __m256i _mm256_srai_epi16 (__m256i a, int imm8) pure @safe
 {
     static if (GDC_or_LDC_with_AVX2)
