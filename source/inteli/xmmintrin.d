@@ -2337,7 +2337,7 @@ void _MM_SET_FLUSH_ZERO_MODE(int _MM_FLUSH_xxxx) @safe
 /// Set packed single-precision (32-bit) floating-point elements with the supplied values.
 __m128 _mm_set_ps (float e3, float e2, float e1, float e0) pure @trusted
 {
-    __m128 r = void;
+    __m128 r;
     r.ptr[0] = e0;
     r.ptr[1] = e1;
     r.ptr[2] = e2;
@@ -2349,6 +2349,9 @@ unittest
     __m128 A = _mm_set_ps(3, 2, 1, 546);
     float[4] correct = [546.0f, 1.0f, 2.0f, 3.0f];
     assert(A.array == correct);
+
+    static immutable B = _mm_set_ps(3, 2, 1, 546);
+    enum C = _mm_set_ps(3, 2, 1, 546);
 }
 
 deprecated("Use _mm_set1_ps instead") alias _mm_set_ps1 = _mm_set1_ps; ///
@@ -2396,6 +2399,7 @@ unittest
     float[4] correct = [42.0f, 42.0f, 42.0f, 42.0f];
     __m128 A = _mm_set1_ps(42.0f);
     assert(A.array == correct);
+    enum B = _mm_set1_ps(2.4f);
 }
 
 /// Set the MXCSR control and status register with the value in unsigned 32-bit integer `controlWord`.
@@ -2465,21 +2469,36 @@ unittest
 __m128 _mm_setr_ps (float e3, float e2, float e1, float e0) pure @trusted
 {
     pragma(inline, true);
-  
-    // This small = void here wins a bit in all optimization levels in GDC
-    // and in -O0 in LDC.
-    __m128 r = void;
-    r.ptr[0] = e3;
-    r.ptr[1] = e2;
-    r.ptr[2] = e1;
-    r.ptr[3] = e0;
-    return r;
+
+    if (__ctfe)
+    {  
+        __m128 r;
+        r.ptr[0] = e3;
+        r.ptr[1] = e2;
+        r.ptr[2] = e1;
+        r.ptr[3] = e0;
+        return r;
+    }
+    else
+    {
+        // This small = void here wins a bit in all optimization levels in GDC
+        // and in -O0 in LDC.
+        __m128 r = void;
+        r.ptr[0] = e3;
+        r.ptr[1] = e2;
+        r.ptr[2] = e1;
+        r.ptr[3] = e0;
+        return r;
+    }
 }
 unittest
 {
     __m128 A = _mm_setr_ps(3, 2, 1, 546);
     float[4] correct = [3.0f, 2.0f, 1.0f, 546.0f];
     assert(A.array == correct);
+
+    static immutable B = _mm_setr_ps(3, 2, 1, 546);
+    enum C = _mm_setr_ps(3, 2, 1, 546);
 }
 
 /// Return vector of type `__m128` with all elements set to zero.

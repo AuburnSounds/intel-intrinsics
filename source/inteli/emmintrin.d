@@ -3333,6 +3333,7 @@ unittest
     __m128i A = _mm_set_epi32(3, 2, 1, 0);
     foreach(i; 0..4)
         assert(A.array[i] == i);
+    enum B = _mm_setr_epi32(0, 1, 2, 3);
 }
 
 /// Set packed 64-bit integers with the supplied values.
@@ -3463,9 +3464,10 @@ __m128i _mm_set1_epi32 (int a) pure @trusted
 }
 unittest
 {
-    int4 a = cast(int4) _mm_set1_epi32(31);
+    int4 A = cast(int4) _mm_set1_epi32(31);
     for (int i = 0; i < 4; ++i)
-        assert(a.array[i] == 31);
+        assert(A.array[i] == 31);
+    enum B = _mm_set1_epi32(3);
 }
 
 /// Broadcast 64-bit integer `a` to all elements.
@@ -3538,16 +3540,29 @@ unittest
 /// Set packed 32-bit integers with the supplied values in reverse order.
 __m128i _mm_setr_epi32 (int e3, int e2, int e1, int e0) pure @trusted
 {
-    // Performs better than = void; with GDC
-    pragma(inline, true);
-    align(16) int[4] result = [e3, e2, e1, e0];
-    return *cast(__m128i*)(result.ptr);
+    if (__ctfe)
+    {
+        __m128i r;
+        r.ptr[0] = e3;
+        r.ptr[1] = e2;
+        r.ptr[2] = e1;
+        r.ptr[3] = e0;
+        return r;
+    }
+    else
+    {
+        // Performs better than = void; with GDC
+        pragma(inline, true);
+        align(16) int[4] result = [e3, e2, e1, e0];
+        return *cast(__m128i*)(result.ptr);
+    }
 }
 unittest
 {
     int4 A = cast(int4) _mm_setr_epi32(-1, 0, -2147483648, 2147483647);
     int[4] correct = [-1, 0, -2147483648, 2147483647];
     assert(A.array == correct);
+    enum B = _mm_setr_epi32(0, 1, 2, 3);
 }
 
 /// Set packed 64-bit integers with the supplied values in reverse order.
