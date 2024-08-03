@@ -1917,7 +1917,7 @@ unittest
     static if (!maskLoadWorkaroundDMD)
     {
         float[4] A = [7.5f, 1, 2, 3];
-        float4 B = _mm_maskload_ps(A.ptr, _mm_setr_epi32(1, -1, -1, 1));  // can address invalid memory with mask load and writes!
+        float4 B = _mm_maskload_ps(A.ptr, _mm_setr_epi32(1, -1, -1, 1));  // can NOT address invalid memory!
         float[4] correct = [0.0f, 1, 2, 0];
         assert(B.array == correct);
     }
@@ -1933,7 +1933,7 @@ __m256 _mm256_maskload_ps (const(float)* mem_addr, __m256i mask) /*pure*/ @syste
     // PERF DMD
     static if (LDC_with_AVX)
     {
-        // MAYDO that the builtin is impure
+        // MAYDO report that the builtin is impure
         return __builtin_ia32_maskloadps256(mem_addr, cast(int8)mask);
     }
     else static if (GDC_with_AVX)
