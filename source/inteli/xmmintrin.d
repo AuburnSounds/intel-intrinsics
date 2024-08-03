@@ -2350,8 +2350,12 @@ unittest
     float[4] correct = [546.0f, 1.0f, 2.0f, 3.0f];
     assert(A.array == correct);
 
-    static immutable B = _mm_set_ps(3, 2, 1, 546);
-    enum C = _mm_set_ps(3, 2, 1, 546);
+    // Very old LDC, like 1.17, cannot case __vector at CT
+    static if (__VERSION__ >= 2094)
+    {
+        static immutable B = _mm_set_ps(3, 2, 1, 546);
+        enum C = _mm_set_ps(3, 2, 1, 546);
+    }
 }
 
 deprecated("Use _mm_set1_ps instead") alias _mm_set_ps1 = _mm_set1_ps; ///
@@ -2497,8 +2501,12 @@ unittest
     float[4] correct = [3.0f, 2.0f, 1.0f, 546.0f];
     assert(A.array == correct);
 
-    static immutable B = _mm_setr_ps(3, 2, 1, 546);
-    enum C = _mm_setr_ps(3, 2, 1, 546);
+    // Very old LDC, like 1.17, cannot case __vector at CT
+    static if (__VERSION__ >= 2094)
+    {
+        static immutable B = _mm_setr_ps(3, 2, 1, 546);
+        enum C = _mm_setr_ps(3, 2, 1, 546);
+    }
 }
 
 /// Return vector of type `__m128` with all elements set to zero.
