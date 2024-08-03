@@ -1723,14 +1723,38 @@ unittest
     static if (!maskLoadWorkaroundDMD)
     {
         int[4] A = [7, 1, 2, 3];
-        int4 B = _mm_maskload_epi32(A.ptr, _mm_setr_epi32(1, -1, -1, 1));  // can address invalid memory with mask load and writes!
+        int4 B = _mm_maskload_epi32(A.ptr, _mm_setr_epi32(1, -1, -1, 1));  // can NOT address invalid memory with mask load and writes!
         int[4] correct = [0, 1, 2, 0];
         assert(B.array == correct);
     }
 }
 
+/// Load packed 32-bit integers from memory using `mask` (elements are zeroed out when the highest 
+/// bit is not set in the corresponding element).
+/// Warning: See "Note about mask load/store" to know why you must address valid memory only.
+__m256i _mm256_maskload_epi32 (const(int)* mem_addr, __m256i mask) /* pure */ @system
+{
+    static if (LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_maskloadd256(mem_addr, cast(int8)mask);
+    }
+    else static if (GDC_with_AVX2)
+    {
+        return cast(__m256i)__builtin_ia32_maskloadd256(cast(__m256i*)mem_addr, cast(int8)mask);
+    }
+    else
+    {
+        return cast(__m256i) _mm256_maskload_ps(cast(const(float*)) mem_addr, mask);
+    }
+}
+unittest
+{
+    int[8] A = [7, 1, 2, 3, 8, -2, 4, 5];
+    int8 B = cast(int8) _mm256_maskload_epi32(A.ptr, _mm256_setr_epi32(1, -1, -1, 1, -1, -1, 1, 1));
+    int[8] correct = [0, 1, 2, 0, 8, -2, 0, 0];
+    assert(B.array == correct);
+}
 
-// TODO __m256i _mm256_maskload_epi32 (int const* mem_addr, __m256i mask) pure @safe
 // TODO __m128i _mm_maskload_epi64 (__int64 const* mem_addr, __m128i mask) pure @safe
 // TODO __m256i _mm256_maskload_epi64 (__int64 const* mem_addr, __m256i mask) pure @safe
 
