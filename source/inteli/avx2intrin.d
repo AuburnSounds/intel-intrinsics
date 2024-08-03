@@ -1755,7 +1755,36 @@ unittest
     assert(B.array == correct);
 }
 
-// TODO __m128i _mm_maskload_epi64 (__int64 const* mem_addr, __m128i mask) pure @safe
+/// Load packed 64-bit integers from memory using `mask` (elements are zeroed out when the highest 
+/// bit is not set in the corresponding element).
+/// Warning: See "Note about mask load/store" to know why you must address valid memory only.
+__m128i _mm_maskload_epi64 (const(long)* mem_addr, __m128i mask) @system
+{
+    // PERF DMD
+    static if (LDC_with_AVX2)
+    {
+        return cast(__m128i) __builtin_ia32_maskloadq(mem_addr, cast(long2) mask);
+    }
+    else static if (GDC_with_AVX2)
+    {
+        return cast(__m128i) __builtin_ia32_maskloadq(cast(long2*)mem_addr, cast(long2) mask);
+    }
+    else
+    {
+        return cast(__m128i) _mm_maskload_pd(cast(const(double)*)mem_addr, mask);
+    }
+}
+unittest
+{
+    static if (!maskLoadWorkaroundDMD)
+    {
+        long[2] A = [-7, -8];
+        long2 B = cast(long2) _mm_maskload_epi64(A.ptr, _mm_setr_epi64(1, -1));
+        long[2] correct = [0, -8];
+        assert(B.array == correct);
+    }
+}
+
 // TODO __m256i _mm256_maskload_epi64 (__int64 const* mem_addr, __m256i mask) pure @safe
 
 /// Compare packed signed 16-bit integers in `a` and `b`, and return packed maximum values.
