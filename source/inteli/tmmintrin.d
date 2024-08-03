@@ -1248,7 +1248,7 @@ unittest
 
 /// Negate packed 8-bit integers in `a` when the corresponding signed 8-bit integer in `b` is negative. 
 /// Elements in result are zeroed out when the corresponding element in `b` is zero.
-__m128i _mm_sign_epi8 (__m128i a, __m128i b) @trusted
+__m128i _mm_sign_epi8 (__m128i a, __m128i b) pure @trusted
 {
     // PERF DMD
     static if (GDC_with_SSSE3)

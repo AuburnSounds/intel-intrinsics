@@ -2731,7 +2731,45 @@ unittest
 // TODO __m256i _mm256_shufflelo_epi16 (__m256i a, const int imm8) pure @safe
 // TODO __m256i _mm256_sign_epi16 (__m256i a, __m256i b) pure @safe
 // TODO __m256i _mm256_sign_epi32 (__m256i a, __m256i b) pure @safe
-// TODO __m256i _mm256_sign_epi8 (__m256i a, __m256i b) pure @safe
+
+
+/// Negate packed signed 8-bit integers in `a` when the corresponding signed 8-bit integer in `b` is negative.
+/// Elements in result are zeroed out when the corresponding element in `b` is zero.
+__m256i _mm256_sign_epi8 (__m256i a, __m256i b) pure @safe
+{
+    // PERF DMD
+    static if (GDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_psignb256(cast(ubyte32)a, cast(ubyte32)b);
+    }
+    else static if (LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_psignb256(cast(byte32)a, cast(byte32)b);
+    }
+    else // split
+    {
+        // LDC arm64, 10 inst since LDC 1.32.1 -O1
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i b_lo = _mm256_extractf128_si256!0(b);
+        __m128i b_hi = _mm256_extractf128_si256!1(b);
+        __m128i r_lo = _mm_sign_epi8(a_lo, b_lo);
+        __m128i r_hi = _mm_sign_epi8(a_hi, b_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+    // PERF: not optimal in AVX without AVX2
+}
+unittest
+{
+    __m256i A = _mm256_setr_epi8( 1,  1, 1, 1,  1,        1,       -2,        1,  0,  1, 0, 0,  0,        0,       -2,        1, 
+                                 -2, -1, 0, 1,  2, byte.min, byte.min, byte.min, -1,  0,-1, 1, -2,      -50,        0,       50);
+    __m256i B = _mm256_setr_epi8(-1,  0,-1, 1, -2,      -50,        0,       50, -1,  0,-1, 1, -2,      -50,        0,       50,
+                                 -1,  0,-1, 1, -2,      -50,        0,       50, -2, -1, 0, 1,  2, byte.min, byte.min, byte.min);
+    byte32  C = cast(byte32) _mm256_sign_epi8(A, B);
+    byte[32] correct =         [ -1, 0,-1, 1, -1,       -1,        0,        1,  0,  0, 0, 0,  0,        0,        0,        1,        
+                                  2, 0, 0, 1, -2, byte.min,        0, byte.min,  1,  0, 0, 1, -2,       50,        0,      -50];
+    assert(C.array == correct);
+}
 
 /// Shift packed 16-bit integers in `a` left by `count` while shifting in zeroes.
 /// Bit-shift is a single value in the low-order 64-bit of `count`. 
