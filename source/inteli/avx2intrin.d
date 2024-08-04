@@ -1785,7 +1785,30 @@ unittest
     }
 }
 
-// TODO __m256i _mm256_maskload_epi64 (__int64 const* mem_addr, __m256i mask) pure @safe
+/// Load packed 64-bit integers from memory using `mask` (elements are zeroed out when the highest 
+/// bit is not set in the corresponding element).
+/// Warning: See "Note about mask load/store" to know why you must address valid memory only.
+__m256i _mm256_maskload_epi64 (const(long)* mem_addr, __m256i mask) /* pure */ @system
+{
+    static if (LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_maskloadq256(mem_addr, cast(long4)mask);
+    }
+    else static if (GDC_with_AVX2)
+    {
+        return cast(__m256i)__builtin_ia32_maskloadq256(cast(__m256i*)mem_addr, cast(long4)mask);
+    }
+    else
+    {
+        return cast(__m256i) _mm256_maskload_pd(cast(const(double*)) mem_addr, mask);
+    }
+}
+unittest
+{
+    long[4] A = [ 8, -2, 4, 5];
+    long4 B = cast(long4) _mm256_maskload_epi64(A.ptr, _mm256_setr_epi64(1, -1, -1, 1));
+    long[4] correct = [0, -2, 4, 0];
+}
 
 /// Compare packed signed 16-bit integers in `a` and `b`, and return packed maximum values.
 __m256i _mm256_max_epi16 (__m256i a, __m256i b) pure @safe
@@ -3961,18 +3984,6 @@ long2 __builtin_ia32_gatherq_q(long2, const void*, long2, long2, byte);
 
 pragma(LDC_intrinsic, "llvm.x86.avx2.gather.q.q.256")
 long4 __builtin_ia32_gatherq_q256(long4, const void*, long4, long4, byte);
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.maskload.d")
-int4 __builtin_ia32_maskloadd(const void*, int4);
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.maskload.d.256")
-int8 __builtin_ia32_maskloadd256(const void*, int8);
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.maskload.q")
-long2 __builtin_ia32_maskloadq(const void*, long2);
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.maskload.q.256")
-long4 __builtin_ia32_maskloadq256(const void*, long4);
 
 pragma(LDC_intrinsic, "llvm.x86.avx2.maskstore.d")
 void __builtin_ia32_maskstored(void*, int4, int4);
