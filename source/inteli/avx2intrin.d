@@ -1590,12 +1590,165 @@ unittest
     assert(R1.array == correct1);
 }
 
-// TODO __m256i _mm256_hadd_epi16 (__m256i a, __m256i b) pure @safe
-// TODO __m256i _mm256_hadd_epi32 (__m256i a, __m256i b) pure @safe
-// TODO __m256i _mm256_hadds_epi16 (__m256i a, __m256i b) pure @safe
-// TODO __m256i _mm256_hsub_epi16 (__m256i a, __m256i b) pure @safe
-// TODO __m256i _mm256_hsub_epi32 (__m256i a, __m256i b) pure @safe
-// TODO __m256i _mm256_hsubs_epi16 (__m256i a, __m256i b) pure @safe
+/// Horizontally add adjacent pairs of 16-bit integers in `a` and `b`, and pack the signed 16-bit results.
+__m256i _mm256_hadd_epi16 (__m256i a, __m256i b) pure @safe
+{
+    static if (GDC_or_LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_phaddw256(cast(short16)a, cast(short16)b);
+    }
+    else
+    {
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i b_lo = _mm256_extractf128_si256!0(b);
+        __m128i b_hi = _mm256_extractf128_si256!1(b);
+        __m128i r_lo = _mm_hadd_epi16(a_lo, b_lo);
+        __m128i r_hi = _mm_hadd_epi16(a_hi, b_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m256i A = _mm256_setr_epi16(1, -2, 4, 8, 16, 32, -1, -32768, 1, -2, 4, 8, 16, 32, -1, -32768);
+    short16 C = cast(short16) _mm256_hadd_epi16(A, A);
+    short[16] correct = [ -1, 12, 48, 32767, -1, 12, 48, 32767,  -1, 12, 48, 32767, -1, 12, 48, 32767];
+    assert(C.array == correct);
+}
+
+/// Horizontally add adjacent pairs of 32-bit integers in `a` and `b`, and pack the signed 32-bit results.
+__m256i _mm256_hadd_epi32 (__m256i a, __m256i b) pure @safe
+{
+    static if (GDC_or_LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_phaddd256(cast(int8)a, cast(int8)b);
+    }
+    else
+    {
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i b_lo = _mm256_extractf128_si256!0(b);
+        __m128i b_hi = _mm256_extractf128_si256!1(b);
+        __m128i r_lo = _mm_hadd_epi32(a_lo, b_lo);
+        __m128i r_hi = _mm_hadd_epi32(a_hi, b_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m256i A = _mm256_setr_epi32(1, -2, int.min, -1, 1, -2, int.min, -1);
+    __m256i B = _mm256_setr_epi32(1, int.max, 4, -4, 1, int.max, 4, -4);
+    int8 C = cast(int8) _mm256_hadd_epi32(A, B);
+    int[8] correct = [ -1, int.max, int.min, 0, -1, int.max, int.min, 0 ];
+    assert(C.array == correct);
+}
+
+/// Horizontally add adjacent pairs of signed 16-bit integers in `a` and `b` using saturation, and pack the signed 16-bit results.
+__m256i _mm256_hadds_epi16 (__m256i a, __m256i b) pure @safe
+{
+    static if (GDC_or_LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_phaddsw256(cast(short16)a, cast(short16)b);
+    }
+    else
+    {
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i b_lo = _mm256_extractf128_si256!0(b);
+        __m128i b_hi = _mm256_extractf128_si256!1(b);
+        __m128i r_lo = _mm_hadds_epi16(a_lo, b_lo);
+        __m128i r_hi = _mm_hadds_epi16(a_hi, b_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m256i A = _mm256_setr_epi16(1, -2, 4, 8, 16, 32, -1, -32768, 1, -2, 4, 8, 16, 32, -1, -32768);
+    short16 C = cast(short16) _mm256_hadds_epi16(A, A);
+    short[16] correct = [ -1, 12, 48, -32768, -1, 12, 48, -32768, -1, 12, 48, -32768, -1, 12, 48, -32768];
+    assert(C.array == correct);
+}
+
+/// Horizontally subtract adjacent pairs of 16-bit integers in `a` and `b`, and pack the signed 16-bit results.
+__m256i _mm256_hsub_epi16 (__m256i a, __m256i b) pure @safe
+{
+    static if (GDC_or_LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_phsubw256(cast(short16)a, cast(short16)b);
+    }
+    else
+    {
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i b_lo = _mm256_extractf128_si256!0(b);
+        __m128i b_hi = _mm256_extractf128_si256!1(b);
+        __m128i r_lo = _mm_hsub_epi32(a_lo, b_lo);
+        __m128i r_hi = _mm_hsub_epi32(a_hi, b_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m256i A = _mm256_setr_epi32(1, 2, int.min, 1, 1, 2, int.min, 1);
+    __m256i B = _mm256_setr_epi32(int.max, -1, 4, 4, int.max, -1, 4, 4);
+    int8 C = cast(int8) _mm256_hsub_epi32(A, B);
+    int[8] correct = [ -1, int.max, int.min, 0, -1, int.max, int.min, 0 ];
+    assert(C.array == correct);
+}
+
+/// Horizontally subtract adjacent pairs of 32-bit integers in `a` and `b`, and pack the signed 32-bit results.
+__m256i _mm256_hsub_epi32 (__m256i a, __m256i b) pure @safe
+{
+    static if (GDC_or_LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_phsubd256(cast(int8)a, cast(int8)b);
+    }
+    else
+    {
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i b_lo = _mm256_extractf128_si256!0(b);
+        __m128i b_hi = _mm256_extractf128_si256!1(b);
+        __m128i r_lo = _mm_hsub_epi32(a_lo, b_lo);
+        __m128i r_hi = _mm_hsub_epi32(a_hi, b_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m256i A = _mm256_setr_epi32(1, 2, int.min, 1, 1, 2, int.min, 1);
+    __m256i B = _mm256_setr_epi32(int.max, -1, 4, 4, int.max, -1, 4, 4);
+    int8 C = cast(int8) _mm256_hsub_epi32(A, B);
+    int[8] correct = [ -1, int.max, int.min, 0,  -1, int.max, int.min, 0 ];
+    assert(C.array == correct);
+}
+
+/// Horizontally subtract adjacent pairs of signed 16-bit integers in `a` and `b` using saturation, and pack the signed 16-bit results.
+__m256i _mm256_hsubs_epi16 (__m256i a, __m256i b) pure @safe
+{
+    static if (GDC_or_LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_phsubsw256(cast(short16)a, cast(short16)b);
+    }
+    else
+    {
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i b_lo = _mm256_extractf128_si256!0(b);
+        __m128i b_hi = _mm256_extractf128_si256!1(b);
+        __m128i r_lo = _mm_hsubs_epi16(a_lo, b_lo);
+        __m128i r_hi = _mm_hsubs_epi16(a_hi, b_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m256i A = _mm256_setr_epi16(1, -2, 4, 8, 32767, -1, -10, 32767, 1, -2, 4, 8, 32767, -1, -10, 32767);
+    short16 C = cast(short16) _mm256_hsubs_epi16(A, A);
+    short[16] correct = [ 3, -4, 32767, -32768, 3, -4, 32767, -32768, 3, -4, 32767, -32768, 3, -4, 32767, -32768 ];
+    assert(C.array == correct);
+}
+
 
 // TODO __m128i _mm_i32gather_epi32 (int const* base_addr, __m128i vindex, const int scale) pure @safe
 // TODO __m128i _mm_mask_i32gather_epi32 (__m128i src, int const* base_addr, __m128i vindex, __m128i mask, const int scale) pure @safe
@@ -2752,9 +2905,76 @@ unittest
 // TODO __m256i _mm256_shuffle_epi8 (__m256i a, __m256i b) pure @safe
 // TODO __m256i _mm256_shufflehi_epi16 (__m256i a, const int imm8) pure @safe
 // TODO __m256i _mm256_shufflelo_epi16 (__m256i a, const int imm8) pure @safe
-// TODO __m256i _mm256_sign_epi16 (__m256i a, __m256i b) pure @safe
-// TODO __m256i _mm256_sign_epi32 (__m256i a, __m256i b) pure @safe
 
+/// Negate packed signed 16-bit integers in `a` when the corresponding signed 8-bit integer in `b` is negative.
+/// Elements in result are zeroed out when the corresponding element in `b` is zero.
+__m256i _mm256_sign_epi16 (__m256i a, __m256i b) pure @safe
+{
+    // PERF DMD
+    static if (GDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_psignw256(cast(short16)a, cast(short16)b);
+    }
+    else static if (LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_psignw256(cast(short16)a, cast(short16)b);
+    }
+    else // split
+    {
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i b_lo = _mm256_extractf128_si256!0(b);
+        __m128i b_hi = _mm256_extractf128_si256!1(b);
+        __m128i r_lo = _mm_sign_epi16(a_lo, b_lo);
+        __m128i r_hi = _mm_sign_epi16(a_hi, b_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+    // PERF: not optimal in AVX without AVX2
+}
+unittest
+{
+    __m128i A = _mm_setr_epi16(-2, -1, 0, 1,  2, short.min, short.min, short.min);
+    __m128i B = _mm_setr_epi16(-1,  0,-1, 1, -2,       -50,         0,        50);
+    __m256i AA = _mm256_set_m128i(A, A);
+    __m256i BB = _mm256_set_m128i(B, B);
+    short16 C = cast(short16) _mm256_sign_epi16(AA, BB);
+    short[16] correct =        [ 2,  0, 0, 1, -2, short.min,         0, short.min, 2,  0, 0, 1, -2, short.min,         0, short.min];
+    assert(C.array == correct);
+}
+
+/// Negate packed signed 32-bit integers in `a` when the corresponding signed 8-bit integer in `b` is negative.
+/// Elements in result are zeroed out when the corresponding element in `b` is zero.
+__m256i _mm256_sign_epi32 (__m256i a, __m256i b) pure @safe
+{
+    // PERF DMD
+    static if (GDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_psignd256(cast(int8)a, cast(int8)b);
+    }
+    else static if (LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_psignd256(cast(int8)a, cast(int8)b);
+    }
+    else // split
+    {
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i b_lo = _mm256_extractf128_si256!0(b);
+        __m128i b_hi = _mm256_extractf128_si256!1(b);
+        __m128i r_lo = _mm_sign_epi32(a_lo, b_lo);
+        __m128i r_hi = _mm_sign_epi32(a_hi, b_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+    // PERF: not optimal in AVX without AVX2
+}
+unittest
+{
+    __m256i A = _mm256_setr_epi32(-2, -1,  0, int.max, -2, -1,  0, int.max);
+    __m256i B = _mm256_setr_epi32(-1,  0, -1,       1, -1,  0, -1,       1);
+    int8 C = cast(int8) _mm256_sign_epi32(A, B);
+    int[8] correct =             [ 2,  0, 0, int.max,   2,  0,  0, int.max];
+    assert(C.array == correct);
+}
 
 /// Negate packed signed 8-bit integers in `a` when the corresponding signed 8-bit integer in `b` is negative.
 /// Elements in result are zeroed out when the corresponding element in `b` is zero.
@@ -4010,29 +4230,11 @@ int8 __builtin_ia32_permvarsi256(int8, int8) pure @safe;
 pragma(LDC_intrinsic, "llvm.x86.avx2.permps")
 float8 __builtin_ia32_permvarsf256(float8, int8) pure @safe;
 
-pragma(LDC_intrinsic, "llvm.x86.avx2.phadd.d")
-int8 __builtin_ia32_phaddd256(int8, int8) pure @safe;
 
-pragma(LDC_intrinsic, "llvm.x86.avx2.phadd.sw")
-short16 __builtin_ia32_phaddsw256(short16, short16) pure @safe;
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.phadd.w")
-short16 __builtin_ia32_phaddw256(short16, short16) pure @safe;
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.phsub.d")
-int8 __builtin_ia32_phsubd256(int8, int8) pure @safe;
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.phsub.sw")
-short16 __builtin_ia32_phsubsw256(short16, short16) pure @safe;
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.phsub.w")
-short16 __builtin_ia32_phsubw256(short16, short16) pure @safe;
 
 pragma(LDC_intrinsic, "llvm.x86.avx2.pmadd.ub.sw")
 short16 __builtin_ia32_pmaddubsw256(byte32, byte32) pure @safe;
 
-pragma(LDC_intrinsic, "llvm.x86.avx2.pmadd.wd")
-int8 __builtin_ia32_pmaddwd256(short16, short16) pure @safe;
 
 pragma(LDC_intrinsic, "llvm.x86.avx2.pmovmskb")
 int __builtin_ia32_pmovmskb256(byte32) pure @safe;
@@ -4051,16 +4253,6 @@ long4 __builtin_ia32_psadbw256(byte32, byte32) pure @safe;
 
 pragma(LDC_intrinsic, "llvm.x86.avx2.pshuf.b")
 byte32 __builtin_ia32_pshufb256(byte32, byte32) pure @safe;
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.psign.b")
-byte32 __builtin_ia32_psignb256(byte32, byte32) pure @safe;
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.psign.d")
-int8 __builtin_ia32_psignd256(int8, int8) pure @safe;
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.psign.w")
-short16 __builtin_ia32_psignw256(short16, short16) pure @safe;
-
 
 pragma(LDC_intrinsic, "llvm.x86.avx2.psll.q")
 long4 __builtin_ia32_psllq256(long4, long2) pure @safe;

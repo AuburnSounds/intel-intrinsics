@@ -406,7 +406,7 @@ unittest
 }
 
 /// Horizontally add adjacent pairs of 16-bit integers in `a` and `b`, and pack the signed 16-bit results.
-__m128i _mm_hadd_epi16 (__m128i a, __m128i b) @trusted
+__m128i _mm_hadd_epi16 (__m128i a, __m128i b) pure @trusted
 {
     // PERF DMD
     static if (GDC_with_SSSE3)
@@ -446,8 +446,8 @@ unittest
 }
 
 /// Horizontally add adjacent pairs of 32-bit integers in `a` and `b`, and pack the signed 32-bit results.
-__m128i _mm_hadd_epi32 (__m128i a, __m128i b) @trusted
-{ 
+__m128i _mm_hadd_epi32 (__m128i a, __m128i b) pure @trusted
+{
     // PERF DMD
     static if (GDC_with_SSSE3)
     {
@@ -551,9 +551,9 @@ unittest
 
 /// Horizontally add adjacent pairs of signed 16-bit integers in `a` and `b` using saturation, 
 /// and pack the signed 16-bit results.
-__m128i _mm_hadds_epi16 (__m128i a, __m128i b) @trusted
+__m128i _mm_hadds_epi16 (__m128i a, __m128i b) pure @trusted
 {
-     // PERF DMD
+    // PERF DMD
     static if (GDC_with_SSSE3)
     {
         return cast(__m128i)__builtin_ia32_phaddsw128(cast(short8)a, cast(short8)b);
@@ -693,8 +693,8 @@ unittest
 }
 
 /// Horizontally add adjacent pairs of 32-bit integers in `a` and `b`, and pack the signed 32-bit results.
-__m128i _mm_hsub_epi32 (__m128i a, __m128i b) @trusted
-{ 
+__m128i _mm_hsub_epi32 (__m128i a, __m128i b) pure @trusted
+{
     // PERF DMD
     static if (GDC_with_SSSE3)
     {
@@ -814,9 +814,9 @@ unittest
 
 /// Horizontally subtract adjacent pairs of signed 16-bit integers in `a` and `b` using saturation, 
 /// and pack the signed 16-bit results.
-__m128i _mm_hsubs_epi16 (__m128i a, __m128i b) @trusted
+__m128i _mm_hsubs_epi16 (__m128i a, __m128i b) pure @trusted
 {
-     // PERF DMD
+    // PERF DMD
     static if (GDC_with_SSSE3)
     {
         return cast(__m128i)__builtin_ia32_phsubsw128(cast(short8)a, cast(short8)b);
@@ -1189,7 +1189,7 @@ unittest
 
 /// Negate packed 16-bit integers in `a` when the corresponding signed 16-bit integer in `b` is negative.
 /// Elements in result are zeroed out when the corresponding element in `b` is zero.
-__m128i _mm_sign_epi16 (__m128i a, __m128i b) @trusted
+__m128i _mm_sign_epi16 (__m128i a, __m128i b) pure @safe
 {
     // PERF DMD
     static if (GDC_with_SSSE3)
@@ -1219,7 +1219,7 @@ unittest
 
 /// Negate packed 32-bit integers in `a` when the corresponding signed 32-bit integer in `b` is negative. 
 /// Elements in result are zeroed out when the corresponding element in `b` is zero.
-__m128i _mm_sign_epi32 (__m128i a, __m128i b) @trusted
+__m128i _mm_sign_epi32 (__m128i a, __m128i b) pure @safe
 {
     // PERF DMD
     static if (GDC_with_SSSE3)
@@ -1248,7 +1248,7 @@ unittest
 
 /// Negate packed 8-bit integers in `a` when the corresponding signed 8-bit integer in `b` is negative. 
 /// Elements in result are zeroed out when the corresponding element in `b` is zero.
-__m128i _mm_sign_epi8 (__m128i a, __m128i b) pure @trusted
+__m128i _mm_sign_epi8 (__m128i a, __m128i b) pure @safe
 {
     // PERF DMD
     static if (GDC_with_SSSE3)
