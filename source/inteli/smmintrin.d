@@ -143,7 +143,8 @@ unittest
 }
 
 /// Blend packed 8-bit integers from `a` and `b` using `mask`.
-__m128i _mm_blendv_epi8 (__m128i a, __m128i b, __m128i mask) @trusted
+/// Select from `b` if the high-order bit of the corresponding 8-bit element in `mask` is set, else select from `a`.
+__m128i _mm_blendv_epi8 (__m128i a, __m128i b, __m128i mask) pure @trusted
 {
     // PERF DMD
     /*static if (GDC_with_SSE41)

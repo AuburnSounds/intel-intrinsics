@@ -585,7 +585,43 @@ unittest
     assert(C.array == correct);
 }
 
-// TODO __m256i _mm256_blendv_epi8 (__m256i a, __m256i b, __m256i mask) pure @safe
+/// Blend packed 8-bit integers from `a` and `b` using `mask`.
+/// Select from `b` if the high-order bit of the corresponding 8-bit element in `mask` is set, else select from `a`.
+ __m256i _mm256_blendv_epi8 (__m256i a, __m256i b, __m256i mask) pure @safe
+ {
+    static if (LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_pblendvb256(cast(byte32)a, cast(byte32)b, cast(byte32)mask);
+    }
+    else
+    {
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i b_lo = _mm256_extractf128_si256!0(b);
+        __m128i b_hi = _mm256_extractf128_si256!1(b);
+        __m128i m_lo = _mm256_extractf128_si256!0(mask);
+        __m128i m_hi = _mm256_extractf128_si256!1(mask);
+        __m128i r_lo = _mm_blendv_epi8(a_lo, b_lo, m_lo);
+        __m128i r_hi = _mm_blendv_epi8(a_hi, b_hi, m_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m128i A = _mm_setr_epi8( 0,  1,  2,  3,  4,  5,  6,  7,  
+                               8,  9, 10, 11, 12, 13, 14, 15);
+    __m128i B = _mm_setr_epi8(16, 17, 18, 19, 20, 21, 22, 23, 
+                              24, 25, 26, 27, 28, 29, 30, 31);
+    __m128i M = _mm_setr_epi8( 1, -1,  1,  1, -4,  1, -8,  127,  
+                               1,  1, -1, -1,  4,  1,  8, -128);
+    __m256i AA = _mm256_set_m128i(A, A);
+    __m256i BB = _mm256_set_m128i(B, B);
+    __m256i MM = _mm256_set_m128i(M, M);
+    byte32 R = cast(byte32) _mm256_blendv_epi8(AA, BB, MM);
+    byte[32] correct =      [  0, 17,  2,  3, 20,  5, 22,  7, 8,  9, 26, 27, 12, 13, 14, 31,
+                               0, 17,  2,  3, 20,  5, 22,  7, 8,  9, 26, 27, 12, 13, 14, 31 ];
+    assert(R.array == correct);
+}
 
 /// Broadcast the low packed 8-bit integer from `a` to all elements of result.
 __m128i _mm_broadcastb_epi8 (__m128i a) pure @safe
