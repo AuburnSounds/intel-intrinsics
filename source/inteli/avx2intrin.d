@@ -1877,6 +1877,43 @@ unittest
 
 // TODO __m256i _mm256_maddubs_epi16 (__m256i a, __m256i b) pure @safe
 
+/// Vertically multiply each unsigned 8-bit integer from `a` with the corresponding 
+/// signed 8-bit integer from `b`, producing intermediate signed 16-bit integers. 
+/// Horizontally add adjacent pairs of intermediate signed 16-bit integers, 
+/// and pack the saturated results.
+__m256i _mm256_maddubs_epi16 (__m256i a, __m256i b) @safe
+{
+    static if (GDC_with_AVX2)
+    {
+        return cast(__m256i)__builtin_ia32_pmaddubsw256(cast(ubyte32)a, cast(ubyte32)b);
+    }
+    else static if (LDC_with_AVX2)
+    {
+        return cast(__m256i)__builtin_ia32_pmaddubsw256(cast(byte32)a, cast(byte32)b);
+    }
+    else
+    {
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i b_lo = _mm256_extractf128_si256!0(b);
+        __m128i b_hi = _mm256_extractf128_si256!1(b);
+        __m128i r_lo = _mm_maddubs_epi16(a_lo, b_lo);
+        __m128i r_hi = _mm_maddubs_epi16(a_hi, b_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m128i A = _mm_setr_epi8(  -1,  10, 100, -128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); // u8
+    __m128i B = _mm_setr_epi8(-128, -30, 100,  127, -1, 2, 4, 6, 0, 0, 0, 0, 0, 0, 0, 0); // i8
+    __m256i AA = _mm256_set_m128i(A, A);
+    __m256i BB = _mm256_set_m128i(B, B);
+    short16 C = cast(short16) _mm256_maddubs_epi16(AA, BB);
+    short[16] correct =       [   -32768,     26256, 0, 0, 0, 0, 0, 0,
+                                  -32768,     26256, 0, 0, 0, 0, 0, 0];
+    assert(C.array == correct);
+}
+
 version(DigitalMars)
 {
     // this avoids a bug with DMD < 2.099 -a x86 -O
