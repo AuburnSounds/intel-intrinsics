@@ -573,6 +573,7 @@ __m128i _mm_hadds_epi16 (__m128i a, __m128i b) pure @trusted
     }
     else
     {
+        // PERF well that doesn't look very fast?
         short8 sa = cast(short8)a;
         short8 sb = cast(short8)b;
         short8 r;
