@@ -938,6 +938,7 @@ unittest
     assert(R.array == E);
 }
 
+// TODO: Should this go in a new avx512intrin.d?
 __m256i _mm256_popcnt_epi32(__m256i a)
 {
     static if (LDC_with_AVX512VPOPCNTDQ)
