@@ -817,40 +817,36 @@ unittest
 // Shift 128-bit lanes in `a` left by `CNT` bytes while shifting in zeros, and return the results.
 __m256i _mm256_bslli_epi128(ubyte CNT)(__m256i a) pure @trusted
 {
+    // PERF This is almost definitely not the best way to do this.
+    // Don't quote me on this but I'm pretty sure that there isn't a need to add extra
+    // code for obvious things like CNT == 8 zeroing half of each lane or whatever because
+    // shuffle should be able to complete fast enough that whatever optimizations will likely
+    // lead to negligible performance benefit.
     static if (CNT == 16)
         return _mm256_setzero_si256();
+    else static if (DMD_with_DSIMD_and_AVX2 || LDC_with_AVX2 || GDC_with_AVX2)
+    {
+        // No direct intrinsic for _mm256_bslli_epi128 as far as I'm aware on either LDC or GDC....
+        __m256i mask = _mm256_set1_epi64x(ulong.max);
+        ubyte* ptr = cast(ubyte*)&mask;
+
+        // This loop is a little nasty but it isn't a big deal.
+        static foreach (ubyte i; 0..(16 - CNT))
+        {
+            ptr[i + CNT] = i;
+            ptr[i + CNT + 16] = i;
+        }
+
+        // We could do 2 byteshifts but this would double the latency on most systems.
+        // This would, however, be more efficient if this function had to generate the mask at runtime.
+
+        return _mm256_shuffle_epi8(a, mask);
+    }
     else
     {
-        // No direct intrinsic for _mm256_bslli_epi128 as far as I'm aware on either LDC or GDC...
-        // Maybe LLVM IR can be used?
-        // static if (GDC_with_AVX2)
-        return cast(__m256i)__builtin_ia32_pslldqi256_byteshift(cast(byte32)a, cast(int)(CNT * 8));
-        // else
-        // {
-        // align (32) ubyte[32] mask;
-
-        // static foreach (ubyte i; 0..16)
-        // {
-        //     static if (i < CNT)
-        //     {
-        //         mask[i] = ubyte.max;
-        //         mask[i + 16] = ubyte.max;
-        //     }
-        //     else
-        //     {
-        //         mask[i] = i - CNT;
-        //         mask[i + 16] = i - CNT;
-        //     }
-        // }
-        // import std.stdio;
-        // debug writeln(mask);
-
-        // debug writeln((cast(ubyte*)&a)[0..32]);
-        // a = _mm256_shuffle_epi8(a, *cast(__m256i*)&mask);
-        // debug writeln((cast(ubyte*)&a)[0..32]);
-
-        // return _mm256_shuffle_epi8(a, *cast(__m256i*)&mask);
-        // }
+        auto hi = _mm_bsrli_si128!CNT(_mm256_extractf128_si256!0(a));
+        auto lo = _mm_bsrli_si128!CNT(_mm256_extractf128_si256!1(a));
+        return _mm256_setr_m128i(hi, lo);
     }
 }
 
@@ -858,24 +854,34 @@ unittest
 {
     __m256i a = _mm256_setr_epi8(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32);
 
-    assert(_mm256_bslli_epi128!7(a).array == [1224979098644774912, 1808220633999610642, 72057594037927936, 650777868590383874]);
+    assert(_mm256_bslli_epi128!7(a).array == [72057594037927936, 650777868590383874, 1224979098644774912, 1808220633999610642]);
 }
 
 // Shift 128-bit lanes in `a` right by `CNT` bytes while shifting in zeros, and return the results.
 __m256i _mm256_bsrli_epi128(ubyte CNT)(__m256i a) pure @trusted
 {
+    // PERF This is almost definitely not the best way to do this.
     static if (CNT == 16)
         return _mm256_setzero_si256();
+    else static if (DMD_with_DSIMD_and_AVX2 || LDC_with_AVX2 || GDC_with_AVX2)
+    {
+        // Again, to my knowledge no intrinsic.
+        __m256i mask = _mm256_set1_epi64x(ulong.max);
+        ubyte* ptr = cast(ubyte*)&mask;
+
+        static foreach (ubyte i; CNT..16)
+        {
+            ptr[i - CNT] = i;
+            ptr[i - CNT + 16] = i;
+        }
+
+        return _mm256_shuffle_epi8(a, mask);
+    }
     else
     {
-        /* static if (GDC_with_AVX2)
-            return cast(__m256i)__builtin_ia32_psrldqi256(cast(byte32)a, cast(int)(CNT * 8));
-        else
-        { */
-        auto hi = _mm_bsrli_si128!CNT(_mm256_extractf128_si256!0(a));
-        auto lo = _mm_bsrli_si128!CNT(_mm256_extractf128_si256!1(a));
-        return _mm256_set_m128i(hi, lo);
-        //}
+        auto hi = _mm_bslli_si128!CNT(_mm256_extractf128_si256!0(a));
+        auto lo = _mm_bslli_si128!CNT(_mm256_extractf128_si256!1(a));
+        return _mm256_setr_m128i(hi, lo);
     }
 }
 
@@ -883,7 +889,7 @@ unittest
 {
     __m256i a = _mm256_setr_epi8(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32);
 
-    assert(_mm256_bsrli_epi128!7(a).array == [2242261671028070680, 32, 1084818905618843912, 16]);
+    assert(_mm256_bsrli_epi128!7(a).array == [1084818905618843912, 16, 2242261671028070680, 32]);
 }
 
 // Shift 128-bit lanes in `a` left by `CNT` bytes while shifting in zeros, and return the results.

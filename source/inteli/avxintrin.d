@@ -3300,7 +3300,7 @@ unittest
 }
 
 /// Broadcast 64-bit integer `a` to all elements of the return value.
-__m256i _mm256_set1_epi64x (long a)
+__m256i _mm256_set1_epi64x (long a) pure @trusted
 {
     return cast(__m256i)(long4(a));
 }
