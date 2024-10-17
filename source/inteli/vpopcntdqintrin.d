@@ -92,15 +92,14 @@ __m256i _mm256_popcnt_epi64(__m256i a)
     }
     else
     {
-        // There's probably a better way to do this, but I don't it and this likely isn't much worse.
+        // There's probably a better way to do this, but I don't know it and this likely isn't much worse.
         __m256i ret = _mm256_popcnt_epi32(a);
-        ret = _mm256_and_si256(ret, _mm256_set_epi32(0, uint.max, 0, uint.max, 0, uint.max, 0, uint.max));
-        return _mm256_add_epi32(ret, ret);
+        return _mm256_sad_epu8(_mm256_setzero_si256(), ret);
     }
 }
 
 unittest
 {
-    auto a = _mm256_set1_epi32(0b11100110);
-    assert(_mm256_popcnt_epi64(a).array == [10, 10, 10, 10]);
+    auto a = _mm256_set_epi64x(1, 2, 3, 4);
+    assert(_mm256_popcnt_epi64(a).array == [1, 2, 1, 1]);
 }

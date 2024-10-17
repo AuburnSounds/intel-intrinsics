@@ -851,8 +851,8 @@ __m256i _mm256_bslli_epi128(ubyte CNT)(__m256i a) pure @trusted
     }
     else
     {
-        auto hi = _mm_bsrli_si128!CNT(_mm256_extractf128_si256!0(a));
-        auto lo = _mm_bsrli_si128!CNT(_mm256_extractf128_si256!1(a));
+        auto hi = _mm_bslli_si128!CNT(_mm256_extractf128_si256!0(a));
+        auto lo = _mm_bslli_si128!CNT(_mm256_extractf128_si256!1(a));
         return _mm256_setr_m128i(hi, lo);
     }
 }
@@ -860,7 +860,6 @@ __m256i _mm256_bslli_epi128(ubyte CNT)(__m256i a) pure @trusted
 unittest
 {
     __m256i a = _mm256_setr_epi8(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32);
-
     assert(_mm256_bslli_epi128!7(a).array == [72057594037927936, 650777868590383874, 1224979098644774912, 1808220633999610642]);
 }
 
@@ -892,8 +891,8 @@ __m256i _mm256_bsrli_epi128(ubyte CNT)(__m256i a) pure @trusted
     }
     else
     {
-        auto hi = _mm_bslli_si128!CNT(_mm256_extractf128_si256!0(a));
-        auto lo = _mm_bslli_si128!CNT(_mm256_extractf128_si256!1(a));
+        auto hi = _mm_bsrli_si128!CNT(_mm256_extractf128_si256!0(a));
+        auto lo = _mm_bsrli_si128!CNT(_mm256_extractf128_si256!1(a));
         return _mm256_setr_m128i(hi, lo);
     }
 }
@@ -901,7 +900,6 @@ __m256i _mm256_bsrli_epi128(ubyte CNT)(__m256i a) pure @trusted
 unittest
 {
     __m256i a = _mm256_setr_epi8(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32);
-
     assert(_mm256_bsrli_epi128!7(a).array == [1084818905618843912, 16, 2242261671028070680, 32]);
 }
 
