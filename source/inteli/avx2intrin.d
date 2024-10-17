@@ -1914,6 +1914,43 @@ unittest
 
 // TODO __m256i _mm256_maddubs_epi16 (__m256i a, __m256i b) pure @safe
 
+/// Vertically multiply each unsigned 8-bit integer from `a` with the corresponding 
+/// signed 8-bit integer from `b`, producing intermediate signed 16-bit integers. 
+/// Horizontally add adjacent pairs of intermediate signed 16-bit integers, 
+/// and pack the saturated results.
+__m256i _mm256_maddubs_epi16 (__m256i a, __m256i b) @safe
+{
+    static if (GDC_with_AVX2)
+    {
+        return cast(__m256i)__builtin_ia32_pmaddubsw256(cast(ubyte32)a, cast(ubyte32)b);
+    }
+    else static if (LDC_with_AVX2)
+    {
+        return cast(__m256i)__builtin_ia32_pmaddubsw256(cast(byte32)a, cast(byte32)b);
+    }
+    else
+    {
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i b_lo = _mm256_extractf128_si256!0(b);
+        __m128i b_hi = _mm256_extractf128_si256!1(b);
+        __m128i r_lo = _mm_maddubs_epi16(a_lo, b_lo);
+        __m128i r_hi = _mm_maddubs_epi16(a_hi, b_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m128i A = _mm_setr_epi8(  -1,  10, 100, -128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); // u8
+    __m128i B = _mm_setr_epi8(-128, -30, 100,  127, -1, 2, 4, 6, 0, 0, 0, 0, 0, 0, 0, 0); // i8
+    __m256i AA = _mm256_set_m128i(A, A);
+    __m256i BB = _mm256_set_m128i(B, B);
+    short16 C = cast(short16) _mm256_maddubs_epi16(AA, BB);
+    short[16] correct =       [   -32768,     26256, 0, 0, 0, 0, 0, 0,
+                                  -32768,     26256, 0, 0, 0, 0, 0, 0];
+    assert(C.array == correct);
+}
+
 version(DigitalMars)
 {
     // this avoids a bug with DMD < 2.099 -a x86 -O
@@ -3543,7 +3580,37 @@ unittest
     assert(C.array == expectedC);
 }
 
-// TODO __m256i _mm256_srli_epi64 (__m256i a, int imm8) pure @safe
+/// Shift packed 64-bit integers in `a` right by `imm8` while shifting in zeros.
+__m256i _mm256_srli_epi64 (__m256i a, int imm8) pure @safe
+{
+    static if (GDC_or_LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_psrlqi256(cast(int8)a, cast(ubyte)imm8);
+    }
+    else 
+    {
+        // split
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i r_lo = _mm_srli_epi64(a_lo, imm8);
+        __m128i r_hi = _mm_srli_epi64(a_hi, imm8);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m256i A = _mm256_setr_epi64(8, -4, 16, -8);
+    long4 B = cast(long4) _mm256_srli_epi64(A, 1);
+    long4 B2 = cast(long4) _mm256_srli_epi64(A, 1 + 512);
+    long[4] expectedB = [ 4, 0x7FFFFFFFFFFFFFFE, 8, 0x7FFFFFFFFFFFFFFC];
+    assert(B.array == expectedB);
+    assert(B2.array == expectedB);
+
+    long4 C = cast(long4) _mm256_srli_epi64(A, 64);
+    long[4] expectedC = [ 0, 0, 0, 0 ];
+    assert(C.array == expectedC);
+}
+
 // TODO __m256i _mm256_srli_si256 (__m256i a, const int imm8) pure @safe
 // TODO __m256i _mm256_srlv_epi32 (__m256i a, __m256i count) pure @safe
 // TODO __m256i _mm256_srlv_epi64 (__m256i a, __m256i count) pure @safe
