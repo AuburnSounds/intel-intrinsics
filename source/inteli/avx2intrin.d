@@ -822,8 +822,14 @@ __m256i _mm256_bslli_epi128(ubyte CNT)(__m256i a) pure @trusted
     // code for obvious things like CNT == 8 zeroing half of each lane or whatever because
     // shuffle should be able to complete fast enough that whatever optimizations will likely
     // lead to negligible performance benefit.
-    static if (CNT == 16)
+    static if (CNT >= 16)
         return _mm256_setzero_si256();
+    else static if (LDC_with_AVX2)
+    {
+        return cast(__m256i)__asm!(long4)("
+            vpslldq $2, $1, $1"
+        , "=v,v,I", a, CNT);
+    }
     else static if (DMD_with_DSIMD_and_AVX2 || LDC_with_AVX2 || GDC_with_AVX2)
     {
         // No direct intrinsic for _mm256_bslli_epi128 as far as I'm aware on either LDC or GDC....
@@ -861,8 +867,14 @@ unittest
 __m256i _mm256_bsrli_epi128(ubyte CNT)(__m256i a) pure @trusted
 {
     // PERF This is almost definitely not the best way to do this.
-    static if (CNT == 16)
+    static if (CNT >= 16)
         return _mm256_setzero_si256();
+    else static if (LDC_with_AVX2)
+    {
+        return cast(__m256i)__asm!(long4)("
+            vpsrldq $2, $1, $1"
+        , "=v,v,I", a, CNT);
+    }
     else static if (DMD_with_DSIMD_and_AVX2 || LDC_with_AVX2 || GDC_with_AVX2)
     {
         // Again, to my knowledge no intrinsic.

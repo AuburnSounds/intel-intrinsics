@@ -1,5 +1,11 @@
 module inteli.vpopcntdqintrin;
 
+public import inteli.types;
+import inteli.internals;
+
+// Pull in all previous instruction set intrinsics.
+public import inteli.avx2intrin;
+
 // TODO: _mm256_popcnt_epi8
 // TODO: _mm256_popcnt_epi16
 // TODO: _mm_popcnt_epi8
