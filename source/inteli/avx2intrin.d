@@ -3050,7 +3050,9 @@ unittest
 /// corresponding 8-bit element of `b`, and return the results.
 __m256i _mm256_shuffle_epi8(__m256i a, __m256i b) pure @trusted
 {
-    static if (GDC_with_AVX2 || LDC_with_AVX2)
+    static if (GDC_with_AVX2)
+        return cast(__m256i)__builtin_ia32_pshufb256(cast(ubyte32)a, cast(ubyte32)b);
+    else static if (LDC_with_AVX2)
         return cast(__m256i)__builtin_ia32_pshufb256(cast(byte32)a, cast(byte32)b);
     else
     {
@@ -3081,7 +3083,7 @@ unittest
 __m256i _mm256_shuffle_epi32(ubyte CTRL)(__m256i a) pure @trusted
 {
     static if (GDC_with_AVX2)
-        return cast(__m256i)__builtin_ia32_pshufd256(cast(byte32)a, CTRL);
+        return cast(__m256i)__builtin_ia32_pshufd256(cast(int8)a, cast(int)CTRL);
     else static if (LDC_with_AVX2)
     {
         return cast(__m256i)shufflevectorLDC!(int8,
@@ -3112,7 +3114,9 @@ unittest
 /// Blend packed 8-bit integers from `a` and `b` using `mask`, and return the results.
 __m256i _mm256_blendv_epi8(__m256i a, __m256i b, __m256i mask) @trusted
 {
-    static if (GDC_with_AVX2 || LDC_with_AVX2)
+    static if (GDC_with_AVX2)
+        return cast(__m256i)__builtin_ia32_pblendvb256(cast(ubyte32)a, cast(ubyte32)b, cast(ubyte32)mask);
+    static if (LDC_with_AVX2)
         return cast(__m256i)__builtin_ia32_pblendvb256(cast(byte32)a, cast(byte32)b, cast(byte32)mask);
     else
     {
