@@ -1,3 +1,10 @@
+/**
+* AVX512-VPOPCNTDQ intrinsics.
+* https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#techs=AVX512
+*
+* Copyright: cet 2024.
+* License:   $(LINK2 http://www.boost.org/LICENSE_1_0.txt, Boost License 1.0)
+*/
 module inteli.vpopcntdqintrin;
 
 public import inteli.types;
