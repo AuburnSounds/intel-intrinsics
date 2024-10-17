@@ -20,6 +20,7 @@ public import inteli.shaintrin;  // SHA
 public import inteli.bmi2intrin; // BMI2
 public import inteli.avxintrin;  // AVX
 public import inteli.avx2intrin; // AVX2
+public import inteli.avx512intrin; // AVX512 (all subsets)
 
 public import inteli.math; // Bonus
 
