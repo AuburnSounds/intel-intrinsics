@@ -3459,7 +3459,7 @@ unittest
 }
 
 /// Set packed `__m256` vector with the supplied values.
-__m256 _mm256_setr_m128 (__m128 lo, __m128 hi)
+__m256 _mm256_setr_m128 (__m128 lo, __m128 hi) pure @trusted
 {
     return _mm256_set_m128(hi, lo);
 }
@@ -3473,7 +3473,7 @@ unittest
 }
 
 /// Set packed `__m256d` vector with the supplied values.
-__m256d _mm256_setr_m128d (__m128d lo, __m128d hi)
+__m256d _mm256_setr_m128d (__m128d lo, __m128d hi) pure @trusted
 {
     return _mm256_set_m128d(hi, lo);
 }
@@ -3487,7 +3487,7 @@ unittest
 }
 
 /// Set packed `__m256i` vector with the supplied values.
-__m256i _mm256_setr_m128i (__m128i lo, __m128i hi)
+__m256i _mm256_setr_m128i (__m128i lo, __m128i hi) pure @trusted
 {
     return _mm256_set_m128i(hi, lo);
 }

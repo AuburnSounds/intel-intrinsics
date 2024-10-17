@@ -22,3 +22,6 @@
 .dub
 docs.json
 __dummy.html
+
+# Debug
+*.pdb

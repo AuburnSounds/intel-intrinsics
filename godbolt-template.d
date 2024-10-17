@@ -273,6 +273,7 @@ version(LDC)
     enum LDC_with_SSSE3 = __traits(targetHasFeature, "ssse3");
     enum LDC_with_AVX   = __traits(targetHasFeature, "avx");
     enum LDC_with_AVX2  = __traits(targetHasFeature, "avx2");
+    enum LDC_with_AVX512  = __traits(targetHasFeature, "avx512");
     
     enum LDC_with_ARM64 = __traits(targetHasFeature, "neon");
     enum LDC_with_SSE41 = __traits(targetHasFeature, "sse4.1");

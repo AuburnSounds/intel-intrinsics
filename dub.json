@@ -5,6 +5,9 @@
     "license": "BSL-1.0",
     "importPaths": ["source"],
     "sourcePaths": ["source"],
+    "dflags-ldc": ["-mcpu=native"],
+    "dflags-dmd": ["-mcpu=native"],
+    "dflags-gdc": ["-march=native"],
 
     "buildTypes": {
         "unittest-inst": {
