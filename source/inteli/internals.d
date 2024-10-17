@@ -167,6 +167,7 @@ version(LDC)
     version(ARM)
     {
         public import ldc.gccbuiltins_arm;
+
         enum LDC_with_ARM32 = true;
         enum LDC_with_ARM64 = false;
         enum LDC_with_ARM64_CRC = false;
@@ -181,6 +182,17 @@ version(LDC)
         enum LDC_with_AVX2 = false;
         enum LDC_with_SHA = false;
         enum LDC_with_BMI2 = false;
+
+        enum LDC_with_AVX512F = false;
+        enum LDC_with_AVX512CD = false;
+        enum LDC_with_AVX512ER = false;
+        enum LDC_with_AVX512PF = false;
+        enum LDC_with_AVX512BW = false;
+        enum LDC_with_AVX512DQ = false;
+        enum LDC_with_AVX512VL = false;
+        enum LDC_with_AVX512IFMA = false;
+        enum LDC_with_AVX512VBMI = false;
+        enum LDC_with_AVX512VBMI2 = false;
     }
     else version(AArch64)
     {
@@ -199,6 +211,17 @@ version(LDC)
         enum LDC_with_AVX2 = false;
         enum LDC_with_SHA = false;
         enum LDC_with_BMI2 = false;
+
+        enum LDC_with_AVX512F = false;
+        enum LDC_with_AVX512CD = false;
+        enum LDC_with_AVX512ER = false;
+        enum LDC_with_AVX512PF = false;
+        enum LDC_with_AVX512BW = false;
+        enum LDC_with_AVX512DQ = false;
+        enum LDC_with_AVX512VL = false;
+        enum LDC_with_AVX512IFMA = false;
+        enum LDC_with_AVX512VBMI = false;
+        enum LDC_with_AVX512VBMI2 = false;
     }
     else static if (some_x86)
     {
@@ -206,9 +229,9 @@ version(LDC)
 
         // Workaround LDC 1.32.0 having NO builtins at all.
         // See LDC issue 4347 https://github.com/ldc-developers/ldc/issues/4347
-        enum LDC_has_some_x86_builtins = __traits(compiles, __builtin_ia32_clflush); // This one must be available in all of LDC history.
+        enum LDC_with_ia32_builtins = __traits(compiles, __builtin_ia32_clflush); // This one must be available in all of LDC history.
 
-        static if (!LDC_has_some_x86_builtins)
+        static if (!LDC_with_ia32_builtins)
         {
             // in case our __builtin_ia32_clflush workaround breaks
             pragma(msg, "Warning: LDC v1.32.0 has no SIMD builtins. intel-intrinsics will use slow path. Please avoid LDC 1.32.0");
@@ -217,28 +240,41 @@ version(LDC)
         enum LDC_with_ARM32 = false;
         enum LDC_with_ARM64 = false;
         enum LDC_with_ARM64_CRC = false;
-        enum LDC_with_SSE = __traits(targetHasFeature, "sse") && LDC_has_some_x86_builtins;
-        enum LDC_with_SSE2 = __traits(targetHasFeature, "sse2") && LDC_has_some_x86_builtins;
-        enum LDC_with_SSE3 = __traits(targetHasFeature, "sse3") && LDC_has_some_x86_builtins;
-        enum LDC_with_SSSE3 = __traits(targetHasFeature, "ssse3") && LDC_has_some_x86_builtins;
-        enum LDC_with_SSE41 = __traits(targetHasFeature, "sse4.1") && LDC_has_some_x86_builtins;
-        enum LDC_with_SSE42 = __traits(targetHasFeature, "sse4.2") && LDC_has_some_x86_builtins;
+        enum LDC_with_SSE = __traits(targetHasFeature, "sse") && LDC_with_ia32_builtins;
+        enum LDC_with_SSE2 = __traits(targetHasFeature, "sse2") && LDC_with_ia32_builtins;
+        enum LDC_with_SSE3 = __traits(targetHasFeature, "sse3") && LDC_with_ia32_builtins;
+        enum LDC_with_SSSE3 = __traits(targetHasFeature, "ssse3") && LDC_with_ia32_builtins;
+        enum LDC_with_SSE41 = __traits(targetHasFeature, "sse4.1") && LDC_with_ia32_builtins;
+        enum LDC_with_SSE42 = __traits(targetHasFeature, "sse4.2") && LDC_with_ia32_builtins;
 
         // Since LDC 1.30, crc32 is a separate (and sufficient) attribute from sse4.2
         // As of Jan 2023, GDC doesn't make that distinction, -msse4.2 includes -mcrc32 for GDC.
         static if (__VERSION__ >= 2100)
         {
-            enum LDC_with_CRC32 = __traits(targetHasFeature, "crc32") && LDC_has_some_x86_builtins;
+            enum LDC_with_CRC32 = __traits(targetHasFeature, "crc32") && LDC_with_ia32_builtins;
         }
         else
         {
-            enum LDC_with_CRC32 = __traits(targetHasFeature, "sse4.2") && LDC_has_some_x86_builtins; // crc32 used to be included in sse4.2
+            enum LDC_with_CRC32 = __traits(targetHasFeature, "sse4.2") && LDC_with_ia32_builtins; // crc32 used to be included in sse4.2
         }
 
-        enum LDC_with_AVX = __traits(targetHasFeature, "avx") && LDC_has_some_x86_builtins;
-        enum LDC_with_AVX2 = __traits(targetHasFeature, "avx2") && LDC_has_some_x86_builtins;
-        enum LDC_with_SHA = __traits(targetHasFeature, "sha") && LDC_has_some_x86_builtins;
-        enum LDC_with_BMI2 = __traits(targetHasFeature, "bmi2") && LDC_has_some_x86_builtins;
+        enum LDC_with_AVX = __traits(targetHasFeature, "avx") && LDC_with_ia32_builtins;
+        enum LDC_with_AVX2 = __traits(targetHasFeature, "avx2") && LDC_with_ia32_builtins;
+        enum LDC_with_SHA = __traits(targetHasFeature, "sha") && LDC_with_ia32_builtins;
+        enum LDC_with_BMI2 = __traits(targetHasFeature, "bmi2") && LDC_with_ia32_builtins;
+
+        // All of the feature flags at https://github.com/cetio/sim-d/blob/main/source/simd/features.d
+        // but I haven't added them because I don't feel inclined, these suffice.
+        enum LDC_with_AVX512F = __traits(targetHasFeature, "avx512f") && LDC_with_ia32_builtins;
+        enum LDC_with_AVX512CD = __traits(targetHasFeature, "avx512cd") && LDC_with_ia32_builtins;
+        enum LDC_with_AVX512ER = __traits(targetHasFeature, "avx512er") && LDC_with_ia32_builtins;
+        enum LDC_with_AVX512PF = __traits(targetHasFeature, "avx512pf") && LDC_with_ia32_builtins;
+        enum LDC_with_AVX512BW = __traits(targetHasFeature, "avx512bw") && LDC_with_ia32_builtins;
+        enum LDC_with_AVX512DQ = __traits(targetHasFeature, "avx512dq") && LDC_with_ia32_builtins;
+        enum LDC_with_AVX512VL = __traits(targetHasFeature, "avx512vl") && LDC_with_ia32_builtins;
+        enum LDC_with_AVX512IFMA = __traits(targetHasFeature, "avx512ifma") && LDC_with_ia32_builtins;
+        enum LDC_with_AVX512VBMI = __traits(targetHasFeature, "avx512vbmi") && LDC_with_ia32_builtins;
+        enum LDC_with_AVX512VBMI2 = __traits(targetHasFeature, "avx512vbmi2") && LDC_with_ia32_builtins;
     }
     else
     {
@@ -256,6 +292,17 @@ version(LDC)
         enum LDC_with_AVX2 = false;
         enum LDC_with_SHA = false;
         enum LDC_with_BMI2 = false;
+
+        enum LDC_with_AVX512F = false;
+        enum LDC_with_AVX512CD = false;
+        enum LDC_with_AVX512ER = false;
+        enum LDC_with_AVX512PF = false;
+        enum LDC_with_AVX512BW = false;
+        enum LDC_with_AVX512DQ = false;
+        enum LDC_with_AVX512VL = false;
+        enum LDC_with_AVX512IFMA = false;
+        enum LDC_with_AVX512VBMI = false;
+        enum LDC_with_AVX512VBMI2 = false;
     }
 
     // Should we use inline x86 assembly with DMD syntax, in LDC?
@@ -291,6 +338,18 @@ else
     enum LDC_with_AVX2 = false;
     enum LDC_with_SHA = false;
     enum LDC_with_BMI2 = false;
+
+    enum LDC_with_AVX512F = false;
+    enum LDC_with_AVX512CD = false;
+    enum LDC_with_AVX512ER = false;
+    enum LDC_with_AVX512PF = false;
+    enum LDC_with_AVX512BW = false;
+    enum LDC_with_AVX512DQ = false;
+    enum LDC_with_AVX512VL = false;
+    enum LDC_with_AVX512IFMA = false;
+    enum LDC_with_AVX512VBMI = false;
+    enum LDC_with_AVX512VBMI2 = false;
+
     enum LDC_with_InlineIREx = false;
     enum bool LDC_with_optimizations = false;
     enum bool LDC_with_32b_x86_asm = false;

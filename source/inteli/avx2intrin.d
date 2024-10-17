@@ -814,7 +814,7 @@ unittest
     assert(B.array == correct);
 }
 
-/+ // Shift 128-bit lanes in `a` left by `CNT` bytes while shifting in zeros, and return the results.
+// Shift 128-bit lanes in `a` left by `CNT` bytes while shifting in zeros, and return the results.
 __m256i _mm256_bslli_epi128(ubyte CNT)(__m256i a) pure @trusted
 {
     static if (CNT == 16)
@@ -823,34 +823,34 @@ __m256i _mm256_bslli_epi128(ubyte CNT)(__m256i a) pure @trusted
     {
         // No direct intrinsic for _mm256_bslli_epi128 as far as I'm aware on either LDC or GDC...
         // Maybe LLVM IR can be used?
-        /* static if (GDC_with_AVX2)
-            return cast(__m256i)__builtin_ia32_pslldqi256(cast(byte32)a, cast(int)(CNT * 8));
-        else
-        { */
-        align (32) ubyte[32] mask;
+        // static if (GDC_with_AVX2)
+        return cast(__m256i)__builtin_ia32_pslldqi256_byteshift(cast(byte32)a, cast(int)(CNT * 8));
+        // else
+        // {
+        // align (32) ubyte[32] mask;
 
-        static foreach (ubyte i; 0..16)
-        {
-            static if (i < CNT)
-            {
-                mask[i] = ubyte.max;
-                mask[i + 16] = ubyte.max;
-            }
-            else
-            {
-                mask[i] = i - CNT;
-                mask[i + 16] = i - CNT;
-            }
-        }
-        import std.stdio;
-        debug writeln(mask);
+        // static foreach (ubyte i; 0..16)
+        // {
+        //     static if (i < CNT)
+        //     {
+        //         mask[i] = ubyte.max;
+        //         mask[i + 16] = ubyte.max;
+        //     }
+        //     else
+        //     {
+        //         mask[i] = i - CNT;
+        //         mask[i + 16] = i - CNT;
+        //     }
+        // }
+        // import std.stdio;
+        // debug writeln(mask);
 
-        debug writeln((cast(ubyte*)&a)[0..32]);
-        a = _mm256_shuffle_epi8(a, *cast(__m256i*)&mask);
-        debug writeln((cast(ubyte*)&a)[0..32]);
+        // debug writeln((cast(ubyte*)&a)[0..32]);
+        // a = _mm256_shuffle_epi8(a, *cast(__m256i*)&mask);
+        // debug writeln((cast(ubyte*)&a)[0..32]);
 
-        return _mm256_shuffle_epi8(a, *cast(__m256i*)&mask);
-        //}
+        // return _mm256_shuffle_epi8(a, *cast(__m256i*)&mask);
+        // }
     }
 }
 
@@ -859,7 +859,7 @@ unittest
     __m256i a = _mm256_setr_epi8(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32);
 
     assert(_mm256_bslli_epi128!7(a).array == [1224979098644774912, 1808220633999610642, 72057594037927936, 650777868590383874]);
-} +/
+}
 
 // Shift 128-bit lanes in `a` right by `CNT` bytes while shifting in zeros, and return the results.
 __m256i _mm256_bsrli_epi128(ubyte CNT)(__m256i a) pure @trusted
@@ -872,9 +872,9 @@ __m256i _mm256_bsrli_epi128(ubyte CNT)(__m256i a) pure @trusted
             return cast(__m256i)__builtin_ia32_psrldqi256(cast(byte32)a, cast(int)(CNT * 8));
         else
         { */
-            auto hi = _mm_bsrli_si128!CNT(_mm256_extractf128_si256!0(a));
-            auto lo = _mm_bsrli_si128!CNT(_mm256_extractf128_si256!1(a));
-            return _mm256_set_m128i(hi, lo);
+        auto hi = _mm_bsrli_si128!CNT(_mm256_extractf128_si256!0(a));
+        auto lo = _mm_bsrli_si128!CNT(_mm256_extractf128_si256!1(a));
+        return _mm256_set_m128i(hi, lo);
         //}
     }
 }
@@ -3110,8 +3110,14 @@ __m256i _mm256_blendv_epi8(__m256i a, __m256i b, __m256i mask) @trusted
         return cast(__m256i)__builtin_ia32_pblendvb256(cast(byte32)a, cast(byte32)b, cast(byte32)mask);
     else
     {
-        auto hi = _mm_blendv_epi8(_mm256_extractf128_si256!0(a), _mm256_extractf128_si256!0(b), _mm256_extractf128_si256!0(mask));
-        auto lo = _mm_blendv_epi8(_mm256_extractf128_si256!1(a), _mm256_extractf128_si256!1(b), _mm256_extractf128_si256!1(mask));
+        auto hi = _mm_blendv_epi8(
+            _mm256_extractf128_si256!0(a), 
+            _mm256_extractf128_si256!0(b), 
+            _mm256_extractf128_si256!0(mask));
+        auto lo = _mm_blendv_epi8(
+            _mm256_extractf128_si256!1(a), 
+            _mm256_extractf128_si256!1(b), 
+            _mm256_extractf128_si256!1(mask));
         return _mm256_setr_m128i(hi, lo);
     }
 }
@@ -3617,28 +3623,30 @@ unittest
 
 /// Load 256-bits of integer data from memory using a non-temporal memory hint.
 /// `mem_addr` must be aligned on a 32-byte boundary or a general-protection exception may be generated.
-__m256i _mm256_stream_load_si256 (const(__m256i)* mem_addr) pure @trusted
+__m256i _mm256_stream_load_si256 (const(__m256i)* mem_addr) @trusted
 {
     // PERF DMD D_SIMD
     static if (GDC_with_AVX2)
     {
         return cast(__m256i) __builtin_ia32_movntdqa256(cast(__m256i*)mem_addr); // const_cast
     }
-    else static if (LDC_with_InlineIREx && LDC_with_optimizations)
+    else static if (LDC_with_InlineIREx)
     {
-        enum prefix = `!0 = !{ i32 1 }`;
+        enum prefix = `!0 = !{ i64 1 }`;
         enum ir = `
-            %r = load <4 x i64>, <4 x i64>* %0, !nontemporal !0
-            ret <4 x i64> %r`;
-        return cast(__m256i) LDCInlineIREx!(prefix, ir, "", long4, const(long4)*)(mem_addr);
+            %val = load <4 x i64>, <4 x i64>* %0, align 32, !nontemporal !0
+            ret <4 x i64> %val`;
+        return LDCInlineIREx!(prefix, ir, "", __m256i, double2*)(cast(double2*)mem_addr);
     }
     else
     {
-        // Sacrifices purity and performance in exchange for ~correctness~ accuracy.
-        scope (exit) _mm_clflush(ptr);
-        return _mm256_load_si256(ptr);
+        // Sacrifices purity in exchange for correctness.
+        scope (exit) _mm_clflush(mem_addr);
+        // You could do *mem_addr here but it is more correct to do this... :-)
+        return _mm256_load_si256(mem_addr);
     }
 }
+
 unittest
 {
     align(32) static immutable int[8] correct = [1, 2, 3, 4, 5, 6, 7, 8];
