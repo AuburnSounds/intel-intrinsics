@@ -3567,7 +3567,9 @@ __m256i _mm256_stream_load_si256 (const(__m256i)* mem_addr) pure @trusted
     }
     else
     {
-        return *mem_addr; // regular move instead
+        // Sacrifices purity and performance in exchange for ~correctness~ accuracy.
+        scope (exit) _mm_clflush(ptr);
+        return _mm256_load_si256(ptr);
     }
 }
 unittest
