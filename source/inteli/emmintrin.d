@@ -3354,21 +3354,27 @@ unittest
 }
 
 /// Set packed 64-bit integers with the supplied values.
-__m128i _mm_set_epi64x (long e1, long e0) pure @trusted
+__m128i _mm_set_epi64(long e1, long e0) pure @trusted
 {
     pragma(inline, true);
     long2 r = void;
     r.ptr[0] = e0;
     r.ptr[1] = e1;
-    return cast(__m128i)(r);
+    return cast(__m128i)r;
 }
 unittest
 {
-    __m128i A = _mm_set_epi64x(1234, -5678);
+    __m128i A = _mm_set_epi64(1234, -5678);
     long2 B = cast(long2) A;
     assert(B.array[0] == -5678);
     assert(B.array[1] == 1234);
 }
+
+/// Set packed 64-bit integers with the supplied values.
+__m128i _mm_set_epi64x(long e1, long e0) => _mm_set_epi64(e1, e0);
+
+/// Set packed 64-bit integers with the supplied values.
+__m128i _mm_setr_epi64x(long e1, long e0) => _mm_setr_epi64(e1, e0);
 
 /// Set packed 8-bit integers with the supplied values.
 __m128i _mm_set_epi8 (byte e15, byte e14, byte e13, byte e12,
@@ -3485,19 +3491,15 @@ unittest
     assert(c.array[1] == b);
 }
 
+/// Broadcast 64-bit integer `a` to all elements.
+__m128i _mm_set1_epi64(long a) pure @safe
+{
+    return _mm_set_epi64(a, a);
+}
+// Why unittest this? Already tested by `_mm_set_epi64`... scrungalicious!
+
 /// Broadcast 64-bit integer `a` to all elements
-__m128i _mm_set1_epi64x (long a) pure @trusted
-{
-    long2 b = a; // Must be on its own line to workaround https://issues.dlang.org/show_bug.cgi?id=21470
-    return cast(__m128i)(b);
-}
-unittest
-{
-    long b = 0x1DEADCAFE;
-    long2 c = cast(long2) _mm_set1_epi64x(b);
-    for (int i = 0; i < 2; ++i)
-        assert(c.array[i] == b);
-}
+__m128i _mm_set1_epi64x (long a) pure @trusted => _mm_set1_epi64(a);
 
 /// Broadcast 8-bit integer `a` to all elements.
 __m128i _mm_set1_epi8 (byte a) pure @trusted
@@ -3566,6 +3568,15 @@ unittest
 }
 
 /// Set packed 64-bit integers with the supplied values in reverse order.
+__m128i _mm_setr_epi64(__m64 e1, __m64 e0) pure @trusted
+{
+    long2 r = void;
+    r.ptr[0] = e1.ptr[0];
+    r.ptr[1] = e1.ptr[1];
+    return cast(__m128i)(r);
+}
+
+/// Set packed 64-bit integers with the supplied values in reverse order.
 __m128i _mm_setr_epi64 (long e1, long e0) pure @trusted
 {
     long2 r = void;
@@ -3579,6 +3590,9 @@ unittest
     long[2] correct = [-1, 0];
     assert(A.array == correct);
 }
+
+/// Set packed 64-bit integers with the supplied values in reverse order.
+__m128i _mm_setr_epi64x(long e1, long e0) pure @trusted => _mm_setr_epi64(e1, e0);
 
 /// Set packed 8-bit integers with the supplied values in reverse order.
 __m128i _mm_setr_epi8 (byte e15, byte e14, byte e13, byte e12,

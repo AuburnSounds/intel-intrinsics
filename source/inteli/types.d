@@ -2,6 +2,7 @@
 * `core.simd` emulation layer.
 *
 * Copyright: Copyright Guillaume Piolat 2016-2020, Stefanos Baziotis 2019.
+*            cet 2024.
 * License:   $(LINK2 http://www.boost.org/LICENSE_1_0.txt, Boost License 1.0)
 */
 module inteli.types;
@@ -301,11 +302,11 @@ else
 {
     // For this compiler, defining MMX-sized vectors is working.
     public import core.simd;
-    alias Vector!(long [1]) long1;
-    alias Vector!(float[2]) float2;
-    alias Vector!(int  [2]) int2;
-    alias Vector!(short[4]) short4;
-    alias Vector!(byte [8]) byte8;
+    alias long1 = Vector!(long[1]);
+    alias float2 = Vector!(float[2]);
+    alias int2 = Vector!(int[2]);
+    alias short4 = Vector!(short[4]);
+    alias byte8 = Vector!(byte[8]);
 }
 
 static assert(float2.sizeof == 8);
