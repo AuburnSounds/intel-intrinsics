@@ -22,19 +22,17 @@ public import inteli.avx2intrin;
 
 /// Count the number of logical 1 bits in a, sum all result elements, and return the final count.
 /// This is not a real intrinsic, but rather a standardization of using popcnt for a sum.
-int _mm256_popcnt(__m256i a)
+long _mm256_popcnt(__m256i a)
 {
     // We use the 32-bit variant here because it has better pathing.
     __m256i cnt = _mm256_popcnt_epi32(a);
-    // Total 9 cycles but good throughput so probably fine... there may be a better way.
-    // 4 cycles on a good day 7 cycles on a bad day
-    // We can only hope the compiler will optimize by using xmm and ignoring the size difference.
-    __m128i ret = _mm_add_epi32(*cast(__m128i*)&cnt, _mm256_extracti128_si256!1(cnt));
-    // 2 cycles
-    ret = _mm_add_epi32(ret, cast(__m128i)_mm_movehl_ps(cast(__m128)ret, cast(__m128)ret));
-    // 3 cycles
-    ret = _mm_hadd_epi32(ret, ret);
-    return ret[0];
+    // Total approx 10~11 cycles but optimized for throughput so this should be ok.
+    // 6 cycles 1 throughput
+    cnt = _mm256_hadd_epi32(cnt, cnt);
+    cnt = _mm256_hadd_epi32(cnt, cnt);
+    // 4 cycles .33 throughput (throttled by the add)
+    cnt = _mm256_add_epi32(cnt, _mm256_permute2f128_si256!0b01110001(cnt, cnt));
+    return (cast(int8)cnt)[0];
 }
 
 unittest
