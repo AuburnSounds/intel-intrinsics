@@ -3,6 +3,7 @@
 * That's the what intel-intrinsics enables.
 *
 * Copyright: Copyright Guillaume Piolat 2016-2020.
+*            cet 2024.
 * License:   $(LINK2 http://www.boost.org/LICENSE_1_0.txt, Boost License 1.0)
 */
 module inteli; 
@@ -20,6 +21,6 @@ public import inteli.shaintrin;  // SHA
 public import inteli.bmi2intrin; // BMI2
 public import inteli.avxintrin;  // AVX
 public import inteli.avx2intrin; // AVX2
+public import inteli.avx512intrin; // AVX512 (all subsets)
 
 public import inteli.math; // Bonus
-

@@ -4,6 +4,7 @@
 *
 * Copyright: Guillaume Piolat 2022-2024.
 *            Johan Engelen 2022.
+*            cet 2024.
 * License:   $(LINK2 http://www.boost.org/LICENSE_1_0.txt, Boost License 1.0)
 */
 module inteli.avx2intrin;
@@ -585,27 +586,27 @@ unittest
     assert(C.array == correct);
 }
 
-/// Blend packed 8-bit integers from `a` and `b` using `mask`.
-/// Select from `b` if the high-order bit of the corresponding 8-bit element in `mask` is set, else select from `a`.
- __m256i _mm256_blendv_epi8 (__m256i a, __m256i b, __m256i mask) pure @safe
- {
+/// Blend packed 8-bit integers from `a` and `b` using `mask`, and return the results.
+__m256i _mm256_blendv_epi8(__m256i a, __m256i b, __m256i mask) @trusted
+{
+    static if (GDC_with_AVX2)
+        return cast(__m256i)__builtin_ia32_pblendvb256(cast(ubyte32)a, cast(ubyte32)b, cast(ubyte32)mask);
     static if (LDC_with_AVX2)
-    {
-        return cast(__m256i) __builtin_ia32_pblendvb256(cast(byte32)a, cast(byte32)b, cast(byte32)mask);
-    }
+        return cast(__m256i)__builtin_ia32_pblendvb256(cast(byte32)a, cast(byte32)b, cast(byte32)mask);
     else
     {
-        __m128i a_lo = _mm256_extractf128_si256!0(a);
-        __m128i a_hi = _mm256_extractf128_si256!1(a);
-        __m128i b_lo = _mm256_extractf128_si256!0(b);
-        __m128i b_hi = _mm256_extractf128_si256!1(b);
-        __m128i m_lo = _mm256_extractf128_si256!0(mask);
-        __m128i m_hi = _mm256_extractf128_si256!1(mask);
-        __m128i r_lo = _mm_blendv_epi8(a_lo, b_lo, m_lo);
-        __m128i r_hi = _mm_blendv_epi8(a_hi, b_hi, m_hi);
-        return _mm256_set_m128i(r_hi, r_lo);
+        auto hi = _mm_blendv_epi8(
+            _mm256_extractf128_si256!0(a), 
+            _mm256_extractf128_si256!0(b), 
+            _mm256_extractf128_si256!0(mask));
+        auto lo = _mm_blendv_epi8(
+            _mm256_extractf128_si256!1(a), 
+            _mm256_extractf128_si256!1(b), 
+            _mm256_extractf128_si256!1(mask));
+        return _mm256_setr_m128i(hi, lo);
     }
 }
+
 unittest
 {
     __m128i A = _mm_setr_epi8( 0,  1,  2,  3,  4,  5,  6,  7,  
@@ -621,6 +622,21 @@ unittest
     byte[32] correct =      [  0, 17,  2,  3, 20,  5, 22,  7, 8,  9, 26, 27, 12, 13, 14, 31,
                                0, 17,  2,  3, 20,  5, 22,  7, 8,  9, 26, 27, 12, 13, 14, 31 ];
     assert(R.array == correct);
+}
+
+// This test is actually basically useless but better test twice than once?
+unittest
+{
+    __m256i a = _mm256_set_epi8(32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1);
+    __m256i b = _mm256_set_epi8(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32);
+    __m256i mask = _mm256_set_epi8(-1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1);
+
+    __m256i expected = _mm256_setr_epi8(
+        32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17,
+        16, 15, 14, 13, 21, 11, 23, 9, 25, 7, 27, 5, 29, 3, 31, 1
+    );
+
+    assert(_mm256_blendv_epi8(a, b, mask).array == expected.array);
 }
 
 /// Broadcast the low packed 8-bit integer from `a` to all elements of result.
@@ -852,8 +868,109 @@ unittest
     assert(B.array == correct);
 }
 
-// TODO __m256i _mm256_bslli_epi128 (__m256i a, const int imm8) pure @safe
-// TODO __m256i _mm256_bsrli_epi128 (__m256i a, const int imm8) pure @safe
+// Shift 128-bit lanes in `a` left by `CNT` bytes while shifting in zeros, and return the results.
+__m256i _mm256_bslli_epi128(ubyte CNT)(__m256i a) pure @trusted
+{
+    // PERF This is almost definitely not the best way to do this.
+    // Don't quote me on this but I'm pretty sure that there isn't a need to add extra
+    // code for obvious things like CNT == 8 zeroing half of each lane or whatever because
+    // shuffle should be able to complete fast enough that whatever optimizations will likely
+    // lead to negligible performance benefit.
+    static if (CNT >= 16)
+        return _mm256_setzero_si256();
+    // TODO: Some odd issue on LDC release with this inline asm either not working or asserts are failing bizzarely.
+    // Compilation emissions will need to be looked into.
+    // else static if (LDC_with_AVX2)
+    // {
+    //     return cast(__m256i)__asm!(long4)("
+    //         vpslldq $2, $1, $1"
+    //     , "=v,v,I", a, CNT);
+    // }
+    else static if (DMD_with_DSIMD_and_AVX2 || LDC_with_AVX2 || GDC_with_AVX2)
+    {
+        // No direct intrinsic for _mm256_bslli_epi128 as far as I'm aware on either LDC or GDC....
+        __m256i mask = _mm256_set1_epi64x(ulong.max);
+        ubyte* ptr = cast(ubyte*)&mask;
+
+        // This loop is a little nasty but it isn't a big deal.
+        static foreach (ubyte i; 0..(16 - CNT))
+        {
+            ptr[i + CNT] = i;
+            ptr[i + CNT + 16] = i;
+        }
+
+        // We could do 2 byteshifts but this would double the latency on most systems.
+        // This would, however, be more efficient if this function had to generate the mask at runtime.
+
+        return _mm256_shuffle_epi8(a, mask);
+    }
+    else
+    {
+        auto hi = _mm_bslli_si128!CNT(_mm256_extractf128_si256!0(a));
+        auto lo = _mm_bslli_si128!CNT(_mm256_extractf128_si256!1(a));
+        return _mm256_setr_m128i(hi, lo);
+    }
+}
+
+unittest
+{
+    __m256i a = _mm256_setr_epi8(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32);
+    assert(_mm256_bslli_epi128!7(a).array == [72057594037927936, 650777868590383874, 1224979098644774912, 1808220633999610642]);
+}
+
+// Shift 128-bit lanes in `a` right by `CNT` bytes while shifting in zeros, and return the results.
+__m256i _mm256_bsrli_epi128(ubyte CNT)(__m256i a) pure @trusted
+{
+    // PERF This is almost definitely not the best way to do this.
+    static if (CNT >= 16)
+        return _mm256_setzero_si256();
+    // TODO: Ensure this doesn't have the same problem as bslli, it appears not to,
+    // so I haven't commented it out; but this is definitely odd behavior. 
+    else static if (LDC_with_AVX2)
+    {
+        return cast(__m256i)__asm!(long4)("
+            vpsrldq $2, $1, $1"
+        , "=v,v,I", a, CNT);
+    }
+    else static if (DMD_with_DSIMD_and_AVX2 || LDC_with_AVX2 || GDC_with_AVX2)
+    {
+        // Again, to my knowledge no intrinsic.
+        __m256i mask = _mm256_set1_epi64x(ulong.max);
+        ubyte* ptr = cast(ubyte*)&mask;
+
+        static foreach (ubyte i; CNT..16)
+        {
+            ptr[i - CNT] = i;
+            ptr[i - CNT + 16] = i;
+        }
+
+        return _mm256_shuffle_epi8(a, mask);
+    }
+    else
+    {
+        auto hi = _mm_bsrli_si128!CNT(_mm256_extractf128_si256!0(a));
+        auto lo = _mm_bsrli_si128!CNT(_mm256_extractf128_si256!1(a));
+        return _mm256_setr_m128i(hi, lo);
+    }
+}
+
+unittest
+{
+    __m256i a = _mm256_setr_epi8(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32);
+    assert(_mm256_bsrli_epi128!7(a).array == [1084818905618843912, 16, 2242261671028070680, 32]);
+}
+
+// Shift 128-bit lanes in `a` left by `CNT` bytes while shifting in zeros, and return the results.
+__m256i _mm256_slli_epi128(ubyte CNT)(__m256i a) pure @trusted
+{
+    return _mm256_bslli_epi128!CNT(a);
+}
+
+// Shift 128-bit lanes in `a` right by `CNT` bytes while shifting in zeros, and return the results.
+__m256i _mm256_srli_epi128(ubyte CNT)(__m256i a) pure @trusted
+{
+    return _mm256_bsrli_epi128!CNT(a);
+}
 
 /// Compare packed 16-bit integers in `a` and `b` for equality.
 __m256i _mm256_cmpeq_epi16 (__m256i a, __m256i b) pure @trusted
@@ -2973,11 +3090,97 @@ unittest
     assert(R.array == correct);
 }
 
+/// Shuffle 16-bit integers in the high 64 bits of 128-bit lanes of `a` using the control in `CTRL`, and return the results.
+__m256i _mm256_shufflehi_epi16(ubyte CTRL)(__m256i a) pure @trusted
+{
+    // Not sure if there is any builtin available for this intrinsic, but the less efficient approach will do :+:
+    auto hi = _mm_shufflehi_epi16!CTRL(_mm256_extracti128_si256!0(a));
+    auto lo = _mm_shufflehi_epi16!CTRL(_mm256_extracti128_si256!0(a));
+    return _mm256_set_m128i(hi, lo);
+}
 
-// TODO __m256i _mm256_shuffle_epi32 (__m256i a, const int imm8) pure @safe
-// TODO __m256i _mm256_shuffle_epi8 (__m256i a, __m256i b) pure @safe
-// TODO __m256i _mm256_shufflehi_epi16 (__m256i a, const int imm8) pure @safe
-// TODO __m256i _mm256_shufflelo_epi16 (__m256i a, const int imm8) pure @safe
+unittest
+{
+    __m256i a = _mm256_set_epi8(32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1);
+    assert(_mm256_shufflehi_epi16!2(a).array == [578437695752307201, 723120249109024269, 578437695752307201, 723120249109024269]);
+}
+
+/// Shuffle 16-bit integers in the low 64 bits of 128-bit lanes of `a` using the control in `CTRL`, and return the results.
+__m256i _mm256_shufflelo_epi16(ubyte CTRL)(__m256i a) pure @trusted
+{
+    // Not sure if there is any builtin available for this intrinsic, but the less efficient approach will do :+:
+    auto hi = _mm_shufflelo_epi16!CTRL(_mm256_extracti128_si256!0(a));
+    auto lo = _mm_shufflelo_epi16!CTRL(_mm256_extracti128_si256!0(a));
+    return _mm256_set_m128i(hi, lo);
+}
+
+unittest
+{
+    __m256i a = _mm256_set_epi8(32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1);
+    assert(_mm256_shufflelo_epi16!2(a).array == [144398866404410885, 1157159078456920585, 144398866404410885, 1157159078456920585]);
+}
+
+/// Shuffle 32-bit integers in `a` within 128-bit lanes using the control in `CTRL`, and return the results.
+__m256i _mm256_shuffle_epi32(ubyte CTRL)(__m256i a) pure @trusted
+{
+    static if (GDC_with_AVX2)
+        return cast(__m256i)__builtin_ia32_pshufd256(cast(int8)a, cast(int)CTRL);
+    else static if (LDC_with_AVX2)
+    {
+        return cast(__m256i)shufflevectorLDC!(int8,
+            (CTRL >> 0) & 3,
+            (CTRL >> 2) & 3,
+            (CTRL >> 4) & 3,
+            (CTRL >> 6) & 3,
+            ((CTRL >> 0) & 3) + 4,
+            ((CTRL >> 2) & 3) + 4,
+            ((CTRL >> 4) & 3) + 4,
+            ((CTRL >> 6) & 3) + 4)(cast(int8)a, cast(int8)a);
+    }
+    else
+    {
+        auto hi = _mm_shuffle_epi32!CTRL(_mm256_extractf128_si256!0(a));
+        auto lo = _mm_shuffle_epi32!CTRL(_mm256_extractf128_si256!1(a));
+        return _mm256_setr_m128i(hi, lo);
+    }
+}
+
+unittest
+{
+    __m256i a = _mm256_set_epi32(32, 31, 30, 29, 28, 27, 26, 25);
+    assert(_mm256_shuffle_epi32!255(a).array == [120259084316L, 120259084316, 137438953504, 137438953504]);
+}
+
+/// Shuffle 8-bit integers in `a` within 128-bit lanes according to shuffle control mask in the 
+/// corresponding 8-bit element of `b`, and return the results.
+__m256i _mm256_shuffle_epi8(__m256i a, __m256i b) pure @trusted
+{
+    static if (GDC_with_AVX2)
+        return cast(__m256i)__builtin_ia32_pshufb256(cast(ubyte32)a, cast(ubyte32)b);
+    else static if (LDC_with_AVX2)
+        return cast(__m256i)__builtin_ia32_pshufb256(cast(byte32)a, cast(byte32)b);
+    else
+    {
+        auto hi = _mm_shuffle_epi8(_mm256_extractf128_si256!0(a), _mm256_extractf128_si256!0(b));
+        auto lo = _mm_shuffle_epi8(_mm256_extractf128_si256!1(a), _mm256_extractf128_si256!1(b));
+        return _mm256_setr_m128i(hi, lo);
+    }
+}
+
+unittest
+{
+    __m256i a = _mm256_set_epi8(32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1);
+    __m256i b = _mm256_set_epi8(0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1);
+
+    __m256i expected = _mm256_setr_epi8(
+        2, 2, 2, 2, 2, 2, 2, 2, 
+        1, 1, 1, 1, 1, 1, 1, 1, 
+        18, 18, 18, 18, 18, 18, 18, 18, 
+        17, 17, 17, 17, 17, 17, 17, 17
+    );
+
+    assert(_mm256_shuffle_epi8(a, b).array == expected.array);
+}
 
 /// Negate packed signed 16-bit integers in `a` when the corresponding signed 8-bit integer in `b` is negative.
 /// Elements in result are zeroed out when the corresponding element in `b` is zero.
@@ -3298,10 +3501,93 @@ unittest
 }
 
 // TODO __m256i _mm256_slli_si256 (__m256i a, const int imm8) pure @safe
-// TODO __m128i _mm_sllv_epi32 (__m128i a, __m128i count) pure @safe
 // TODO __m256i _mm256_sllv_epi32 (__m256i a, __m256i count) pure @safe
-// TODO __m128i _mm_sllv_epi64 (__m128i a, __m128i count) pure @safe
 // TODO __m256i _mm256_sllv_epi64 (__m256i a, __m256i count) pure @safe
+
+/// Shift packed 32-bit integers in `a` left by the amount specified by the corresponding element in `b` while shifting in zeros, and return the results.
+__m128i _mm_sllv_epi32(__m128i a, __m128i b) pure @trusted
+{
+    static if (GDC_with_AVX2 || LDC_with_AVX2)
+        return cast(__m128i)__builtin_ia32_psllv4si(cast(byte16)a, cast(byte16)b);
+    else
+    {
+        return _mm_setr_epi32(
+            a[0] << b[0],
+            a[1] << b[1],
+            a[2] << b[2],
+            a[3] << b[3]
+        );
+    }
+}
+
+unittest
+{
+    __m128i expected = _mm_setr_epi64(1, 4);
+    assert(_mm_sllv_epi32(_mm_setr_epi64(1, 2), _mm_setr_epi64(0, 1)).array == expected.array);
+}
+
+/// Shift packed 64-bit integers in `a` left by the amount specified by the corresponding element in `b` while shifting in zeros, and return the results.
+__m128i _mm_sllv_epi64(__m128i a, __m128i b) pure @trusted
+{
+    static if (GDC_with_AVX2 || LDC_with_AVX2)
+        return cast(__m128i)__builtin_ia32_psllv2di(cast(long2)a, cast(long2)b);
+    else
+    {
+        // TODO: _mm_setr_epi64x should be a thing
+        return _mm_setr_epi64(
+            _mm_extract_epi64(a, 0) << _mm_extract_epi64(b, 0),
+            _mm_extract_epi64(a, 1) << _mm_extract_epi64(b, 1)
+        );
+    }
+}
+
+unittest
+{
+    __m128i expected = _mm_setr_epi64(1, 4);
+    assert(_mm_sllv_epi64(_mm_setr_epi64(1, 2), _mm_setr_epi64(0, 1)).array == expected.array);
+}
+
+/// Shift packed 32-bit integers in `a` right by the amount specified by the corresponding element in `b` while shifting in zeros, and return the results.
+__m128i _mm_srlv_epi32(__m128i a, __m128i b) pure @trusted
+{
+    static if (GDC_with_AVX2 || LDC_with_AVX2)
+        return cast(__m128i)__builtin_ia32_psrlv4si(cast(byte16)a, cast(byte16)b);
+    else
+    {
+        return _mm_setr_epi32(
+            a[0] >> b[0],
+            a[1] >> b[1],
+            a[2] >> b[2],
+            a[3] >> b[3]
+        );
+    }
+}
+
+unittest
+{
+    __m128i expected = _mm_setr_epi64(1, 2);
+    assert(_mm_srlv_epi32(_mm_setr_epi64(1, 4), _mm_setr_epi64(0, 1)).array == expected.array);
+}
+
+/// Shift packed 64-bit integers in `a` right by the amount specified by the corresponding element in `b` while shifting in zeros, and return the results.
+__m128i _mm_srlv_epi64(__m128i a, __m128i b) pure @trusted
+{
+    static if (GDC_with_AVX2 || LDC_with_AVX2)
+        return cast(__m128i)__builtin_ia32_psrlv2di(cast(long2)a, cast(long2)b);
+    else
+    {
+        return _mm_setr_epi64(
+            _mm_extract_epi64(a, 0) >> _mm_extract_epi64(b, 0),
+            _mm_extract_epi64(a, 1) >> _mm_extract_epi64(b, 1)
+        );
+    }
+}
+
+unittest
+{
+    __m128i expected = _mm_setr_epi64(1, 2);
+    assert(_mm_srlv_epi64(_mm_setr_epi64(1, 4), _mm_setr_epi64(0, 1)).array == expected.array);
+}
 
 /// Shift packed 16-bit integers in `a` right by `count` while shifting in sign bits.
 /// Bit-shift is a single value in the low-order 64-bit of `count`. 
@@ -3675,9 +3961,7 @@ unittest
 }
 
 // TODO __m256i _mm256_srli_si256 (__m256i a, const int imm8) pure @safe
-// TODO __m128i _mm_srlv_epi32 (__m128i a, __m128i count) pure @safe
 // TODO __m256i _mm256_srlv_epi32 (__m256i a, __m256i count) pure @safe
-// TODO __m128i _mm_srlv_epi64 (__m128i a, __m128i count) pure @safe
 // TODO __m256i _mm256_srlv_epi64 (__m256i a, __m256i count) pure @safe
 
 /// Load 256-bits of integer data from memory using a non-temporal memory hint.
@@ -3706,6 +3990,25 @@ unittest
 {
     align(32) static immutable int[8] correct = [1, 2, 3, 4, 5, 6, 7, 8];
     __m256i A = _mm256_stream_load_si256(cast(__m256i*)correct.ptr);
+    _mm_mfence();
+    assert((cast(int8)A).array == correct);
+}
+
+/// Load 256-bits of integer data from memory using a non-temporal memory hint.
+/// `mem_addr` must be aligned on a 32-byte boundary or a general-protection exception may be generated.
+/// Unlike _mm256_stream_load_si256, this will ensure the absence of cache hierarchy changes.
+/// #BONUS
+__m256i _mm256_stream_load_si256nt(const(__m256i)* mem_addr) @trusted
+{
+    static if (!GDC_with_AVX2 && !(LDC_with_InlineIREx && LDC_with_optimizations))
+        scope (exit) _mm_clflush(mem_addr);
+    return _mm256_stream_load_si256(mem_addr);
+}
+
+unittest
+{
+    align(32) static immutable int[8] correct = [1, 2, 3, 4, 5, 6, 7, 8];
+    __m256i A = _mm256_stream_load_si256nt(cast(__m256i*)correct.ptr);
     _mm_mfence();
     assert((cast(int8)A).array == correct);
 }

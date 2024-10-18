@@ -4,6 +4,7 @@
 *
 * Copyright: Guillaume Piolat 2021.
 *            Johan Engelen 2021.
+*            cet 2024.
 * License:   $(LINK2 http://www.boost.org/LICENSE_1_0.txt, Boost License 1.0)
 */
 module inteli.smmintrin;
@@ -1987,10 +1988,10 @@ unittest
     // tested in other intrinsics
 }
 
-
 /// Load 128-bits of integer data from memory using a non-temporal memory hint. 
 /// `mem_addr` must be aligned on a 16-byte boundary or a general-protection 
 /// exception may be generated.
+// NOTE Why is this not const(**) like _mm256_stream_load_si256?
 __m128i _mm_stream_load_si128 (__m128i * mem_addr) pure @trusted
 {
     // PERF DMD D_SIMD
@@ -2015,6 +2016,25 @@ unittest
 {
     align(16) static immutable int[4] correct = [1, 2, 3, 4];
     __m128i A = _mm_stream_load_si128(cast(__m128i*)(correct.ptr));
+    _mm_mfence();
+    assert(A.array == correct);
+}
+
+/// Load 128-bits of integer data from memory using a non-temporal memory hint.
+/// `mem_addr` must be aligned on a 16-byte boundary or a general-protection exception may be generated.
+/// Unlike _mm_stream_load_si128, this will ensure the absence of cache hierarchy changes.
+/// #BONUS
+__m128i _mm_stream_load_si128nt(__m128i* mem_addr) @trusted
+{
+    static if (!GDC_with_AVX2 && !(LDC_with_InlineIREx && LDC_with_optimizations))
+        scope (exit) _mm_clflush(mem_addr);
+    return _mm_stream_load_si128(mem_addr);
+}
+
+unittest
+{
+    align(16) static immutable int[4] correct = [1, 2, 3, 4];
+    __m128i A = _mm_stream_load_si128nt(cast(__m128i*)(correct.ptr));
     _mm_mfence();
     assert(A.array == correct);
 }
