@@ -22,7 +22,7 @@ public import inteli.avx2intrin;
 
 /// Count the number of logical 1 bits in a, sum all result elements, and return the final count.
 /// #BONUS
-int _mm256_popcnt(__m256i a)
+int _mm256_popcnt(const __m256i a) pure
 {
     // We use the 32-bit variant here because it has better pathing.
     __m256i cnt = _mm256_popcnt_epi32(a);
@@ -42,14 +42,13 @@ unittest
 }
 
 /// Count the number of logical 1 bits in packed 32-bit integers in a and return the results.
-__m256i _mm256_popcnt_epi32(__m256i a)
+__m256i _mm256_popcnt_epi32(const __m256i a) pure
 {
     // TODO: Fix, same issue as _mm256_bslli_epi128.
-    //static if (LDC_with_AVX512VPOPCNTDQ)
-    static if (false)
+    static if (LDC_with_AVX512VPOPCNTDQ)
     {
         return cast(__m256i)__asm!(int8)("
-            vpopcntd $1, $1"
+            vpopcntd $1, $0"
         , "=v,v", a);
     }
     else
@@ -84,12 +83,12 @@ unittest
 }
 
 /// Count the number of logical 1 bits in packed 64-bit integers in a and return the results.
-__m256i _mm256_popcnt_epi64(__m256i a)
+__m256i _mm256_popcnt_epi64(const __m256i a) pure
 {
     static if (LDC_with_AVX512VPOPCNTDQ)
     {
         return cast(__m256i)__asm!(long4)("
-            vpopcntq $1, $1"
+            vpopcntq $1, $0"
         , "=v,v", a);
     }
     else

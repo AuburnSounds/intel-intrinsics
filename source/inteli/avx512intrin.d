@@ -16,3 +16,4 @@ module inteli.avx512intrin;
 // are yet to be capable of such interactions as are necessary.
 
 public import inteli.vpopcntdqintrin;
+public import inteli.vnniintrin;

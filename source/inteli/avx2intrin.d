@@ -27,8 +27,6 @@ import inteli.internals;
 // Pull in all previous instruction set intrinsics.
 public import inteli.avxintrin;
 
-nothrow @nogc:
-
 /// Compute the absolute value of packed signed 16-bit integers in `a`.
 __m256i _mm256_abs_epi16 (__m256i a) @trusted
 {
@@ -878,31 +876,30 @@ __m256i _mm256_bslli_epi128(ubyte CNT)(__m256i a) pure @trusted
     // lead to negligible performance benefit.
     static if (CNT >= 16)
         return _mm256_setzero_si256();
-    // TODO: Some odd issue on LDC release with this inline asm either not working or asserts are failing bizzarely.
-    // Compilation emissions will need to be looked into.
-    // else static if (LDC_with_AVX2)
-    // {
-    //     return cast(__m256i)__asm!(long4)("
-    //         vpslldq $2, $1, $1"
-    //     , "=v,v,I", a, CNT);
-    // }
+    else static if (LDC_with_AVX2)
+    {
+        return cast(__m256i)__asm!(long4)("
+            vpslldq $2, $1, $0"
+        , "=v,v,I", a, CNT);
+    }
     else static if (DMD_with_DSIMD_and_AVX2 || LDC_with_AVX2 || GDC_with_AVX2)
     {
         // No direct intrinsic for _mm256_bslli_epi128 as far as I'm aware on either LDC or GDC....
-        __m256i mask = _mm256_set1_epi64x(ulong.max);
-        ubyte* ptr = cast(ubyte*)&mask;
+        // NOTE There's a chance this could have problems with alignment.
+        align (32) ubyte[32] mask = void;
+        mask[] = ubyte.max;
 
         // This loop is a little nasty but it isn't a big deal.
         static foreach (ubyte i; 0..(16 - CNT))
         {
-            ptr[i + CNT] = i;
-            ptr[i + CNT + 16] = i;
+            mask[i + CNT] = i;
+            mask[i + CNT + 16] = i;
         }
 
         // We could do 2 byteshifts but this would double the latency on most systems.
         // This would, however, be more efficient if this function had to generate the mask at runtime.
 
-        return _mm256_shuffle_epi8(a, mask);
+        return _mm256_shuffle_epi8(a, *cast(__m256i*)&mask);
     }
     else
     {
@@ -929,22 +926,22 @@ __m256i _mm256_bsrli_epi128(ubyte CNT)(__m256i a) pure @trusted
     else static if (LDC_with_AVX2)
     {
         return cast(__m256i)__asm!(long4)("
-            vpsrldq $2, $1, $1"
+            vpsrldq $2, $1, $0"
         , "=v,v,I", a, CNT);
     }
     else static if (DMD_with_DSIMD_and_AVX2 || LDC_with_AVX2 || GDC_with_AVX2)
     {
         // Again, to my knowledge no intrinsic.
-        __m256i mask = _mm256_set1_epi64x(ulong.max);
-        ubyte* ptr = cast(ubyte*)&mask;
+        align (32) ubyte[32] mask = void;
+        mask[] = ubyte.max;
 
         static foreach (ubyte i; CNT..16)
         {
-            ptr[i - CNT] = i;
-            ptr[i - CNT + 16] = i;
+            mask[i - CNT] = i;
+            mask[i - CNT + 16] = i;
         }
 
-        return _mm256_shuffle_epi8(a, mask);
+        return _mm256_shuffle_epi8(a, *cast(__m256i*)&mask);
     }
     else
     {
@@ -2808,6 +2805,7 @@ unittest
 }
 
 // TODO __m256i _mm256_mulhi_epi16 (__m256i a, __m256i b) pure @safe
+// __builtin_ia32_pmulhw256
 // TODO __m256i _mm256_mulhi_epu16 (__m256i a, __m256i b) pure @safe
 // TODO __m256i _mm256_mulhrs_epi16 (__m256i a, __m256i b) pure @safe
 
@@ -3040,13 +3038,41 @@ unittest
     assert(R.array == correct);
 }
 
-
-
 // TODO __m256i _mm256_permute2x128_si256 (__m256i a, __m256i b, const int imm8) pure @safe
-// TODO __m256i _mm256_permute4x64_epi64 (__m256i a, const int imm8) pure @safe
 // TODO __m256d _mm256_permute4x64_pd (__m256d a, const int imm8) pure @safe
 // TODO __m256i _mm256_permutevar8x32_epi32 (__m256i a, __m256i idx) pure @safe
 // TODO __m256 _mm256_permutevar8x32_ps (__m256 a, __m256i idx) pure @safe
+
+/// Shuffle 64-bit integers in `a` across lanes using the control in `IMM8`, and return the results.
+__m256i _mm256_permute4x64_epi64(int IMM8)(__m256i a)
+{
+    // PERF GDC also this should be shuffle and blend on slow path.
+    // Trust me, I tried oh so hard to make this as efficient as possible but after
+    // 4 hours I cut my losses and decided it isn't worth it to keep banging my head over.
+    static if (LDC_with_AVX2)
+        return cast(__m256i)__asm!(long4)("
+            vpermq $2, $1, $0"
+        , "=v,v,n", a, IMM8);
+    else
+    {
+        __m256i b = a;
+        static foreach (i; 0..4)
+            a[i] = b[(IMM8 & (0b00000011 << (i * 2))) >> (i * 2)];
+        return a;
+    }
+}
+
+unittest
+{
+    __m256i a = _mm256_setr_epi64x(1, 2, 3, 4);
+    assert(_mm256_permute4x64_epi64!(0b00011011)(a).array == [4, 3, 2, 1]);
+}
+
+unittest
+{
+    __m256i a = _mm256_setr_epi64x(1, 2, 3, 4);
+    assert(_mm256_permute4x64_epi64!(0b00001100)(a).array == [1, 4, 1, 1]);
+}
 
 /// Compute the absolute differences of packed unsigned 8-bit integers in `a` and `b`, then horizontally sum each
 /// consecutive 8 differences to produce two unsigned 16-bit integers, and pack these unsigned 16-bit integers in the
