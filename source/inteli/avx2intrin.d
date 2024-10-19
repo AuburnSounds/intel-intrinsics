@@ -27,6 +27,8 @@ import inteli.internals;
 // Pull in all previous instruction set intrinsics.
 public import inteli.avxintrin;
 
+nothrow @nogc:
+
 /// Compute the absolute value of packed signed 16-bit integers in `a`.
 __m256i _mm256_abs_epi16 (__m256i a) @trusted
 {
