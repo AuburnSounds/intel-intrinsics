@@ -22,3 +22,9 @@
 .dub
 docs.json
 __dummy.html
+
+# Debug
+*.pdb
+
+# Could be *library* but we want to avoid possible conflicts.
+intel-intrinsics-test-library
