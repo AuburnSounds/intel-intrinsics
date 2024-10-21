@@ -129,6 +129,52 @@ __m64 _mm_add_si64 (__m64 a, __m64 b) pure @safe
     return a + b;
 }
 
+/// Add packed signed 32-bit integers in `a` and `b` using saturation, and return the results.
+/// #BONUS
+__m128i _mm_adds_epi32(__m128i a, __m128i b) pure
+{
+    const __m128i int_max = _mm_set1_epi32(0x7FFFFFFF);
+    const __m128i res = _mm_add_epi32(a, b);
+    const __m128i sign_bit = _mm_srli_epi32(a, 31);
+
+    __m128i sign_xor  = _mm_xor_si128(a, b);
+    __m128i overflow = _mm_andnot_si128(sign_xor, _mm_xor_si128(a, res));
+
+    __m128i saturated = _mm_add_epi32(int_max, sign_bit);
+
+    // PERF AVX512
+    // const __m128i overflow = _mm_ternarylogic_epi32(a, b, res, 0x42);
+    // _mm_mask_add_epi32(res, _mm_movepi32_mask(overflow), int_max, sign_bit);
+    static if (LDC_with_SSE41)
+    {
+        import inteli.smmintrin;
+        
+        return _mm_castps_si128(
+            _mm_blendv_ps(
+                _mm_castsi128_ps(res),
+                _mm_castsi128_ps(saturated),
+                _mm_castsi128_ps(overflow) 
+            ) 
+        );
+    }
+    else
+    {
+        const __m128i overflow_mask = _mm_srai_epi32(overflow, 31);
+        return _mm_or_si128(
+            _mm_and_si128(overflow_mask, saturated),
+            _mm_andnot_si128(overflow_mask, res)
+        );
+    }
+}
+
+unittest
+{
+    __m128i a = _mm_setr_epi32(int.max, 1, 2, int.min);
+    __m128i b = _mm_setr_epi32(1, 2, 3, -4);
+    assert(_mm_adds_epi32(a, b).array == [int.max, 3, 5, int.min]);
+}
+
+
 /// Add packed 16-bit integers in `a` and `b` using signed saturation.
 __m128i _mm_adds_epi16(__m128i a, __m128i b) pure @trusted
 {

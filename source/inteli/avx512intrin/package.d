@@ -15,5 +15,6 @@ module inteli.avx512intrin;
 // "unimplemented" nature in that, most unequivocably, they types which they do relate
 // are yet to be capable of such interactions as are necessary.
 
-public import inteli.vpopcntdqintrin;
-public import inteli.vnniintrin;
+public import inteli.avx512intrin.core; // AVX512F
+public import inteli.avx512intrin.vpopcntdq; // AVX512VPOPCNTDQ
+public import inteli.avx512intrin.vnni; // AVX512VNNI

@@ -239,7 +239,7 @@ unittest
 
 
 /// Blend packed single-precision (32-bit) floating-point elements from `a` and `b` using `mask`.
-__m128 _mm_blendv_ps (__m128 a, __m128 b, __m128 mask) @trusted
+__m128 _mm_blendv_ps (__m128 a, __m128 b, __m128 mask) pure @trusted
 {
     // PERF DMD
     static if (GDC_with_SSE41)

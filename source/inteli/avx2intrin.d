@@ -920,11 +920,9 @@ unittest
 // Shift 128-bit lanes in `a` right by `CNT` bytes while shifting in zeros, and return the results.
 __m256i _mm256_bsrli_epi128(ubyte CNT)(__m256i a) pure @trusted
 {
-    // PERF This is almost definitely not the best way to do this.
+    // PERF GDC
     static if (CNT >= 16)
         return _mm256_setzero_si256();
-    // TODO: Ensure this doesn't have the same problem as bslli, it appears not to,
-    // so I haven't commented it out; but this is definitely odd behavior. 
     else static if (LDC_with_AVX2)
     {
         return cast(__m256i)__asm!(long4)("
@@ -3561,7 +3559,6 @@ __m128i _mm_sllv_epi64(__m128i a, __m128i b) pure @trusted
         return cast(__m128i)__builtin_ia32_psllv2di(cast(long2)a, cast(long2)b);
     else
     {
-        // TODO: _mm_setr_epi64x should be a thing
         return _mm_setr_epi64(
             _mm_extract_epi64(a, 0) << _mm_extract_epi64(b, 0),
             _mm_extract_epi64(a, 1) << _mm_extract_epi64(b, 1)
