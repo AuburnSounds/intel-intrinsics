@@ -3388,7 +3388,36 @@ unittest
 
 
 // TODO __m256i _mm256_sllv_epi32 (__m256i a, __m256i count) pure @safe
-// TODO __m128i _mm_sllv_epi64 (__m128i a, __m128i count) pure @safe
+
+/// Shift packed 64-bit integers in `a` left by the amount specified by the corresponding element in `b` while shifting in zeros.
+__m128i _mm_sllv_epi64(__m128i a, __m128i b) pure @trusted
+{
+    static if (GDC_with_AVX2 || LDC_with_AVX2)
+        return cast(__m128i)__builtin_ia32_psllv2di(cast(long2)a, cast(long2)b);
+    else
+    {
+        // PERF arm64
+        // LDC: x86, it's not good, but at least it's branchless
+        long2 la = cast(long2)a;
+        long2 lb = cast(long2)b;
+        long2 R;
+        R.ptr[0] = cast(uint)(lb.array[0]) < 64 ? (la.array[0] << lb.array[0]) : 0;
+        R.ptr[1] = cast(uint)(lb.array[1]) < 64 ? (la.array[1] << lb.array[1]) : 0;
+        return cast(__m128i)R;
+    }
+}
+unittest
+{
+    __m128i A  = _mm_setr_epi64( -4,  6);
+    __m128i B1 = _mm_setr_epi64(  2,  0);
+    __m128i B2 = _mm_setr_epi64(-12, 64);
+    long2 R1 = cast(long2) _mm_sllv_epi64(A, B1);
+    long2 R2 = cast(long2) _mm_sllv_epi64(A, B2);
+    long[2] correct1 = [-16, 6];
+    long[2] correct2 = [  0, 0];
+    assert(R1.array == correct1);
+    assert(R2.array == correct2);
+}
 // TODO __m256i _mm256_sllv_epi64 (__m256i a, __m256i count) pure @safe
 
 /// Shift packed 16-bit integers in `a` right by `count` while shifting in sign bits.
