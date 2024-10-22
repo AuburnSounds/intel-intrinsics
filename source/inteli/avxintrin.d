@@ -4,6 +4,7 @@
 *
 * Copyright: Guillaume Piolat 2022.
 *            Johan Engelen 2022.
+*            cet 2024.
 * License:   $(LINK2 http://www.boost.org/LICENSE_1_0.txt, Boost License 1.0)
 */
 module inteli.avxintrin;
@@ -3300,7 +3301,7 @@ unittest
 }
 
 /// Broadcast 64-bit integer `a` to all elements of the return value.
-__m256i _mm256_set1_epi64x (long a)
+__m256i _mm256_set1_epi64x (long a) pure
 {
     return cast(__m256i)(long4(a));
 }
@@ -3459,7 +3460,7 @@ unittest
 }
 
 /// Set packed `__m256` vector with the supplied values.
-__m256 _mm256_setr_m128 (__m128 lo, __m128 hi)
+__m256 _mm256_setr_m128 (__m128 lo, __m128 hi) pure
 {
     return _mm256_set_m128(hi, lo);
 }
@@ -3473,7 +3474,7 @@ unittest
 }
 
 /// Set packed `__m256d` vector with the supplied values.
-__m256d _mm256_setr_m128d (__m128d lo, __m128d hi)
+__m256d _mm256_setr_m128d (__m128d lo, __m128d hi) pure
 {
     return _mm256_set_m128d(hi, lo);
 }
@@ -3487,7 +3488,7 @@ unittest
 }
 
 /// Set packed `__m256i` vector with the supplied values.
-__m256i _mm256_setr_m128i (__m128i lo, __m128i hi)
+__m256i _mm256_setr_m128i (__m128i lo, __m128i hi) pure
 {
     return _mm256_set_m128i(hi, lo);
 }
