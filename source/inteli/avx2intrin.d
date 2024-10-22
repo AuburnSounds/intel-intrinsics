@@ -3355,7 +3355,38 @@ unittest
 /// Shift 128-bit lanes in `a` left by `bytes` bytes while shifting in zeroes.
 alias _mm256_slli_si256 = _mm256_bslli_epi128;
 
-// TODO __m128i _mm_sllv_epi32 (__m128i a, __m128i count) pure @safe
+/// Shift packed 32-bit integers in `a` left by the amount specified by the corresponding element in `b` while shifting in zeroes.
+__m128i _mm_sllv_epi32(__m128i a, __m128i b) pure @trusted
+{
+    static if (GDC_with_AVX2 || LDC_with_AVX2)
+        return cast(__m128i)__builtin_ia32_psllv4si(cast(byte16)a, cast(byte16)b);
+    else
+    {
+        // UB if b[n] >= 32
+        __m128i R = _mm_setr_epi32(a.array[0] << b.array[0], 
+                                   a.array[1] << b.array[1], 
+                                   a.array[2] << b.array[2], 
+                                   a.array[3] << b.array[3]);
+
+        // Map large and negative shifts to 32
+        __m128i mm32 = _mm_set1_epi32(32);
+        __m128i shift = _mm_min_epu32(b, mm32);
+
+        // Set to 0 where the shift is >= 32
+        R = R & _mm_cmplt_epi32(shift, mm32);
+        return R;
+    }
+}
+unittest
+{
+    __m128i A     = _mm_setr_epi32(-1,  1, 4, -4);
+    __m128i shift = _mm_setr_epi32( 2, -6, 1, 32);
+    int4 R = cast(int4) _mm_sllv_epi32(A, shift);
+    int[4] expected = [ -4, 0, 8, 0 ];
+    assert(R.array == expected);
+}
+
+
 // TODO __m256i _mm256_sllv_epi32 (__m256i a, __m256i count) pure @safe
 // TODO __m128i _mm_sllv_epi64 (__m128i a, __m128i count) pure @safe
 // TODO __m256i _mm256_sllv_epi64 (__m256i a, __m256i count) pure @safe
