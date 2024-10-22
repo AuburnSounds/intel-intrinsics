@@ -3352,7 +3352,9 @@ unittest
     assert(D.array == expectedD);
 }
 
-// TODO __m256i _mm256_slli_si256 (__m256i a, const int imm8) pure @safe
+/// Shift 128-bit lanes in `a` left by `bytes` bytes while shifting in zeroes.
+alias _mm256_slli_si256 = _mm256_bslli_epi128;
+
 // TODO __m128i _mm_sllv_epi32 (__m128i a, __m128i count) pure @safe
 // TODO __m256i _mm256_sllv_epi32 (__m256i a, __m256i count) pure @safe
 // TODO __m128i _mm_sllv_epi64 (__m128i a, __m128i count) pure @safe
@@ -3729,7 +3731,9 @@ unittest
     assert(C.array == expectedC);
 }
 
-// TODO __m256i _mm256_srli_si256 (__m256i a, const int imm8) pure @safe
+/// Shift 128-bit lanes in `a` right by `bytes` bytes while shifting in zeroes.
+alias _mm256_srli_si256 = _mm256_bsrli_epi128;
+
 // TODO __m128i _mm_srlv_epi32 (__m128i a, __m128i count) pure @safe
 // TODO __m256i _mm256_srlv_epi32 (__m256i a, __m256i count) pure @safe
 // TODO __m128i _mm_srlv_epi64 (__m128i a, __m128i count) pure @safe
