@@ -4,6 +4,7 @@
 *
 * Copyright: Guillaume Piolat 2022-2024.
 *            Johan Engelen 2022.
+*            cet 2024.
 * License:   $(LINK2 http://www.boost.org/LICENSE_1_0.txt, Boost License 1.0)
 */
 module inteli.avx2intrin;
