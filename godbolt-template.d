@@ -265,8 +265,6 @@ version(LDC)
     else
         enum LDC_with_ARM32 = false;
 
-
-
     enum LDC_with_SSE   = __traits(targetHasFeature, "sse");
     enum LDC_with_SSE2  = __traits(targetHasFeature, "sse2");
     enum LDC_with_SSE3  = __traits(targetHasFeature, "sse3");
@@ -277,6 +275,26 @@ version(LDC)
     enum LDC_with_ARM64 = __traits(targetHasFeature, "neon");
     enum LDC_with_SSE41 = __traits(targetHasFeature, "sse4.1");
     enum LDC_with_SSE42 = __traits(targetHasFeature, "sse4.2");
+
+    enum LDC_with_AVX512F = __traits(targetHasFeature, "avx512f") && LDC_with_ia32_builtins;
+    enum LDC_with_AVX512CD = __traits(targetHasFeature, "avx512cd") && LDC_with_ia32_builtins;
+    enum LDC_with_AVX512ER = __traits(targetHasFeature, "avx512er") && LDC_with_ia32_builtins;
+    enum LDC_with_AVX512PF = __traits(targetHasFeature, "avx512pf") && LDC_with_ia32_builtins;
+    enum LDC_with_AVX512BW = __traits(targetHasFeature, "avx512bw") && LDC_with_ia32_builtins;
+    enum LDC_with_AVX512DQ = __traits(targetHasFeature, "avx512dq") && LDC_with_ia32_builtins;
+    enum LDC_with_AVX512VL = __traits(targetHasFeature, "avx512vl") && LDC_with_ia32_builtins;
+    enum LDC_with_AVX512IFMA = __traits(targetHasFeature, "avx512ifma") && LDC_with_ia32_builtins;
+    enum LDC_with_AVX512VBMI = __traits(targetHasFeature, "avx512vbmi") && LDC_with_ia32_builtins;
+    enum LDC_with_AVX512VBMI2 = __traits(targetHasFeature, "avx512vbmi2") && LDC_with_ia32_builtins;
+
+    enum LDC_with_AVX512FP16 = __traits(targetHasFeature, "avx512fp16") && LDC_with_ia32_builtins;
+    enum LDC_with_AVX512BF16 = __traits(targetHasFeature, "avx512bf16") && LDC_with_ia32_builtins;
+    enum LDC_with_AVX512VNNI = __traits(targetHasFeature, "avx512vnni") && LDC_with_ia32_builtins;
+    enum LDC_with_AVX512BITALG = __traits(targetHasFeature, "avx512bitalg") && LDC_with_ia32_builtins;
+
+    enum LDC_with_AVX512VP2INTERSECT = __traits(targetHasFeature, "avx512vp2intersect") && LDC_with_ia32_builtins;
+    enum LDC_with_AVX512VPOPCNTDQ = __traits(targetHasFeature, "avx512vpopcntdq") && LDC_with_ia32_builtins;
+
     alias shufflevectorLDC = shufflevector;
 }
 else
@@ -293,6 +311,25 @@ else
     
     enum LDC_with_SSE41 = false;
     enum LDC_with_SSE42 = false;
+
+    enum LDC_with_AVX512F = false;
+    enum LDC_with_AVX512CD = false;
+    enum LDC_with_AVX512ER = false;
+    enum LDC_with_AVX512PF = false;
+    enum LDC_with_AVX512BW = false;
+    enum LDC_with_AVX512DQ = false;
+    enum LDC_with_AVX512VL = false;
+    enum LDC_with_AVX512IFMA = false;
+    enum LDC_with_AVX512VBMI = false;
+    enum LDC_with_AVX512VBMI2 = false;
+
+    enum LDC_with_AVX512FP16 = false;
+    enum LDC_with_AVX512BF16 = false;
+    enum LDC_with_AVX512VNNI = false;
+    enum LDC_with_AVX512BITALG = false;
+
+    enum LDC_with_AVX512VP2INTERSECT = false;
+    enum LDC_with_AVX512VPOPCNTDQ = false;
 }
 
 enum LDC_with_ARM = LDC_with_ARM32 | LDC_with_ARM64;
