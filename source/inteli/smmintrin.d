@@ -39,6 +39,33 @@ enum int _MM_FROUND_TRUNC     = (_MM_FROUND_RAISE_EXC | _MM_FROUND_TO_ZERO);
 enum int _MM_FROUND_RINT      = (_MM_FROUND_RAISE_EXC | _MM_FROUND_CUR_DIRECTION);
 enum int _MM_FROUND_NEARBYINT = (_MM_FROUND_NO_EXC    | _MM_FROUND_CUR_DIRECTION);
 
+/// Add packed signed 32-bit integers in `a` and `b` using saturation.
+/// #BONUS
+__m128i _mm_adds_epi32(__m128i a, __m128i b) pure
+{
+    // PERF: ARM64 should use 2x vqadd_s32
+    static if (LDC_with_saturated_intrinsics)
+        return cast(__m128i)inteli_llvm_adds!int4(cast(int4)a, cast(int4)b);
+    else
+    {
+        __m128i int_max = _mm_set1_epi32(0x7FFFFFFF);
+        __m128i res = _mm_add_epi32(a, b);
+        __m128i sign_bit = _mm_srli_epi32(a, 31);
+        __m128i sign_xor  = _mm_xor_si128(a, b);
+        __m128i overflow = _mm_andnot_si128(sign_xor, _mm_xor_si128(a, res));
+        __m128i saturated = _mm_add_epi32(int_max, sign_bit);
+        return cast(__m128i) _mm_blendv_ps(cast(__m128)res, 
+            cast(__m128)saturated, 
+            cast(__m128)overflow);
+    }
+}
+unittest
+{
+    __m128i a = _mm_setr_epi32(int.max, 1, 2, int.min);
+    __m128i b = _mm_setr_epi32(1, 2, 3, -4);
+    assert(_mm_adds_epi32(a, b).array == [int.max, 3, 5, int.min]);
+}
+
 /// Blend packed 16-bit integers from `a` and `b` using control mask `imm8`, and store the results.
 // Note: changed signature, GDC needs a compile-time value for imm8.
 __m128i _mm_blend_epi16(int imm8)(__m128i a, __m128i b) pure @trusted
@@ -259,7 +286,14 @@ __m128 _mm_blendv_ps (__m128 a, __m128 b, __m128 mask) pure @trusted
     }
     else
     {
-        __m128 r; // PERF =void;
+        // LDC x86_64: Compiles to 5 instr since LDC 1.27 -O2
+        // If lack of optimization, consider replacing by:
+        //  __m128i overflow_mask = _mm_srai_epi32(overflow, 31);
+        //    return _mm_or_si128(
+        //        _mm_and_si128(overflow_mask, saturated),
+        //        _mm_andnot_si128(overflow_mask, res)
+        // LLVM makes almost the same sequence when optimized.
+        __m128 r;
         int4 lmask = cast(int4)mask;
         for (int n = 0; n < 4; ++n)
         {
