@@ -4,6 +4,7 @@
 *
 * Copyright: Guillaume Piolat 2021.
 *            Johan Engelen 2021.
+*            cet 2024.
 * License:   $(LINK2 http://www.boost.org/LICENSE_1_0.txt, Boost License 1.0)
 */
 module inteli.smmintrin;
@@ -238,7 +239,7 @@ unittest
 
 
 /// Blend packed single-precision (32-bit) floating-point elements from `a` and `b` using `mask`.
-__m128 _mm_blendv_ps (__m128 a, __m128 b, __m128 mask) @trusted
+__m128 _mm_blendv_ps (__m128 a, __m128 b, __m128 mask) pure @trusted
 {
     // PERF DMD
     static if (GDC_with_SSE41)
@@ -1991,7 +1992,7 @@ unittest
 /// Load 128-bits of integer data from memory using a non-temporal memory hint. 
 /// `mem_addr` must be aligned on a 16-byte boundary or a general-protection 
 /// exception may be generated.
-__m128i _mm_stream_load_si128 (__m128i * mem_addr) pure @trusted
+__m128i _mm_stream_load_si128 (void* mem_addr) pure @trusted
 {
     // PERF DMD D_SIMD
     static if (GDC_with_SSE41)
@@ -2004,11 +2005,11 @@ __m128i _mm_stream_load_si128 (__m128i * mem_addr) pure @trusted
         enum ir = `
             %r = load <4 x i32>, <4 x i32>* %0, !nontemporal !0
             ret <4 x i32> %r`;
-        return cast(__m128i) LDCInlineIREx!(prefix, ir, "", int4, int4*)(mem_addr);
+        return cast(__m128i) LDCInlineIREx!(prefix, ir, "", int4, int4*)(cast(__m128i*)mem_addr);
     }
     else
     {
-        return *mem_addr; // regular move instead
+        return *cast(__m128i*)mem_addr; // regular move instead
     }
 }
 unittest
