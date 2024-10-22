@@ -855,8 +855,60 @@ unittest
     assert(B.array == correct);
 }
 
-// TODO __m256i _mm256_bslli_epi128 (__m256i a, const int imm8) pure @safe
-// TODO __m256i _mm256_bsrli_epi128 (__m256i a, const int imm8) pure @safe
+
+/// Shift 128-bit lanes in `a` left by `bytes` bytes while shifting in zeroes.
+__m256i _mm256_bslli_epi128(ubyte bytes)(__m256i a) pure @trusted
+{
+    // Note: can't use __builtin_ia32_pslldqi256 with GDC, wants an immediate
+    //       and even string mixin do not make it
+    // PERF: hence GDC AVX2 doesn't use the instruction, and nothing inlines very well in GDC either
+    static if (bytes >= 16)
+    {
+        return _mm256_setzero_si256();
+    }
+    else static if (LDC_with_AVX2)
+    {
+        return cast(__m256i)__asm!(long4)("vpslldq $2, $1, $0", "=v,v,I", a, bytes);
+    }
+    else // split
+    {
+        __m128i lo = _mm_slli_si128!bytes(_mm256_extractf128_si256!0(a));
+        __m128i hi = _mm_slli_si128!bytes(_mm256_extractf128_si256!1(a));
+        return _mm256_set_m128i(hi, lo);
+    }
+}
+unittest
+{
+    __m256i a = _mm256_setr_epi8(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32);
+    assert(_mm256_bslli_epi128!7(a).array == [72057594037927936, 650777868590383874, 1224979098644774912, 1808220633999610642]);
+}
+
+/// Shift 128-bit lanes in `a` right by `bytes` bytes while shifting in zeroes.
+__m256i _mm256_bsrli_epi128(ubyte bytes)(__m256i a) pure @trusted
+{
+    // Note: can't use __builtin_ia32_psrldqi256 with GDC, wants an immediate
+    //       and even string mixin do not make it
+    // PERF: hence GDC AVX2 doesn't use the instruction, and nothing inlines very well in GDC either
+    static if (bytes >= 16)
+    {
+        return _mm256_setzero_si256();
+    }
+    else static if (LDC_with_AVX2)
+    {
+        return cast(__m256i)__asm!(long4)("vpsrldq $2, $1, $0", "=v,v,I", a, bytes);
+    }
+    else // split
+    {
+        __m128i lo = _mm_srli_si128!bytes(_mm256_extractf128_si256!0(a));
+        __m128i hi = _mm_srli_si128!bytes(_mm256_extractf128_si256!1(a));
+        return _mm256_set_m128i(hi, lo);
+    }
+}
+unittest
+{
+    __m256i a = _mm256_setr_epi8(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32);
+    assert(_mm256_bsrli_epi128!7(a).array == [1084818905618843912, 16, 2242261671028070680, 32]);
+}
 
 /// Compare packed 16-bit integers in `a` and `b` for equality.
 __m256i _mm256_cmpeq_epi16 (__m256i a, __m256i b) pure @trusted
