@@ -1,15 +1,25 @@
 Advice:
 
+- Correctness with original semantics. Historically contributions to this repositery give tons of work to the maintainer because of insufficient reading of this document and general lack of care for correctness.
+  * If your work is not high-quality it will be auto-closed, because fixing it may take more time than creating it.
+  * Follow the rules here that stem from experience implementing SIMD intrinsics, a library that shall be very reliable.
+
+Here are the source for semantics:
+  - Intel Intrinsics Guide
+  - When the guide and the instruction disagree, we look at what C++ compilers do 
+    for this intrinsic.
+
 - **GODBOLT EVERYTHING YOU COMMIT**
   * Use `godbolt-template.d` and modify to your wished
   * GDC (version 12 or later) with -mavx -mavx2 (the template doesn't build without -mavx)
   * LDC (version 1.24+ or later) with -mtriple arm64, -O2, -O0, -mattr=+avx2, etc. 
 
 
-- Do intrinsics **one by one**, not all at once. This is **very** detailed work, it's not possible nor desirable to go fast while writing intrinsics. 
+- I implore you to do intrinsics **one by one**, not all at once. This is **very** detailed work, it's not possible nor desirable to go fast while writing intrinsics. 
    * Please don't go fast. 
    * Please make small PR because there is a lot of context to communicate.
    * Get pre-approval before working on something big.
+   * If you're a first time contributor, PR with only one intrinsic.
 
 - Add PERF comment anywhere you feel that something could be done faster in a supported combination: DMD D_SIMD, LDC x86_64, LDC arm64, LDC x86, GDC x86_64, with or without optimizations, with or without instruction support... 
   * If this is supposed returns a SIMD literal, does it inline?
