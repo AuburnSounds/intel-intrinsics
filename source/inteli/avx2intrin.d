@@ -3356,21 +3356,21 @@ unittest
 alias _mm256_slli_si256 = _mm256_bslli_epi128;
 
 /// Shift packed 32-bit integers in `a` left by the amount specified by the corresponding element in `b` while shifting in zeroes.
-__m128i _mm_sllv_epi32(__m128i a, __m128i b) pure @trusted
+__m128i _mm_sllv_epi32(__m128i a, __m128i count) pure @trusted
 {
     static if (GDC_with_AVX2 || LDC_with_AVX2)
-        return cast(__m128i)__builtin_ia32_psllv4si(cast(byte16)a, cast(byte16)b);
+        return cast(__m128i)__builtin_ia32_psllv4si(cast(byte16)a, cast(byte16)count);
     else
     {
         // UB if b[n] >= 32
-        __m128i R = _mm_setr_epi32(a.array[0] << b.array[0], 
-                                   a.array[1] << b.array[1], 
-                                   a.array[2] << b.array[2], 
-                                   a.array[3] << b.array[3]);
+        __m128i R = _mm_setr_epi32(a.array[0] << count.array[0], 
+                                   a.array[1] << count.array[1], 
+                                   a.array[2] << count.array[2], 
+                                   a.array[3] << count.array[3]);
 
         // Map large and negative shifts to 32
         __m128i mm32 = _mm_set1_epi32(32);
-        __m128i shift = _mm_min_epu32(b, mm32);
+        __m128i shift = _mm_min_epu32(count, mm32);
 
         // Set to 0 where the shift is >= 32
         R = R & _mm_cmplt_epi32(shift, mm32);
@@ -3390,16 +3390,18 @@ unittest
 // TODO __m256i _mm256_sllv_epi32 (__m256i a, __m256i count) pure @safe
 
 /// Shift packed 64-bit integers in `a` left by the amount specified by the corresponding element in `b` while shifting in zeros.
-__m128i _mm_sllv_epi64(__m128i a, __m128i b) pure @trusted
+__m128i _mm_sllv_epi64(__m128i a, __m128i count) pure @trusted
 {
     static if (GDC_with_AVX2 || LDC_with_AVX2)
-        return cast(__m128i)__builtin_ia32_psllv2di(cast(long2)a, cast(long2)b);
+    {
+        return cast(__m128i)__builtin_ia32_psllv2di(cast(long2)a, cast(long2)count);
+    }
     else
     {
         // PERF arm64
         // LDC: x86, it's not good, but at least it's branchless
         long2 la = cast(long2)a;
-        long2 lb = cast(long2)b;
+        long2 lb = cast(long2)count;
         long2 R;
         R.ptr[0] = cast(uint)(lb.array[0]) < 64 ? (la.array[0] << lb.array[0]) : 0;
         R.ptr[1] = cast(uint)(lb.array[1]) < 64 ? (la.array[1] << lb.array[1]) : 0;
@@ -3796,7 +3798,39 @@ alias _mm256_srli_si256 = _mm256_bsrli_epi128;
 
 // TODO __m128i _mm_srlv_epi32 (__m128i a, __m128i count) pure @safe
 // TODO __m256i _mm256_srlv_epi32 (__m256i a, __m256i count) pure @safe
-// TODO __m128i _mm_srlv_epi64 (__m128i a, __m128i count) pure @safe
+
+/// Shift packed 64-bit integers in `a` left by the amount specified by the corresponding element in `count` while shifting in zeroes.
+__m128i _mm_srlv_epi64(__m128i a, __m128i count) pure @trusted
+{
+    static if (GDC_or_LDC_with_AVX2)
+    {
+        return cast(__m128i)__builtin_ia32_psrlv2di(cast(long2)a, cast(long2)count);
+    }
+    else
+    {
+        // PERF arm64 bad
+        // LDC: x86, it's not good, but at least it's branchless
+        long2 la = cast(long2)a;
+        long2 lb = cast(long2)count;
+        long2 R;
+        R.ptr[0] = cast(ulong)(lb.array[0]) < 64 ? (la.array[0] >>> lb.array[0]) : 0;
+        R.ptr[1] = cast(ulong)(lb.array[1]) < 64 ? (la.array[1] >>> lb.array[1]) : 0;
+        return cast(__m128i)R;
+    }
+}
+unittest
+{
+    __m128i A  = _mm_setr_epi64( -4,  6);
+    __m128i B1 = _mm_setr_epi64(  2,  0);
+    __m128i B2 = _mm_setr_epi64(-12, 64);
+    long2 R1 = cast(long2) _mm_srlv_epi64(A, B1);
+    long2 R2 = cast(long2) _mm_srlv_epi64(A, B2);
+    long[2] correct1 = [ 4611686018427387903, 6];
+    long[2] correct2 = [          0, 0];
+    assert(R1.array == correct1);
+    assert(R2.array == correct2);
+}
+
 // TODO __m256i _mm256_srlv_epi64 (__m256i a, __m256i count) pure @safe
 
 /// Load 256-bits of integer data from memory using a non-temporal memory hint.
