@@ -3029,8 +3029,36 @@ unittest
 }
 
 
-// TODO __m256i _mm256_shuffle_epi32 (__m256i a, const int imm8) pure @safe
-// TODO __m256i _mm256_shuffle_epi8 (__m256i a, __m256i b) pure @safe
+/// Shuffle 8-bit integers in `a` within 128-bit lanes according to shuffle control mask in the 
+/// corresponding 8-bit element of `b`.
+__m256i _mm256_shuffle_epi8(__m256i a, __m256i b) pure @trusted
+{
+    static if (GDC_with_AVX2)
+        return cast(__m256i)__builtin_ia32_pshufb256(cast(ubyte32)a, cast(ubyte32)b);
+    else static if (LDC_with_AVX2)
+        return cast(__m256i)__builtin_ia32_pshufb256(cast(byte32)a, cast(byte32)b);
+    else
+    {
+        auto hi = _mm_shuffle_epi8(_mm256_extractf128_si256!0(a), _mm256_extractf128_si256!0(b));
+        auto lo = _mm_shuffle_epi8(_mm256_extractf128_si256!1(a), _mm256_extractf128_si256!1(b));
+        return _mm256_setr_m128i(hi, lo);
+    }
+}
+unittest
+{
+    __m256i a = _mm256_set_epi8(32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1);
+    __m256i b = _mm256_set_epi8(0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1);
+
+    __m256i expected = _mm256_setr_epi8(
+        2, 2, 2, 2, 2, 2, 2, 2, 
+        1, 1, 1, 1, 1, 1, 1, 1, 
+        18, 18, 18, 18, 18, 18, 18, 18, 
+        17, 17, 17, 17, 17, 17, 17, 17
+    );
+
+    assert(_mm256_shuffle_epi8(a, b).array == expected.array);
+}
+
 // TODO __m256i _mm256_shufflehi_epi16 (__m256i a, const int imm8) pure @safe
 // TODO __m256i _mm256_shufflelo_epi16 (__m256i a, const int imm8) pure @safe
 
