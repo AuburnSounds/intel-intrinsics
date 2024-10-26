@@ -3028,6 +3028,35 @@ unittest
     assert(R.array == correct);
 }
 
+/// Shuffle 32-bit integers in `a` within 128-bit lanes using the control in `imm8`, and return the results.
+__m256i _mm256_shuffle_epi32(int imm8)(__m256i a) pure @trusted
+{
+    static if (GDC_with_AVX2)
+        return cast(__m256i)__builtin_ia32_pshufd256(cast(int8)a, imm8);
+    else static if (LDC_with_AVX2)
+    {
+        return cast(__m256i)shufflevectorLDC!(int8,
+            (imm8 >> 0) & 3,
+            (imm8 >> 2) & 3,
+            (imm8 >> 4) & 3,
+            (imm8 >> 6) & 3,
+            ((imm8 >> 0) & 3) + 4,
+            ((imm8 >> 2) & 3) + 4,
+            ((imm8 >> 4) & 3) + 4,
+            ((imm8 >> 6) & 3) + 4)(cast(int8)a, cast(int8)a);
+    }
+    else
+    {
+        auto hi = _mm_shuffle_epi32!imm8(_mm256_extractf128_si256!0(a));
+        auto lo = _mm_shuffle_epi32!imm8(_mm256_extractf128_si256!1(a));
+        return _mm256_setr_m128i(hi, lo);
+    }
+}
+unittest
+{
+    __m256i a = _mm256_set_epi32(32, 31, 30, 29, 28, 27, 26, 25);
+    assert(_mm256_shuffle_epi32!255(a).array == [120259084316L, 120259084316, 137438953504, 137438953504]);
+}
 
 /// Shuffle 8-bit integers in `a` within 128-bit lanes according to shuffle control mask in the 
 /// corresponding 8-bit element of `b`.
