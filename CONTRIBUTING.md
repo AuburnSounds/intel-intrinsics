@@ -14,6 +14,7 @@ Here are the source for semantics:
   * GDC (version 12 or later) with -mavx -mavx2 (the template doesn't build without -mavx)
   * LDC (version 1.24+ or later) with -mtriple arm64, -O2, -O0, -mattr=+avx2, etc. 
 
+- Do not add AVX-512 or AVX-10 intrinsics, they are out of scope.
 
 - I implore you to do intrinsics **one by one**, not all at once. This is **very** detailed work, it's not possible nor desirable to go fast while writing intrinsics. 
    * Please don't go fast. 
