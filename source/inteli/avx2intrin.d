@@ -2981,7 +2981,37 @@ unittest
 
 
 // TODO __m256i _mm256_permute2x128_si256 (__m256i a, __m256i b, const int imm8) pure @safe
-// TODO __m256i _mm256_permute4x64_epi64 (__m256i a, const int imm8) pure @safe
+
+/// Shuffle 64-bit integers in `a` across lanes using the control in `imm8`.
+__m256i _mm256_permute4x64_epi64(int imm8)(__m256i a) pure @trusted
+{
+    static if (GDC_with_AVX2)
+        return cast(__m256i) __builtin_ia32_permdi256(a, imm8);
+    else static if (LDC_with_optimizations)
+    {
+        return shufflevector!(long4, (imm8 >> 0) & 3,
+                              (imm8 >> 2) & 3,
+                              (imm8 >> 4) & 3,
+                              (imm8 >> 6) & 3)(a, a);
+    }
+    else
+    {
+        __m256i b = a;
+        static foreach (i; 0..4)
+            a[i] = b[(imm8 & (0b00000011 << (i * 2))) >> (i * 2)];
+        return a;
+    }
+}
+unittest
+{
+    __m256i A = _mm256_setr_epi64x(1, 2, 3, 4);
+    assert(_mm256_permute4x64_epi64!(0b00011011)(A).array == [4, 3, 2, 1]);
+
+    A = _mm256_setr_epi64x(1, 2, 3, 4);
+    assert(_mm256_permute4x64_epi64!(0b00001100)(A).array == [1, 4, 1, 1]);
+}
+
+
 // TODO __m256d _mm256_permute4x64_pd (__m256d a, const int imm8) pure @safe
 // TODO __m256i _mm256_permutevar8x32_epi32 (__m256i a, __m256i idx) pure @safe
 // TODO __m256 _mm256_permutevar8x32_ps (__m256 a, __m256i idx) pure @safe
