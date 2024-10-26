@@ -293,7 +293,7 @@ version(LDC)
         enum LDC_with_AVX512VBMI = __traits(targetHasFeature, "avx512vbmi") && LDC_with_ia32_builtins;
         enum LDC_with_AVX512VBMI2 = __traits(targetHasFeature, "avx512vbmi2") && LDC_with_ia32_builtins;
 
-        enum LDC_with_AVX512FP16 = __traits(targetHasFeature, "avx512fp16") && LDC_with_ia32_builtins;
+        enum LDC_with_AVX512FP16 = (__VERSION__ > 2101) && __traits(targetHasFeature, "avx512fp16") && LDC_with_ia32_builtins;
         enum LDC_with_AVX512BF16 = __traits(targetHasFeature, "avx512bf16") && LDC_with_ia32_builtins;
         enum LDC_with_AVX512VNNI = __traits(targetHasFeature, "avx512vnni") && LDC_with_ia32_builtins;
         enum LDC_with_AVX512BITALG = __traits(targetHasFeature, "avx512bitalg") && LDC_with_ia32_builtins;
