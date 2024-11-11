@@ -2548,7 +2548,7 @@ __m256d _mm256_permute2f128_pd(int imm8)(__m256d a, __m256d b) pure @safe
     return cast(__m256d) _mm256_permute2f128_si256!imm8(cast(__m256i)a, cast(__m256i)b);
 }
 ///ditto
-__m256d _mm256_permute2f128_ps(int imm8)(__m256 a, __m256 b) pure @safe
+__m256 _mm256_permute2f128_ps(int imm8)(__m256 a, __m256 b) pure @safe
 {
     return cast(__m256) _mm256_permute2f128_si256!imm8(cast(__m256i)a, cast(__m256i)b);
 }
