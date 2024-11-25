@@ -180,28 +180,10 @@ version(LDC)
         enum LDC_with_SSE42 = false;
         enum LDC_with_CRC32 = false;
         enum LDC_with_AVX = false;
+        enum LDC_with_F16C = false;
         enum LDC_with_AVX2 = false;
         enum LDC_with_SHA = false;
         enum LDC_with_BMI2 = false;
-
-        enum LDC_with_AVX512F = false;
-        enum LDC_with_AVX512CD = false;
-        enum LDC_with_AVX512ER = false;
-        enum LDC_with_AVX512PF = false;
-        enum LDC_with_AVX512BW = false;
-        enum LDC_with_AVX512DQ = false;
-        enum LDC_with_AVX512VL = false;
-        enum LDC_with_AVX512IFMA = false;
-        enum LDC_with_AVX512VBMI = false;
-        enum LDC_with_AVX512VBMI2 = false;
-
-        enum LDC_with_AVX512FP16 = false;
-        enum LDC_with_AVX512BF16 = false;
-        enum LDC_with_AVX512VNNI = false;
-        enum LDC_with_AVX512BITALG = false;
-
-        enum LDC_with_AVX512VP2INTERSECT = false;
-        enum LDC_with_AVX512VPOPCNTDQ = false;
     }
     else version(AArch64)
     {
@@ -217,28 +199,10 @@ version(LDC)
         enum LDC_with_SSE42 = false;
         enum LDC_with_CRC32 = false;
         enum LDC_with_AVX = false;
+        enum LDC_with_F16C = false;
         enum LDC_with_AVX2 = false;
         enum LDC_with_SHA = false;
         enum LDC_with_BMI2 = false;
-
-        enum LDC_with_AVX512F = false;
-        enum LDC_with_AVX512CD = false;
-        enum LDC_with_AVX512ER = false;
-        enum LDC_with_AVX512PF = false;
-        enum LDC_with_AVX512BW = false;
-        enum LDC_with_AVX512DQ = false;
-        enum LDC_with_AVX512VL = false;
-        enum LDC_with_AVX512IFMA = false;
-        enum LDC_with_AVX512VBMI = false;
-        enum LDC_with_AVX512VBMI2 = false;
-
-        enum LDC_with_AVX512FP16 = false;
-        enum LDC_with_AVX512BF16 = false;
-        enum LDC_with_AVX512VNNI = false;
-        enum LDC_with_AVX512BITALG = false;
-
-        enum LDC_with_AVX512VP2INTERSECT = false;
-        enum LDC_with_AVX512VPOPCNTDQ = false;
     }
     else static if (some_x86)
     {
@@ -276,30 +240,10 @@ version(LDC)
         }
 
         enum LDC_with_AVX = __traits(targetHasFeature, "avx") && LDC_with_ia32_builtins;
+        enum LDC_with_F16C = __traits(targetHasFeature, "f16c") && LDC_with_ia32_builtins;
         enum LDC_with_AVX2 = __traits(targetHasFeature, "avx2") && LDC_with_ia32_builtins;
         enum LDC_with_SHA = __traits(targetHasFeature, "sha") && LDC_with_ia32_builtins;
         enum LDC_with_BMI2 = __traits(targetHasFeature, "bmi2") && LDC_with_ia32_builtins;
-
-        // All of the feature flags at https://github.com/cetio/sim-d/blob/main/source/simd/features.d
-        // but I haven't added them because I don't feel inclined, these suffice.
-        enum LDC_with_AVX512F = __traits(targetHasFeature, "avx512f") && LDC_with_ia32_builtins;
-        enum LDC_with_AVX512CD = __traits(targetHasFeature, "avx512cd") && LDC_with_ia32_builtins;
-        enum LDC_with_AVX512ER = __traits(targetHasFeature, "avx512er") && LDC_with_ia32_builtins;
-        enum LDC_with_AVX512PF = __traits(targetHasFeature, "avx512pf") && LDC_with_ia32_builtins;
-        enum LDC_with_AVX512BW = __traits(targetHasFeature, "avx512bw") && LDC_with_ia32_builtins;
-        enum LDC_with_AVX512DQ = __traits(targetHasFeature, "avx512dq") && LDC_with_ia32_builtins;
-        enum LDC_with_AVX512VL = __traits(targetHasFeature, "avx512vl") && LDC_with_ia32_builtins;
-        enum LDC_with_AVX512IFMA = __traits(targetHasFeature, "avx512ifma") && LDC_with_ia32_builtins;
-        enum LDC_with_AVX512VBMI = __traits(targetHasFeature, "avx512vbmi") && LDC_with_ia32_builtins;
-        enum LDC_with_AVX512VBMI2 = __traits(targetHasFeature, "avx512vbmi2") && LDC_with_ia32_builtins;
-
-        enum LDC_with_AVX512FP16 = (__VERSION__ > 2101) && __traits(targetHasFeature, "avx512fp16") && LDC_with_ia32_builtins;
-        enum LDC_with_AVX512BF16 = __traits(targetHasFeature, "avx512bf16") && LDC_with_ia32_builtins;
-        enum LDC_with_AVX512VNNI = __traits(targetHasFeature, "avx512vnni") && LDC_with_ia32_builtins;
-        enum LDC_with_AVX512BITALG = __traits(targetHasFeature, "avx512bitalg") && LDC_with_ia32_builtins;
-
-        enum LDC_with_AVX512VP2INTERSECT = __traits(targetHasFeature, "avx512vp2intersect") && LDC_with_ia32_builtins;
-        enum LDC_with_AVX512VPOPCNTDQ = __traits(targetHasFeature, "avx512vpopcntdq") && LDC_with_ia32_builtins;
     }
     else
     {
@@ -314,28 +258,10 @@ version(LDC)
         enum LDC_with_SSE42 = false;
         enum LDC_with_CRC32 = false;
         enum LDC_with_AVX = false;
+        enum LDC_with_F16C = false;
         enum LDC_with_AVX2 = false;
         enum LDC_with_SHA = false;
         enum LDC_with_BMI2 = false;
-
-        enum LDC_with_AVX512F = false;
-        enum LDC_with_AVX512CD = false;
-        enum LDC_with_AVX512ER = false;
-        enum LDC_with_AVX512PF = false;
-        enum LDC_with_AVX512BW = false;
-        enum LDC_with_AVX512DQ = false;
-        enum LDC_with_AVX512VL = false;
-        enum LDC_with_AVX512IFMA = false;
-        enum LDC_with_AVX512VBMI = false;
-        enum LDC_with_AVX512VBMI2 = false;
-
-        enum LDC_with_AVX512FP16 = false;
-        enum LDC_with_AVX512BF16 = false;
-        enum LDC_with_AVX512VNNI = false;
-        enum LDC_with_AVX512BITALG = false;
-
-        enum LDC_with_AVX512VP2INTERSECT = false;
-        enum LDC_with_AVX512VPOPCNTDQ = false;
     }
 
     // Should we use inline x86 assembly with DMD syntax, in LDC?
@@ -368,28 +294,10 @@ else
     enum LDC_with_SSE42 = false;
     enum LDC_with_CRC32 = false;
     enum LDC_with_AVX = false;
+    enum LDC_with_F16C = false;
     enum LDC_with_AVX2 = false;
     enum LDC_with_SHA = false;
     enum LDC_with_BMI2 = false;
-
-    enum LDC_with_AVX512F = false;
-    enum LDC_with_AVX512CD = false;
-    enum LDC_with_AVX512ER = false;
-    enum LDC_with_AVX512PF = false;
-    enum LDC_with_AVX512BW = false;
-    enum LDC_with_AVX512DQ = false;
-    enum LDC_with_AVX512VL = false;
-    enum LDC_with_AVX512IFMA = false;
-    enum LDC_with_AVX512VBMI = false;
-    enum LDC_with_AVX512VBMI2 = false;
-
-    enum LDC_with_AVX512FP16 = false;
-    enum LDC_with_AVX512BF16 = false;
-    enum LDC_with_AVX512VNNI = false;
-    enum LDC_with_AVX512BITALG = false;
-
-    enum LDC_with_AVX512VP2INTERSECT = false;
-    enum LDC_with_AVX512VPOPCNTDQ = false;
 
     enum LDC_with_InlineIREx = false;
     enum bool LDC_with_optimizations = false;

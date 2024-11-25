@@ -1,5 +1,5 @@
 /**
-* AVX intrinsics.
+* AVX and FP16C intrinsics.
 * https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#techs=AVX
 *
 * Copyright: Guillaume Piolat 2022.
@@ -10,13 +10,19 @@
 module inteli.avxintrin;
 
 // AVX instructions
-// https://software.intel.com/sites/landingpage/IntrinsicsGuide/#techs=AVX
+// https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#avxnewtechs=AVX
 // Note: this header will work whether you have AVX enabled or not.
 // With LDC, use "dflags-ldc": ["-mattr=+avx"] or equivalent to actively
 // generate AVX instructions.
 // With GDC, use "dflags-gdc": ["-mavx"] or equivalent to actively
 // generate AVX instructions.
 
+// This header also implements FP16C intrinsics.
+// https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#avxnewtechs=F16C
+// With LDC, use "dflags-ldc": ["-mattr=+f16c"] or equivalent to actively
+// generate F16C instructions.
+// With GDC, use "dflags-gdc": ["-mf16c"] or equivalent to actively
+// generate F16C instructions.
 
 /// IMPORTANT NOTE ABOUT MASK LOAD/STORE:
 ///
@@ -4889,3 +4895,84 @@ unittest
     long[4] correct = [-1, 99, 0, 0];
     assert(R.array == correct);
 }
+
+
+// F16C start here
+
+/// Convert 4 packed half-precision (16-bit) floating-point elements 
+/// in `a` to packed single-precision (32-bit) floating-point elements.
+/// Note: Only lowest 64-bit of input considered.
+///       Preserve infinities, sign of zeroes, and NaN-ness.
+__m128 _mm_cvtph_ps(__m128i a) pure @trusted
+{
+    short8 sa = cast(short8)a;
+
+    // PERF F16C actual instruction
+    {
+        // Reference: stb_image_resize2.h has F16C emulation.
+        // See: 
+        // Originated from: 
+        __m128i mask_nosign      = _mm_set1_epi32(0x7fff);
+        __m128i smallest_normal  = _mm_set1_epi32(0x0400);
+        __m128i infinity         = _mm_set1_epi32(0x7c00);
+        __m128i expadjust_normal = _mm_set1_epi32((127 - 15) << 23);
+        __m128i magic_denorm     = _mm_set1_epi32(113 << 23);
+        __m128i i = a;
+        __m128i h = _mm_unpacklo_epi16 ( i, _mm_setzero_si128() );
+        __m128i mnosign     = mask_nosign;
+        __m128i eadjust     = expadjust_normal;
+        __m128i smallest    = smallest_normal;
+        __m128i infty       = infinity;
+        __m128i expmant     = _mm_and_si128(mnosign, h);
+        __m128i justsign    = _mm_xor_si128(h, expmant);
+        __m128i b_notinfnan = _mm_cmpgt_epi32(infty, expmant);
+        __m128i b_isdenorm  = _mm_cmpgt_epi32(smallest, expmant);
+        __m128i shifted     = _mm_slli_epi32(expmant, 13);
+        __m128i adj_infnan  = _mm_andnot_si128(b_notinfnan, eadjust);
+        __m128i adjusted    = _mm_add_epi32(eadjust, shifted);
+        __m128i den1        = _mm_add_epi32(shifted, magic_denorm);
+        __m128i adjusted2   = _mm_add_epi32(adjusted, adj_infnan);
+        __m128  den2        = _mm_sub_ps(cast(__m128)den1, *cast(const(__m128)*)&magic_denorm);
+        __m128  adjusted3   = _mm_and_ps(den2, cast(__m128)b_isdenorm);
+        __m128  adjusted4   = _mm_andnot_ps(cast(__m128)b_isdenorm, cast(__m128)adjusted2);
+        __m128  adjusted5   = _mm_or_ps(adjusted3, adjusted4);
+        __m128i sign        = _mm_slli_epi32(justsign, 16);
+        __m128  final_      = _mm_or_ps(adjusted5, cast(__m128)sign);
+        return final_;
+    }
+}
+unittest
+{
+    __m128i A = _mm_setr_epi16(cast(short)0x8000, 0x7C00, cast(short)0xDA90, 0x5000, 0, 0, 0, 0);
+    float[4] correct      = [-0.0f, float.infinity, -210.0f,  32.0f];
+    __m128 R = _mm_cvtph_ps(A);
+    assert(R.array == correct);
+}
+
+/// Convert 8 packed half-precision (16-bit) floating-point elements 
+/// in `a` to packed single-precision (32-bit) floating-point elements.
+/// Note: Preserve infinities, sign of zeroes, and NaN-ness.
+__m256 _mm256_cvtph_ps(__m128i a) pure @trusted
+{
+    // PERF F16C actual instruction
+    {
+        // In stb_image_resize2.h, _mm_cvtph_ps is simply hand-inlined 2x
+        // so we do the same here.
+        int4 ihi;
+        ihi.ptr[0] = a.array[2];
+        ihi.ptr[1] = a.array[3];
+        __m128 lo = _mm_cvtph_ps(a);
+        __m128 hi = _mm_cvtph_ps(ihi);
+        return _mm256_set_m128(hi, lo);
+    }
+}
+unittest
+{
+    __m128i A = _mm_setr_epi16(0, cast(short)-32768, 0, cast(short)0xFC00, 0x7C00, 0x5A90,cast(short)0xDA90, 0x5000);
+    float[8] correct      = [0.0f, -0.0f, 0.0f, -float.infinity, float.infinity, 210.0f, -210.0f,  32.0f];
+    __m256 R = _mm256_cvtph_ps(A);
+    assert(R.array == correct);
+}
+
+// __m128i _mm_cvtps_ph (__m128 a, int imm8) TODO
+// __m128i _mm256_cvtps_ph (__m256 a, int imm8) TODO

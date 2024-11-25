@@ -34,6 +34,7 @@
 | SSE4.2| Yes but ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes (`-mattr=+sse4.2`) | Yes (`-mattr=+crc`)   | Yes (`-msse4.2`) |
 | BMI2  | Yes but ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes (`-mattr=+bmi2`)   | Yes | Yes (`-mbmi2`)  |
 | AVX   | Yes but ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes (`-mattr=+avx`) | Yes | Yes (`-mavx`) |
+| F16C   | WIP, ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | WIP (`-mattr=+f16c`) | WIP | WIP (`-mf16c`) |
 | AVX2  | WIP and ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | WIP (`-mattr=+avx2`) | WIP | WIP (`-mavx2`) |
 
 The intrinsics implemented follow the syntax and semantics at: https://software.intel.com/sites/landingpage/IntrinsicsGuide/
