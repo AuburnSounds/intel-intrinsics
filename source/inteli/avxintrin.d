@@ -4907,7 +4907,15 @@ __m128 _mm_cvtph_ps(__m128i a) pure @trusted
 {
     short8 sa = cast(short8)a;
 
-    // PERF F16C actual instruction
+    static if (LDC_with_F16C)
+    {
+        // Note: clang has a __builtin_ia32_vcvtph2ps256 but we don't
+        // Note: LLVM IR fpext leads to  call __extendhfsf2@PLT
+        // Same with the pragma llvm.convert.from.fp16, so not sure 
+        // what to do
+        return cast(__m128)__asm!(float4)("vcvtph2ps $1, $0", "=v,v", a);
+    }
+    else
     {
         // Reference: stb_image_resize2.h has F16C emulation.
         // See: 
@@ -4954,7 +4962,11 @@ unittest
 /// Note: Preserve infinities, sign of zeroes, and NaN-ness.
 __m256 _mm256_cvtph_ps(__m128i a) pure @trusted
 {
-    // PERF F16C actual instruction
+    static if (LDC_with_F16C)
+    {
+        return __asm!(float8)("vcvtph2ps $1, $0", "=v,v", a);
+    }
+    else
     {
         // In stb_image_resize2.h, _mm_cvtph_ps is simply hand-inlined 2x
         // so we do the same here.
