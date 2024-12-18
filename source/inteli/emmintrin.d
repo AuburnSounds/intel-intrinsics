@@ -1382,6 +1382,17 @@ __m128 _mm_cvtepi32_ps(__m128i a) pure @trusted
             ret <4 x float> %r`;
         return cast(__m128) LDCInlineIR!(ir, float4, int4)(a);
     }
+    else static if (LDC_with_x86_asm)
+    {
+        __m128 r;
+        asm pure nothrow @nogc @trusted
+        {
+            movdqu XMM0, a;
+            cvtdq2ps XMM0, XMM0;
+            movdqu r, XMM0;
+        }
+        return r;
+    }
     else
     {
         __m128 res; // PERF =void;
