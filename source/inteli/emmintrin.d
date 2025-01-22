@@ -3483,7 +3483,7 @@ unittest
 
     // compile-time should work
     static if (__VERSION__ >= 2094)
-        enum __m128 B = _mm_set1_epi32(3); 
+        enum __m128i B = _mm_set1_epi32(3); 
 }
 
 /// Broadcast 64-bit integer `a` to all elements.
