@@ -2403,7 +2403,11 @@ unittest
     float[4] correct = [42.0f, 42.0f, 42.0f, 42.0f];
     __m128 A = _mm_set1_ps(42.0f);
     assert(A.array == correct);
-    enum B = _mm_set1_ps(2.4f);
+    
+    static if (__VERSION__ >= 2094)
+    {
+        enum __m128 B = _mm_set1_ps(2.4f);
+    }
 }
 
 /// Set the MXCSR control and status register with the value in unsigned 32-bit integer `controlWord`.

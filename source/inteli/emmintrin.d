@@ -3344,7 +3344,9 @@ unittest
     __m128i A = _mm_set_epi32(3, 2, 1, 0);
     foreach(i; 0..4)
         assert(A.array[i] == i);
-    enum B = _mm_setr_epi32(0, 1, 2, 3);
+        
+    static if (__VERSION__ >= 2094)
+        enum __m128i B = _mm_setr_epi32(0, 1, 2, 3);
 }
 
 /// Set packed 64-bit integers with the supplied values.
@@ -3478,7 +3480,10 @@ unittest
     int4 A = cast(int4) _mm_set1_epi32(31);
     for (int i = 0; i < 4; ++i)
         assert(A.array[i] == 31);
-    enum B = _mm_set1_epi32(3);
+
+    // compile-time should work
+    static if (__VERSION__ >= 2094)
+        enum __m128 B = _mm_set1_epi32(3); 
 }
 
 /// Broadcast 64-bit integer `a` to all elements.
@@ -3573,7 +3578,10 @@ unittest
     int4 A = cast(int4) _mm_setr_epi32(-1, 0, -2147483648, 2147483647);
     int[4] correct = [-1, 0, -2147483648, 2147483647];
     assert(A.array == correct);
-    enum B = _mm_setr_epi32(0, 1, 2, 3);
+    
+    // compile-time should work
+    static if (__VERSION__ >= 2094)
+        enum __m128i B = _mm_setr_epi32(0, 1, 2, 3);
 }
 
 /// Set packed 64-bit integers with the supplied values in reverse order.
