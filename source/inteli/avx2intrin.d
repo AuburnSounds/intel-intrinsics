@@ -3005,10 +3005,12 @@ __m256i _mm256_permute4x64_epi64(int imm8)(__m256i a) pure @trusted
 unittest
 {
     __m256i A = _mm256_setr_epi64x(1, 2, 3, 4);
-    assert(_mm256_permute4x64_epi64!(0b00011011)(A).array == [4, 3, 2, 1]);
+    static immutable long[4] correct = [ 4, 3, 2, 1 ];
+    assert(_mm256_permute4x64_epi64!(0b00011011)(A).array == correct);
 
     A = _mm256_setr_epi64x(1, 2, 3, 4);
-    assert(_mm256_permute4x64_epi64!(0b00001100)(A).array == [1, 4, 1, 1]);
+    static immutable long[4] correct2 = [ 1, 4, 1, 1 ];
+    assert(_mm256_permute4x64_epi64!(0b00001100)(A).array == correct2);
 }
 
 
