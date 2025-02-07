@@ -2743,7 +2743,40 @@ unittest
     assert(LC.array == correct);
 }
 
-// TODO __m256i _mm256_mulhi_epi16 (__m256i a, __m256i b) pure @safe
+/// Multiply the packed signed 16-bit integers in `a` and `b`, 
+/// producing intermediate 32-bit integers, and return the high 
+/// 16 bits of the intermediate integers.
+__m256i _mm256_mulhi_epi16 (__m256i a, __m256i b) pure @safe
+{
+    static if (GDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_pmulhw256(cast(short16)a, cast(short16)b);
+    }
+    else static if (LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_pmulhw256(cast(short16)a, cast(short16)b);
+    }
+    else
+    {
+        // split
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i b_lo = _mm256_extractf128_si256!0(b);
+        __m128i b_hi = _mm256_extractf128_si256!1(b);
+        __m128i r_lo = _mm_mulhi_epi16(a_lo, b_lo);
+        __m128i r_hi = _mm_mulhi_epi16(a_hi, b_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m256i A = _mm256_setr_epi16(0, -16, 2, 3, 4, 8, 16, 7, 0, -16, 2, 3, 4, 8, 16, 8);
+    __m256i B = _mm256_set1_epi16(16384);
+    short16 R = cast(short16)_mm256_mulhi_epi16(A, B);
+    short[16] correct = [0, -4, 0, 0, 1, 2, 4, 1, 0, -4, 0, 0, 1, 2, 4, 2];
+    assert(R.array == correct);
+}
+
 // TODO __m256i _mm256_mulhi_epu16 (__m256i a, __m256i b) pure @safe
 // TODO __m256i _mm256_mulhrs_epi16 (__m256i a, __m256i b) pure @safe
 
