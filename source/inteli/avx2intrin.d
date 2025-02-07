@@ -1930,8 +1930,6 @@ unittest
     assert(R.array == correct);
 }
 
-// TODO __m256i _mm256_maddubs_epi16 (__m256i a, __m256i b) pure @safe
-
 /// Vertically multiply each unsigned 8-bit integer from `a` with the corresponding 
 /// signed 8-bit integer from `b`, producing intermediate signed 16-bit integers. 
 /// Horizontally add adjacent pairs of intermediate signed 16-bit integers, 
