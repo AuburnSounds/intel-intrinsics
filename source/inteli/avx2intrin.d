@@ -2777,7 +2777,32 @@ unittest
     assert(R.array == correct);
 }
 
-// TODO __m256i _mm256_mulhi_epu16 (__m256i a, __m256i b) pure @safe
+/// Multiply the packed unsigned 16-bit integers in `a` and `b`, 
+/// producing intermediate 32-bit integers, and return the high 
+/// 16 bits of the intermediate integers.
+__m256i _mm256_mulhi_epu16 (__m256i a, __m256i b) pure @safe
+{
+    static if (GDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_pmulhuw256(cast(short16)a, cast(short16)b);
+    }
+    else static if (LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_pmulhuw256(cast(short16)a, cast(short16)b);
+    }
+    else
+    {
+        // split
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i b_lo = _mm256_extractf128_si256!0(b);
+        __m128i b_hi = _mm256_extractf128_si256!1(b);
+        __m128i r_lo = _mm_mulhi_epu16(a_lo, b_lo);
+        __m128i r_hi = _mm_mulhi_epu16(a_hi, b_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+
 // TODO __m256i _mm256_mulhrs_epi16 (__m256i a, __m256i b) pure @safe
 
 /// Multiply the packed signed 16-bit integers in `a` and `b`, producing intermediate 32-bit integers, 
@@ -3151,8 +3176,91 @@ unittest
     assert(_mm256_shuffle_epi8(a, b).array == expected.array);
 }
 
-// TODO __m256i _mm256_shufflehi_epi16 (__m256i a, const int imm8) pure @safe
-// TODO __m256i _mm256_shufflelo_epi16 (__m256i a, const int imm8) pure @safe
+/// Shuffle 16-bit integers in the high 64 bits of 128-bit lanes of `a` using
+/// the control in `imm8`. Store the results in the high 64 bits of 128-bit lanes
+/// of result, with the low 64 bits of 128-bit lanes being copied from from `a`.
+/// See also: `_MM_SHUFFLE`.
+__m256i _mm256_shufflehi_epi16(int imm8)(__m256i a) pure @safe
+{
+    static if (GDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_pshufhw256(cast(short16)a, imm8);
+    }
+    else static if (LDC_with_optimizations)
+    {
+        return cast(__m256i) shufflevectorLDC!(short16,
+            0, 1, 2, 3,
+            4 + ( (imm8 >> 0) & 3 ),
+            4 + ( (imm8 >> 2) & 3 ),
+            4 + ( (imm8 >> 4) & 3 ),
+            4 + ( (imm8 >> 6) & 3 ),
+            8, 9, 10, 11,
+            12 + ( (imm8 >> 0) & 3 ),
+            12 + ( (imm8 >> 2) & 3 ),
+            12 + ( (imm8 >> 4) & 3 ),
+            12 + ( (imm8 >> 6) & 3 ))
+            (cast(short16)a, cast(short16)a);
+    }
+    else
+    {
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i r_lo = _mm_shufflehi_epi16!imm8(a_lo);
+        __m128i r_hi = _mm_shufflehi_epi16!imm8(a_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m256i A = _mm256_setr_epi16(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+    enum int SHUFFLE = _MM_SHUFFLE(0, 1, 2, 3);
+    short16 B = cast(short16) _mm256_shufflehi_epi16!SHUFFLE(A);
+    short[16] expectedB = [ 0, 1, 2, 3, 7, 6, 5, 4, 8, 9, 10, 11, 15, 14, 13, 12 ];
+    assert(B.array == expectedB);
+}
+
+/// Shuffle 16-bit integers in the low 64 bits of 128-bit lanes of `a` using
+/// the control in `imm8`. Store the results in the low 64 bits of 128-bit lanes 
+/// of result, with the high 64 bits of 128-bit lanes being copied from from `a`.
+/// See also: `_MM_SHUFFLE`.
+__m256i _mm256_shufflelo_epi16(int imm8)(__m256i a) pure @safe
+{
+    static if (GDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_pshuflw256(cast(short16)a, imm8);
+    }
+    else static if (LDC_with_optimizations)
+    { 
+        return cast(__m256i) shufflevectorLDC!(short16,
+            ( (imm8 >> 0) & 3 ),
+            ( (imm8 >> 2) & 3 ),
+            ( (imm8 >> 4) & 3 ),
+            ( (imm8 >> 6) & 3 ), 
+            4, 5, 6, 7,
+            ( (imm8 >> 0) & 3 ) + 8,
+            ( (imm8 >> 2) & 3 ) + 8,
+            ( (imm8 >> 4) & 3 ) + 8,
+            ( (imm8 >> 6) & 3 ) + 8,
+            12, 13, 14, 15)
+            (cast(short16)a, cast(short16)a);
+    }
+    else
+    {
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i r_lo = _mm_shufflelo_epi16!imm8(a_lo);
+        __m128i r_hi = _mm_shufflelo_epi16!imm8(a_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m256i A = _mm256_setr_epi16(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+    enum int SHUFFLE = _MM_SHUFFLE(0, 1, 2, 3);
+    short16 B = cast(short16) _mm256_shufflelo_epi16!SHUFFLE(A);
+    short[16] expectedB = [ 3, 2, 1, 0, 4, 5, 6, 7, 11, 10, 9, 8, 12, 13, 14, 15 ];
+    assert(B.array == expectedB);
+}
 
 /// Negate packed signed 16-bit integers in `a` when the corresponding signed 8-bit integer in `b` is negative.
 /// Elements in result are zeroed out when the corresponding element in `b` is zero.
