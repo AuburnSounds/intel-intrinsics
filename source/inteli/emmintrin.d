@@ -11,7 +11,6 @@ public import inteli.types;
 public import inteli.xmmintrin; // SSE2 includes SSE1
 import inteli.mmx;
 import inteli.internals;
-import inteli.common;
 
 nothrow @nogc:
 

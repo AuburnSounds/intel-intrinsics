@@ -10,7 +10,6 @@ module inteli.xmmintrin;
 public import inteli.types;
 
 import inteli.internals;
-import inteli.common;
 
 import inteli.mmx;
 import inteli.emmintrin;
