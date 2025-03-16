@@ -10,13 +10,10 @@ module inteli.xmmintrin;
 public import inteli.types;
 
 import inteli.internals;
+import inteli.common;
 
 import inteli.mmx;
 import inteli.emmintrin;
-
-import core.stdc.stdlib: malloc, free;
-import core.stdc.string: memcpy;
-import core.exception: onOutOfMemoryError;
 
 version(D_InlineAsm_X86)
     version = InlineX86Asm;
@@ -1265,8 +1262,7 @@ uint _mm_getcsr() @trusted
             }
             return sseRounding;
         }
-        else
-            static assert(false);
+        else return __warn_noop_ret!uint();
     }
     else version (InlineX86Asm)
     {
@@ -2455,8 +2451,7 @@ void _mm_setcsr(uint controlWord) @trusted
                   : ;
             }
         }
-        else
-            static assert(false);
+        else return __warn_noop();
     }
     else version (InlineX86Asm)
     {
@@ -2547,8 +2542,7 @@ void _mm_sfence() @trusted
                 "sfence;\n" : : : ;
             }
         }
-        else
-            static assert(false);
+        else return __warn_noop();
     }
     else static if (LDC_with_SSE)
     {
