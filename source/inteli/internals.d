@@ -1,20 +1,55 @@
 /**
 * Internal stuff only, do not import.
 *
-* Copyright: Copyright Guillaume Piolat 2016-2020, Stefanos Baziotis 2019.
+* Copyright: Copyright Guillaume Piolat 2016-2025, Stefanos Baziotis 2019.
 *            cet 2024.
+*            Copyright Kitsunebi Games 2025.
 * License:   $(LINK2 http://www.boost.org/LICENSE_1_0.txt, Boost License 1.0)
 */
 module inteli.internals;
 
 import inteli.types;
 
-// The only math functions needed for intel-intrinsics
-public import core.math: sqrt; // since it's an intrinsics
-
 package:
 nothrow:
 @nogc:
+
+// nurt compatibility
+
+version(Have_nurt) 
+{
+    import numem.core.hooks : nu_malloc, nu_free, nu_memcpy;
+    public import core.internal.exception : onOutOfMemoryError;
+    alias malloc = nu_malloc;
+    alias free = nu_free;
+    alias memcpy = nu_memcpy;
+} 
+else 
+{
+    public import core.stdc.stdlib: malloc, free;
+    public import core.stdc.string: memcpy;
+    public import core.exception: onOutOfMemoryError;
+}
+
+// The only math functions needed for intel-intrinsics
+public import core.math: sqrt;
+public import core.bitop: bsf, bsr;
+
+
+
+/// Helps portability with yet unsupported platforms
+void __warn_noop(string fname = __FUNCTION__)() 
+{
+    pragma(msg, "Warning: ", fname, " is currently not supported, it will become a NO-OP!");
+}
+///ditto
+RetT __warn_noop_ret(RetT, string fname = __FUNCTION__)(RetT rval = RetT.init) 
+    if (!is(RetT == void)) 
+{
+    pragma(msg, "Warning: ", fname, " is currently not supported, it will become a NO-OP!");
+    return rval;
+}
+
 
 
 version(GNU)
@@ -473,8 +508,18 @@ int convertFloatToInt32UsingMXCSR(float value) @trusted
                 "cvtss2si %1, %0\n": "=r"(result) : "x" (value);
             }
         }
+        else version(X86_64)
+        {
+            asm pure nothrow @nogc @trusted
+            {
+                "cvtss2si %1, %0\n": "=r"(result) : "x" (value);
+            }
+        }
         else
+        {
+            // BUG: this is truncation instead of MXCSR
             result = cast(int)value;
+        }
     }
     else static if (LDC_with_ARM32)
     {
@@ -519,8 +564,18 @@ int convertDoubleToInt32UsingMXCSR(double value) @trusted
                 "cvtsd2si %1, %0\n": "=r"(result) : "x" (value);
             }
         }
+        else version(X86_64)
+        {
+            asm pure nothrow @nogc @trusted
+            {
+                "cvtsd2si %1, %0\n": "=r"(result) : "x" (value);
+            }
+        }
         else
+        {
+            // BUG: this is truncation instead of MXCSR
             result = cast(int)value;
+        }
     }
     else static if (LDC_with_ARM32)
     {
@@ -684,7 +739,12 @@ long convertFloatToInt64UsingMXCSR(float value) @trusted
             static assert(false);
     }
     else
+    {
+        // BUG
+        // This is a last result and wrong, typically
+        // for GDC architectures we don't yet support
         return cast(long)value;
+    }
 }
 
 
@@ -814,7 +874,12 @@ long convertDoubleToInt64UsingMXCSR(double value) @trusted
         }
     }
     else
+    {
+        // BUG
+        // This is a last result and wrong, typically
+        // for GDC architectures we don't yet support
         return cast(long)value;
+    }
 }
 
 //
