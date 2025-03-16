@@ -466,10 +466,15 @@ int convertFloatToInt32UsingMXCSR(float value) @trusted
     int result;
     version(GNU)
     {
-        asm pure nothrow @nogc @trusted
+        version(X86)
         {
-            "cvtss2si %1, %0\n": "=r"(result) : "x" (value);
+            asm pure nothrow @nogc @trusted
+            {
+                "cvtss2si %1, %0\n": "=r"(result) : "x" (value);
+            }
         }
+        else
+            result = cast(int)value;
     }
     else static if (LDC_with_ARM32)
     {
@@ -507,10 +512,15 @@ int convertDoubleToInt32UsingMXCSR(double value) @trusted
     int result;
     version(GNU)
     {
-        asm pure nothrow @nogc @trusted
+        version(X86)
         {
-            "cvtsd2si %1, %0\n": "=r"(result) : "x" (value);
+            asm pure nothrow @nogc @trusted
+            {
+                "cvtsd2si %1, %0\n": "=r"(result) : "x" (value);
+            }
         }
+        else
+            result = cast(int)value;
     }
     else static if (LDC_with_ARM32)
     {
@@ -674,7 +684,7 @@ long convertFloatToInt64UsingMXCSR(float value) @trusted
             static assert(false);
     }
     else
-        static assert(false);
+        return cast(long)value;
 }
 
 
@@ -804,7 +814,7 @@ long convertDoubleToInt64UsingMXCSR(double value) @trusted
         }
     }
     else
-        static assert(false);
+        return cast(long)value;
 }
 
 //

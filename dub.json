@@ -5,7 +5,18 @@
     "license": "BSL-1.0",
     "importPaths": ["source"],
     "sourcePaths": ["source"],
-
+    "dependencies": {
+        "nulib:stdc": {
+            "version": ">=0.2.0",
+            "optional": true,
+            "default": false
+        },
+        "nurt": {
+            "version": ">=0.1.4",
+            "optional": true,
+            "default": false
+        }
+    },
     "buildTypes": {
         "unittest-inst": {
             "buildOptions": ["unittests", "debugMode", "debugInfo"],

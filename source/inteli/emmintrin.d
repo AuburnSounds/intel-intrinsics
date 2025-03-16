@@ -11,6 +11,7 @@ public import inteli.types;
 public import inteli.xmmintrin; // SSE2 includes SSE1
 import inteli.mmx;
 import inteli.internals;
+import inteli.common;
 
 nothrow @nogc:
 
@@ -1944,8 +1945,7 @@ void _mm_lfence() @trusted
                 "lfence;\n" : : : ;
             }
         }
-        else
-            static assert(false);
+        else __warn_noop();
     }
     else static if (LDC_with_SSE2)
     {
@@ -2512,8 +2512,7 @@ void _mm_mfence() @trusted // not pure!
                 "mfence;\n" : : : ;
             }
         }
-        else
-            static assert(false);
+        else __warn_noop();
     }
     else static if (LDC_with_SSE2)
     {
@@ -3229,8 +3228,7 @@ void _mm_pause() @trusted
                 "pause;\n" : : : ;
             }
         }
-        else
-            static assert(false);
+        else __warn_noop();
     }
     else static if (LDC_with_SSE2)
     {
