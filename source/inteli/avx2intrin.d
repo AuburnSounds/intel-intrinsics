@@ -3846,8 +3846,65 @@ unittest
     assert(D.array == expectedD);
 }
 
-// TODO __m128i _mm_srav_epi32 (__m128i a, __m128i count) pure @safe
-// TODO __m256i _mm256_srav_epi32 (__m256i a, __m256i count) pure @safe
+__m128i _mm_srav_epi32(__m128i a, __m128i count) pure @trusted
+{
+    static if (GDC_with_AVX2 || LDC_with_AVX2)
+        return cast(__m128i)__builtin_ia32_psrav4si(cast(int4)a, cast(int4)count);
+    else
+    {
+        __m128i R = _mm_setr_epi32(a.array[0] >> count.array[0], 
+                                   a.array[1] >> count.array[1], 
+                                   a.array[2] >> count.array[2], 
+                                   a.array[3] >> count.array[3]);
+
+        // Map large and negative shifts to all sign bits
+        __m128i signbits = _mm_srai_epi32(a, 31);
+        __m128i mm32 = _mm_set1_epi32(32);
+        __m128i shift = _mm_min_epu32(count, mm32);
+
+        // Set to 0 where the shift is >= 32
+        __m128i lower = _mm_cmplt_epi32(shift, mm32);
+
+        R = (R & lower) | (signbits & ~lower);
+        return R;
+    }
+}
+unittest
+{
+    __m128i A     = _mm_setr_epi32(-1,  1, -4, -4);
+    __m128i shift = _mm_setr_epi32( 2, -6, 31, 32);
+    int4 R = cast(int4) _mm_srav_epi32(A, shift);
+    int[4] expected = [ -1, 0, -1, -1 ];
+    assert(R.array == expected);
+}
+
+__m256i _mm256_srav_epi32 (__m256i a, __m256i count) pure @safe
+{
+    static if (GDC_or_LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_psrav8si(cast(int8)a, cast(ubyte)imm8);
+    }
+    else // split
+    {
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i c_lo = _mm256_extractf128_si256!0(count);
+        __m128i c_hi = _mm256_extractf128_si256!1(count);
+        __m128i r_lo = _mm_srav_epi32(a_lo, c_lo);
+        __m128i r_hi = _mm_srav_epi32(a_hi, c_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m128i A     = _mm_setr_epi32(-1,  1, -4, -4);
+    __m128i shift = _mm_setr_epi32( 2, -6, 31, 32);
+    int4 R = cast(int4) _mm_srav_epi32(A, shift);
+    int[4] expected = [ -1, 0, -1, -1 ];
+    assert(R.array == expected);
+}
+
+// TODO 
 
 /// Shift packed 16-bit integers in `a` right by `count` while shifting in zeroes.
 /// Bit-shift is a single value in the low-order 64-bit of `count`. 
