@@ -3583,7 +3583,7 @@ unittest
 /// Shift 128-bit lanes in `a` left by `bytes` bytes while shifting in zeroes.
 alias _mm256_slli_si256 = _mm256_bslli_epi128;
 
-/// Shift packed 32-bit integers in `a` left by the amount specified by the corresponding element in `b` while shifting in zeroes.
+/// Shift packed 32-bit integers in `a` left by the amount specified by the corresponding element in `count` while shifting in zeroes.
 __m128i _mm_sllv_epi32(__m128i a, __m128i count) pure @trusted
 {
     static if (GDC_with_AVX2 || LDC_with_AVX2)
@@ -3614,8 +3614,32 @@ unittest
     assert(R.array == expected);
 }
 
+/// Shift packed 32-bit integers in `a` left by the amount specified by the corresponding element in `count` while shifting in zeroes.
+__m256i _mm256_sllv_epi32 (__m256i a, __m256i count) pure @safe
+{
+    static if (GDC_with_AVX2 || LDC_with_AVX2)
+        return cast(__m256i)__builtin_ia32_psllv8si(cast(int8)a, cast(int8)count);
+    else
+    {
+        // split
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i c_lo = _mm256_extractf128_si256!0(count);
+        __m128i c_hi = _mm256_extractf128_si256!1(count);
+        __m128i r_lo = _mm_sllv_epi32(a_lo, c_lo);
+        __m128i r_hi = _mm_sllv_epi32(a_hi, c_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m256i A     = _mm256_setr_epi32(-1,  1, 4, -4, -1,  1,  4, -4);
+    __m256i shift = _mm256_setr_epi32( 2, -6, 1, 32,  2, -6, 33, 32);
+    int8 R = cast(int8) _mm256_sllv_epi32(A, shift);
+    int[8] expected = [ -4, 0, 8, 0, -4, 0, 0, 0 ];
+    assert(R.array == expected);
+}
 
-// TODO __m256i _mm256_sllv_epi32 (__m256i a, __m256i count) pure @safe
 
 /// Shift packed 64-bit integers in `a` left by the amount specified by the corresponding element in `b` while shifting in zeros.
 __m128i _mm_sllv_epi64(__m128i a, __m128i count) pure @trusted
