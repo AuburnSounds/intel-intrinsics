@@ -3672,7 +3672,38 @@ unittest
     assert(R1.array == correct1);
     assert(R2.array == correct2);
 }
-// TODO __m256i _mm256_sllv_epi64 (__m256i a, __m256i count) pure @safe
+
+/// Shift packed 64-bit integers in `a` left by the amount specified by the corresponding element in `count` while shifting in zeroes.
+__m256i _mm256_sllv_epi64 (__m256i a, __m256i count) pure @safe
+{
+    static if (GDC_with_AVX2 || LDC_with_AVX2)
+        return cast(__m256i)__builtin_ia32_psllv4di(cast(long4)a, cast(long4)count);
+    else
+    {
+        // split
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i c_lo = _mm256_extractf128_si256!0(count);
+        __m128i c_hi = _mm256_extractf128_si256!1(count);
+        __m128i r_lo = _mm_sllv_epi64(a_lo, c_lo);
+        __m128i r_hi = _mm_sllv_epi64(a_hi, c_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m256i A  = _mm256_setr_epi64( -4,  6, -1, 6);
+    __m256i B1 = _mm256_setr_epi64(  2,  0,  3, 1);
+    __m256i B2 = _mm256_setr_epi64(-12, 64, 63, 64);
+    long4 R1 = cast(long4) _mm256_sllv_epi64(A, B1);
+    long4 R2 = cast(long4) _mm256_sllv_epi64(A, B2);
+    long[4] correct1 = [-16, 6, -8, 12];
+    long[4] correct2 = [  0, 0, long.min, 0];
+    assert(R1.array == correct1);
+    assert(R2.array == correct2);
+}
+
+
 
 /// Shift packed 16-bit integers in `a` right by `count` while shifting in sign bits.
 /// Bit-shift is a single value in the low-order 64-bit of `count`. 
