@@ -16,7 +16,7 @@ nothrow:
 
 // nurt compatibility
 
-version(Have_nurt) 
+version(USE_NURT) 
 {
     import numem.core.hooks : nu_malloc, nu_free, nu_memcpy;
     public import core.internal.exception : onOutOfMemoryError;
