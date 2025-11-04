@@ -3882,7 +3882,7 @@ __m256i _mm256_srav_epi32 (__m256i a, __m256i count) pure @safe
 {
     static if (GDC_or_LDC_with_AVX2)
     {
-        return cast(__m256i) __builtin_ia32_psrav8si(cast(int8)a, cast(ubyte)imm8);
+        return cast(__m256i) __builtin_ia32_psrav8si(cast(int8)a, cast(int8)count);
     }
     else // split
     {
