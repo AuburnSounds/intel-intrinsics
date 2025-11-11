@@ -1189,7 +1189,11 @@ unittest
 __m256i _mm256_cmpgt_epi8 (__m256i a, __m256i b) pure @safe
 {
     version(GNU)
-        enum bool mayUseComparisonOperator = GDC_with_AVX2; // too slow in GDC without AVX2
+    {
+        // too slow in GDC without AVX2, but also doesn't 
+        // work in CI? BUG
+        enum bool mayUseComparisonOperator = false; 
+    }
     else
         enum bool mayUseComparisonOperator = true;
 
