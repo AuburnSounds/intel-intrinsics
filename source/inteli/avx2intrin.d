@@ -1201,10 +1201,10 @@ __m256i _mm256_cmpgt_epi8 (__m256i a, __m256i b) pure @safe
     {
         return cast(__m256i)(cast(byte32)a > cast(byte32)b);
     }
-    else static if (GDC_with_AVX2)
+    /*else static if (GDC_with_AVX2)
     {
         return cast(__m256i) __builtin_ia32_pcmpgtb256(cast(ubyte32)a, cast(ubyte32)b);
-    }
+    }*/
     else // split
     {
         __m128i a_lo = _mm256_extractf128_si256!0(a);
