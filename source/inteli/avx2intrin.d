@@ -590,6 +590,7 @@ unittest
 /// Select from `b` if the high-order bit of the corresponding 8-bit element in `mask` is set, else select from `a`.
  __m256i _mm256_blendv_epi8 (__m256i a, __m256i b, __m256i mask) pure @safe
  {
+    // BUG PERF: this would fail the CI with GDC 12
     /*static if (GDC_with_AVX2)
         return cast(__m256i)__builtin_ia32_pblendvb256(cast(ubyte32)a, cast(ubyte32)b, cast(ubyte32)mask);
     else 
@@ -1191,7 +1192,7 @@ __m256i _mm256_cmpgt_epi8 (__m256i a, __m256i b) pure @safe
     version(GNU)
     {
         // too slow in GDC without AVX2, but also doesn't 
-        // work in CI? BUG
+        // work in CI? BUG PERF
         enum bool mayUseComparisonOperator = false; 
     }
     else
