@@ -590,9 +590,12 @@ unittest
 /// Select from `b` if the high-order bit of the corresponding 8-bit element in `mask` is set, else select from `a`.
  __m256i _mm256_blendv_epi8 (__m256i a, __m256i b, __m256i mask) pure @safe
  {
-    static if (GDC_with_AVX2)
+    /*static if (GDC_with_AVX2)
         return cast(__m256i)__builtin_ia32_pblendvb256(cast(ubyte32)a, cast(ubyte32)b, cast(ubyte32)mask);
-    else static if (LDC_with_AVX2)
+    else 
+*/
+
+    static if (LDC_with_AVX2)
     {
         return cast(__m256i) __builtin_ia32_pblendvb256(cast(byte32)a, cast(byte32)b, cast(byte32)mask);
     }
