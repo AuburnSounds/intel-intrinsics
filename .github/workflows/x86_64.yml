@@ -19,6 +19,8 @@ jobs:
                       os: macOS-latest
                     - dc: dmd-2.098.1
                       os: macOS-latest
+                    - dc: ldc-1.36.0
+                      os: macOS-latest
 
         runs-on: ${{ matrix.os }}
         steps:
