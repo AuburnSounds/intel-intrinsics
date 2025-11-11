@@ -11,7 +11,7 @@ jobs:
                     - dmd-latest
                     - dmd-2.098.1 
                     - ldc-latest
-                    - ldc-1.41.1
+                    - ldc-1.41.0
                     - ldc-1.36.0
                     - ldc-1.28.1
 
