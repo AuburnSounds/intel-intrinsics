@@ -2664,7 +2664,44 @@ unittest
                                                                -1, 1, 2, -3, -1, -1, 4, 8, 127, 0, -1, -1, 0, -1, -1, 0)));
 }
 
-// TODO __m256i _mm256_mpsadbw_epu8 (__m256i a, __m256i b, const int imm8) pure @safe
+/// Basically 2x `_mm_mpsadbw_epu8` in parallel, over the two lanes.
+__m256i _mm256_mpsadbw_epu8(int imm8)(__m256i a, __m256i b) pure @safe
+{
+    static if (GDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_mpsadbw256(cast(ubyte32)a,
+                                                       cast(ubyte32)b,
+                                                       imm8);
+    }
+    else static if (LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_mpsadbw256(cast(byte32)a,
+                                                       cast(byte32)b,
+                                                       imm8);
+    }
+    else
+    {
+        // split
+        __m128i a_lo = _mm256_extractf128_si256!0(a);
+        __m128i a_hi = _mm256_extractf128_si256!1(a);
+        __m128i b_lo = _mm256_extractf128_si256!0(b);
+        __m128i b_hi = _mm256_extractf128_si256!1(b);
+        __m128i r_lo = _mm_mpsadbw_epu8!(imm8 & 7)(a_lo, b_lo);
+        __m128i r_hi = _mm_mpsadbw_epu8!((imm8 >> 3) & 7)(a_hi, b_hi);
+        return _mm256_set_m128i(r_hi, r_lo);
+    }
+}
+unittest
+{
+    __m128i A = _mm_setr_epi8(0, 1, 2, 3,  4,  5, 6,  7, 8, 9, 10, 11, 12, 13, 14, 15);
+    __m128i B = _mm_setr_epi8(9, 1, 2, 3, -1, -1, 0, -1, 5, 5,  5,  5, 12, 13, 14, 15);
+    __m256i AA = _mm256_set_m128i(A, A);
+    __m256i BB = _mm256_set_m128i(B, B);
+    short[16] correct = [755, 753, 751, 749, 747, 745, 743, 741,
+                          32,  28,  24,  20,  16,  12,  8,    4];
+    short16 r5 = cast(short16) _mm256_mpsadbw_epu8!(7 * 8 + 5)(AA, BB);
+    assert(r5.array == correct);
+}
 
 /// Multiply the low signed 32-bit integers from each packed 64-bit element in `a` and `b`, and 
 /// return the signed 64-bit results.
