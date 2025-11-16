@@ -1000,7 +1000,7 @@ unittest
 
 /// Multiply packed signed 16-bit integers in `a` and `b`, producing intermediate signed 32-bit integers.
 /// Truncate each intermediate integer to the 18 most significant bits, round by adding 1, and return bits `[16:1]`.
-__m128i _mm_mulhrs_epi16 (__m128i a, __m128i b) @trusted
+__m128i _mm_mulhrs_epi16 (__m128i a, __m128i b) pure @trusted
 {
     // PERF DMD
     static if (GDC_with_SSSE3)
@@ -1041,7 +1041,6 @@ __m128i _mm_mulhrs_epi16 (__m128i a, __m128i b) @trusted
         return cast(__m128i)r;
     }
 }
-
 unittest
 {
     __m128i A = _mm_setr_epi16(12345, -32768, 32767, 0, 1, 845, -6999, -1);
