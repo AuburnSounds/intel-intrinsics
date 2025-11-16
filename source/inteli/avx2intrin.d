@@ -3109,9 +3109,24 @@ unittest
     assert(R.array == correct);
 }
 
-
-
-// TODO __m256i _mm256_permute2x128_si256 (__m256i a, __m256i b, const int imm8) pure @safe
+/// Shuffle 128-bits (composed of 2 packed (128-bit) integer elements)
+/// selected by `imm8` from `a` and `b`.
+/// See the documentation as the `imm8` format is quite complex.
+__m256i _mm256_permute2x128_si256(int imm8)(__m256i a, __m256i b) pure @safe
+{
+    // PERF: the only difference with _mm256_permute2f128_si256, which we
+    // haven't reproduced here, is that _mm256_permute2x128_si256 is supposed
+    // to be with an integer hint at instruction level, and requires AVX2.
+    return _mm256_permute2f128_si256!imm8(a, b);
+}
+unittest
+{
+    __m256d A = _mm256_setr_pd(8.0, 1, 2, 3);
+    __m256d B = _mm256_setr_pd(4.0, 5, 6, 7);
+    __m256d R2 = _mm256_permute2f128_pd!(3*16 + 8 + 1)(A, B);
+    double[4] correct2 = [0.0, 0.0, 6.0, 7.0];
+    assert(R2.array == correct2);
+}
 
 /// Shuffle 64-bit integers in `a` across lanes using the control in `imm8`.
 __m256i _mm256_permute4x64_epi64(int imm8)(__m256i a) pure @trusted

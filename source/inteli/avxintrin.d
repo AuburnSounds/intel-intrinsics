@@ -2549,6 +2549,7 @@ unittest
 
 /// Shuffle 128-bits (composed of 2 packed double-precision (64-bit) floating-point elements) 
 /// selected by `imm8` from `a` and `b`.
+/// See the documentation as the `imm8` format is quite complex.
 __m256d _mm256_permute2f128_pd(int imm8)(__m256d a, __m256d b) pure @safe
 {
     return cast(__m256d) _mm256_permute2f128_si256!imm8(cast(__m256i)a, cast(__m256i)b);
