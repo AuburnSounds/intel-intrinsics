@@ -3159,8 +3159,19 @@ unittest
     assert(_mm256_permute4x64_epi64!(0b00001100)(A).array == correct2);
 }
 
+/// Shuffle 64-bit double in `a` across lanes using the control in `imm8`.
+__m256d _mm256_permute4x64_pd(int imm8)(__m256d a) pure @trusted
+{
+    // PERF: ignore instruction-level type hint
+    return cast(__m256d) _mm256_permute4x64_epi64!imm8(cast(__m256i)a);
+}
+unittest
+{
+    __m256d A = _mm256_setr_pd(1.0, 2.0, 3.0, 4.0);
+    static immutable double[4] correct = [ 4.0, 3.0, 2.0, 1.0 ];
+    assert(_mm256_permute4x64_pd!(0b00011011)(A).array == correct);
+}
 
-// TODO __m256d _mm256_permute4x64_pd (__m256d a, const int imm8) pure @safe
 // TODO __m256i _mm256_permutevar8x32_epi32 (__m256i a, __m256i idx) pure @safe
 // TODO __m256 _mm256_permutevar8x32_ps (__m256 a, __m256i idx) pure @safe
 
