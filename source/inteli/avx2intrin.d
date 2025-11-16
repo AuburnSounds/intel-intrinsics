@@ -3172,8 +3172,44 @@ unittest
     assert(_mm256_permute4x64_pd!(0b00011011)(A).array == correct);
 }
 
-// TODO __m256i _mm256_permutevar8x32_epi32 (__m256i a, __m256i idx) pure @safe
-// TODO __m256 _mm256_permutevar8x32_ps (__m256 a, __m256i idx) pure @safe
+/// Shuffle 32-bit integers in `a` across lanes using the corresponding index in `idx`.
+__m256i _mm256_permutevar8x32_epi32 (__m256i a, __m256i idx) pure @trusted
+{
+    // While it _should_ be possible to use 4x _mm_shuffle_epi8 for this permute,
+    // it is quite hard to pull off and simd-everwhere doesn't attempt either.
+    static if (GDC_or_LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_permvarsi256(cast(int8)a, cast(int8)idx);
+    }    
+    else
+    {
+        // PERF ARM64 and x86 without AVX, it's not very good
+        int8 ai = cast(int8)a;
+        int8 ii = cast(int8)idx;
+        int8 ri;
+
+        for (int j = 0; j < 8; ++j)
+        {
+            ri.ptr[j] = ai.array[ ii[j] & 7 ];
+        }
+        return cast(__m256i) ri;
+    }
+}
+unittest
+{
+    __m256i A = _mm256_setr_epi32(8, 9, 10, 11, 12, 13, 14, 15);
+    __m256i B = _mm256_setr_epi32(8 + 1, 4, 7, 8 + 2, 24, 3, 3, 2);
+    int8 R = cast(int8) _mm256_permutevar8x32_epi32(A, B);
+    int[8] correct = [ 9, 12, 15, 10, 8, 11, 11, 10 ];
+    assert(R.array == correct);
+}
+
+/// Shuffle single-precision (32-bit) floating-point in `a` across lanes using the 
+/// corresponding index in `idx`.
+__m256 _mm256_permutevar8x32_ps (__m256 a, __m256i idx) pure @safe
+{
+    return cast(__m256) _mm256_permutevar8x32_epi32(cast(__m256i)a, cast(__m256i)idx);
+}
 
 /// Compute the absolute differences of packed unsigned 8-bit integers in `a` and `b`, then horizontally sum each
 /// consecutive 8 differences to produce two unsigned 16-bit integers, and pack these unsigned 16-bit integers in the

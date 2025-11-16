@@ -911,7 +911,6 @@ unittest
     assert(C.array == correct);
 }
 
-
 /// Vertically multiply each unsigned 8-bit integer from `a` with the corresponding 
 /// signed 8-bit integer from `b`, producing intermediate signed 16-bit integers. 
 /// Horizontally add adjacent pairs of intermediate signed 16-bit integers, 
@@ -1093,7 +1092,6 @@ unittest
     assert(C.array == correct);
 }
 
-
 /// Shuffle packed 8-bit integers in `a` according to shuffle control mask in the corresponding 8-bit element of `b`.
 __m128i _mm_shuffle_epi8 (__m128i a, __m128i b) pure @trusted
 {
@@ -1113,6 +1111,8 @@ __m128i _mm_shuffle_epi8 (__m128i a, __m128i b) pure @trusted
         byte16 mask;
         mask = cast(byte)(0x8F);
         bb = bb & mask;
+        // "If an index is out of range for the table, the result for that lookup is 0."
+        // So, having bit 7 in indices will yield 0 correctly.
         byte16 r = vqtbl1q_s8(cast(byte16)a, bb);
         return cast(__m128i)r;
     }
