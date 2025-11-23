@@ -2068,8 +2068,63 @@ unittest
     assert(A.array == correctA);
 }
 
-// TODO __m256i _mm256_i32gather_epi64 (__int64 const* base_addr, __m128i vindex, const int scale) pure @safe
-// TODO __m256i _mm256_mask_i32gather_epi64 (__m256i src, __int64 const* base_addr, __m128i vindex, __m256i mask, const int scale) pure @safe
+/// Gather 64-bit integers from memory using 32-bit indices. 64-bit elements are loaded 
+/// from addresses starting at `base_addr` and offset by each 32-bit element in `vindex`
+/// (each index is scaled by the factor in `scale`). Gathered elements are returned. 
+/// `scale` should be 1, 2, 4 or 8.
+__m256i _mm256_i32gather_epi64(int scale)(const(long)* base_addr, __m128i vindex) @system
+{
+    __m256i src = void;
+    return _mm256_mask_i32gather_epi64!scale(src, base_addr, vindex, _mm256_set1_epi64(-1));
+}
+unittest
+{
+    long[8] data = [0, 1, 2, 3, 
+                    4, 5, 6, 7]; 
+    __m128i vindex = _mm_setr_epi32(-4, 24, 0, 12);
+    long4 A = cast(long4) _mm256_i32gather_epi64!2(&data[1], vindex);
+    long[4] correctA = [0, 7, 1, 4];
+    assert(A.array == correctA);
+}
+
+/// Gather 64-bit integers from memory using 32-bit indices. 64-bit elements are loaded 
+/// from addresses starting at `base_addr` and offset by each 32-bit element in `vindex` 
+/// (each index is scaled by the factor in `scale`). Gathered elements are merged using mask 
+/// (elements are copied from `src` when the highest bit is not set in the corresponding element). 
+/// `scale` should be 1, 2, 4 or 8.
+__m256i _mm256_mask_i32gather_epi64(int scale)(__m256i src, const(long)* base_addr, __m128i vindex, __m256i mask) @system
+{
+
+    {
+        long4 r;
+        int4 vindexi = cast(int4)vindex;
+        long4 srci = cast(long4)src;
+        long4 maski = cast(long4)mask;
+        for (int n = 0; n < 4; ++n)
+        {
+            int index = vindexi.array[n];
+            long offset = cast(long)index * scale;
+            void* p = cast(void*)(base_addr);
+            if (maski.array[n] < 0)
+                r.ptr[n] = *cast(long*)(p + offset);
+            else
+                r.ptr[n] = srci.ptr[n];
+        }
+        return cast(__m256i)r;
+    }
+}
+unittest
+{
+    long[8] data = [0, 1, 2, 3, 
+                    4, 5, 6, 7]; 
+    __m256i src    = _mm256_setr_epi64(-1, -2, -3, -4);
+    __m256i mask   = _mm256_setr_epi64(0, -1, 0, -1);
+    __m128i vindex = _mm_setr_epi32(-400, 3*8, 420, 4);
+    long4 A = cast(long4) _mm256_mask_i32gather_epi64!2(src, &data[1], vindex, mask);
+    long[4] correctA = [-1, 7, -3, 2];
+    assert(A.array == correctA);
+}
+
 // TODO __m128d _mm_i32gather_pd (double const* base_addr, __m128i vindex, const int scale) pure @safe
 // TODO __m128d _mm_mask_i32gather_pd (__m128d src, double const* base_addr, __m128i vindex, __m128d mask, const int scale) pure @safe
 // TODO __m256d _mm256_i32gather_pd (double const* base_addr, __m128i vindex, const int scale) pure @safe
@@ -2078,6 +2133,7 @@ unittest
 // TODO __m128 _mm_mask_i32gather_ps (__m128 src, float const* base_addr, __m128i vindex, __m128 mask, const int scale) pure @safe
 // TODO __m256 _mm256_i32gather_ps (float const* base_addr, __m256i vindex, const int scale) pure @safe
 // TODO __m256 _mm256_mask_i32gather_ps (__m256 src, float const* base_addr, __m256i vindex, __m256 mask, const int scale) pure @safe
+
 // TODO __m128i _mm_i64gather_epi32 (int const* base_addr, __m128i vindex, const int scale) pure @safe
 // TODO __m128i _mm_mask_i64gather_epi32 (__m128i src, int const* base_addr, __m128i vindex, __m128i mask, const int scale) pure @safe
 // TODO __m128i _mm256_i64gather_epi32 (int const* base_addr, __m256i vindex, const int scale) pure @safe
@@ -2086,6 +2142,7 @@ unittest
 // TODO __m128i _mm_mask_i64gather_epi64 (__m128i src, __int64 const* base_addr, __m128i vindex, __m128i mask, const int scale) pure @safe
 // TODO __m256i _mm256_i64gather_epi64 (__int64 const* base_addr, __m256i vindex, const int scale) pure @safe
 // TODO __m256i _mm256_mask_i64gather_epi64 (__m256i src, __int64 const* base_addr, __m256i vindex, __m256i mask, const int scale) pure @safe
+
 // TODO __m128d _mm_i64gather_pd (double const* base_addr, __m128i vindex, const int scale) pure @safe
 // TODO __m128d _mm_mask_i64gather_pd (__m128d src, double const* base_addr, __m128i vindex, __m128d mask, const int scale) pure @safe
 // TODO __m256d _mm256_i64gather_pd (double const* base_addr, __m256i vindex, const int scale) pure @safe
