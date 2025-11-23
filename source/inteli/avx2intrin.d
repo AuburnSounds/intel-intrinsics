@@ -1848,18 +1848,23 @@ unittest
     assert(C.array == correct);
 }
 
+/// Gather 32-bit integers from memory using 32-bit indices. 32-bit elements are loaded 
+/// from addresses starting at `base_addr` and offset by each 32-bit element in `vindex` 
+/// (each index is scaled by the factor in `scale`). Return gathered elements. 
+/// `scale` should be 1, 2, 4 or 8.
 __m128i _mm_i32gather_epi32(int scale)(const(int)* base_addr, __m128i vindex)
 {
     __m128i src = _mm_undefined_si128();
     return _mm_mask_i32gather_epi32!scale(src, m, vindex, _mm_set1_epi32(-1));
 }
 
-private bool isValidSIBScale(const int scale)
-{
-    // Encoded using two SIB bits in the x86 instruction
-    return scale == 1 || scale == 2 || scale == 4 || scale == 8;
-}
 
+
+/// Gather 32-bit integers from memory using 32-bit indices. 32-bit elements are loaded 
+/// from addresses starting at `base_addr` and offset by each 32-bit element in `vindex` 
+/// (each index is scaled by the factor in `scale`). Gathered elements are merged using 
+/// `mask` (elements are copied from `src` when the highest bit is not set in the 
+/// corresponding element). `scale` should be 1, 2, 4 or 8.
 __m128i _mm_mask_i32gather_epi32(int scale)(__m128i src, const(int)* base_addr, __m128i vindex, __m128i mask) @system
 {
     static assert(isValidSIBScale(scale));
@@ -5030,6 +5035,11 @@ unittest
     assert(R.array == correct);
 }
 
+private bool isValidSIBScale(const int scale)
+{
+    // Encoded using two SIB bits in the x86 instruction
+    return scale == 1 || scale == 2 || scale == 4 || scale == 8;
+}
 
 /+
 // IN GCC parlance:
