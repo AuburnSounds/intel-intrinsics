@@ -1852,13 +1852,11 @@ unittest
 /// from addresses starting at `base_addr` and offset by each 32-bit element in `vindex` 
 /// (each index is scaled by the factor in `scale`). Return gathered elements. 
 /// `scale` should be 1, 2, 4 or 8.
-__m128i _mm_i32gather_epi32(int scale)(const(int)* base_addr, __m128i vindex)
+__m128i _mm_i32gather_epi32(int scale)(const(int)* base_addr, __m128i vindex) @system
 {
-    __m128i src = _mm_undefined_si128();
-    return _mm_mask_i32gather_epi32!scale(src, m, vindex, _mm_set1_epi32(-1));
+    __m128i src = void;
+    return _mm_mask_i32gather_epi32!scale(src, base_addr, vindex, _mm_set1_epi32(-1));
 }
-
-
 
 /// Gather 32-bit integers from memory using 32-bit indices. 32-bit elements are loaded 
 /// from addresses starting at `base_addr` and offset by each 32-bit element in `vindex` 
@@ -1916,10 +1914,75 @@ unittest
     assert(C.array == correctC);
 }
 
+/// Gather 32-bit integers from memory using 32-bit indices. 32-bit elements are loaded 
+/// from addresses starting at `base_addr` and offset by each 32-bit element in `vindex` 
+/// (each index is scaled by the factor in `scale`). Gathered elements are returned. 
+/// `scale` should be 1, 2, 4 or 8.
+__m256i _mm256_i32gather_epi32(int scale)(const(int)* base_addr, __m256i vindex) @system
+{
+    __m256i src = void;
+    return _mm256_mask_i32gather_epi32!scale(src, base_addr, vindex, _mm256_set1_epi32(-1));
+}
 
+/// Gather 32-bit integers from memory using 32-bit indices. 32-bit elements are loaded
+/// from addresses starting at `base_addr` and offset by each 32-bit element in `vindex` 
+/// (each index is scaled by the factor in `scale`). Gathered elements are merged using mask
+/// (elements are copied from `src` when the highest bit is not set in the corresponding element).
+/// `scale` should be 1, 2, 4 or 8.
+__m256i _mm256_mask_i32gather_epi32(int scale)(__m256i src, const(int)* base_addr, __m256i vindex, __m256i mask) @system
+{
+    static assert(isValidSIBScale(scale));
+    static if (LDC_with_AVX2)
+    {
+        // Not pure, so the intrinsic cannot be pure.
+        return cast(__m256i) __builtin_ia32_gatherd_d256(cast(int8)src, base_addr, cast(int8)vindex, cast(int8)mask, cast(ubyte)scale);
+    }
+    else static if (GDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_gathersiv8si (cast(int8)src, base_addr, cast(int8)vindex, cast(int8)mask, scale);
+    }
+    else
+    {
+        int8 r;
+        int8 vindexi = cast(int8)vindex;
+        int8 srci = cast(int8)src;
+        int8 maski = cast(int8)mask;
+        for (int n = 0; n < 8; ++n)
+        {
+            int index = vindexi.array[n];
+            long offset = cast(long)index * scale;
+            void* p = cast(void*)(base_addr);
+            if (maski.array[n] < 0)
+                r.ptr[n] = *cast(int*)(p + offset);
+            else
+                r.ptr[n] = srci.ptr[n];
+        }
+        return cast(__m256i)r;
+    }
+}
+unittest
+{
+    int[24] data = [0, 1, 2, 3, 
+                    4, 5, 6, 7, 
+                    8, 9, 10, 11, 
+                    12, 13, 14, 15,
+                    16, 17, 18, 19,
+                    20, 21, 22, 23];
+    __m256i src    = _mm256_setr_epi32(-1, -2, -3, -4, -5, -6, -7, -8);
+    __m256i mask   = _mm256_setr_epi32(-4,  4, -1, -2,  0,  0, -8, -9);
+    __m256i vindex = _mm256_setr_epi32(-4,  4,  0,  8,  0, 12, -8,  4);
 
-// TODO __m256i _mm256_i32gather_epi32 (int const* base_addr, __m256i vindex, const int scale) pure @safe
-// TODO __m256i _mm256_mask_i32gather_epi32 (__m256i src, int const* base_addr, __m256i vindex, __m256i mask, const int scale) pure @safe
+    int8 A = cast(int8) _mm256_mask_i32gather_epi32!1(src, &data[10], vindex, mask);
+    int8 B = cast(int8) _mm256_mask_i32gather_epi32!2(src, &data[10], vindex, mask);
+    int8 C = cast(int8) _mm256_mask_i32gather_epi32!4(src, &data[10], vindex, mask);
+    int[8] correctA = [9, -2, 10, 12, -5, -6, 8, 11];
+    int[8] correctB = [8, -2, 10, 14, -5, -6, 6, 12];
+    int[8] correctC = [6, -2, 10, 18, -5, -6, 2, 14];
+    assert(A.array == correctA);
+    assert(B.array == correctB);
+    assert(C.array == correctC);
+}
+
 // TODO __m128i _mm_i32gather_epi64 (__int64 const* base_addr, __m128i vindex, const int scale) pure @safe
 // TODO __m128i _mm_mask_i32gather_epi64 (__m128i src, __int64 const* base_addr, __m128i vindex, __m128i mask, const int scale) pure @safe
 // TODO __m256i _mm256_i32gather_epi64 (__int64 const* base_addr, __m128i vindex, const int scale) pure @safe
