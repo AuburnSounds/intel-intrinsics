@@ -1848,9 +1848,71 @@ unittest
     assert(C.array == correct);
 }
 
+__m128i _mm_i32gather_epi32(int scale)(const(int)* base_addr, __m128i vindex)
+{
+    __m128i src = _mm_undefined_si128();
+    return _mm_mask_i32gather_epi32!scale(src, m, vindex, _mm_set1_epi32(-1));
+}
 
-// TODO __m128i _mm_i32gather_epi32 (int const* base_addr, __m128i vindex, const int scale) pure @safe
-// TODO __m128i _mm_mask_i32gather_epi32 (__m128i src, int const* base_addr, __m128i vindex, __m128i mask, const int scale) pure @safe
+private bool isValidSIBScale(const int scale)
+{
+    // Encoded using two SIB bits in the x86 instruction
+    return scale == 1 || scale == 2 || scale == 4 || scale == 8;
+}
+
+__m128i _mm_mask_i32gather_epi32(int scale)(__m128i src, const(int)* base_addr, __m128i vindex, __m128i mask) @system
+{
+    static assert(isValidSIBScale(scale));
+    static if (LDC_with_AVX2)
+    {
+        return cast(__m128i) __builtin_ia32_gatherd_d(src, base_addr, vindex, mask, cast(ubyte)scale);
+    }
+    else static if (GDC_with_AVX2)
+    {
+        // Not pure, so the intrinsic cannot be pure.
+        return cast(__m128i) __builtin_ia32_gathersiv4si (src, base_addr, vindex, mask, scale);
+    }
+    else
+    {
+        __m128i r;
+        for (int n = 0; n < 4; ++n)
+        {
+            int index = vindex.array[n];
+            long offset = cast(long)index * scale;
+            void* p = cast(void*)(base_addr);
+            if (mask.array[n] < 0)
+                r.ptr[n] = *cast(int*)(p + offset);
+            else
+                r.ptr[n] = src.ptr[n];
+        }
+        return r;
+    }
+}
+unittest
+{
+    int[24] data = [0, 1, 2, 3, 
+                    4, 5, 6, 7, 
+                    8, 9, 10, 11, 
+                    12, 13, 14, 15,
+                    16, 17, 18, 19,
+                    20, 21, 22, 23];
+    __m128i src    = _mm_setr_epi32(-1, -2, -3, -4);
+    __m128i mask   = _mm_setr_epi32(-4,  4, -1, -2);
+    __m128i vindex = _mm_setr_epi32(-4,  4,  0,  8);
+
+    int4 A = cast(int4) _mm_mask_i32gather_epi32!1(src, &data[10], vindex, mask);
+    int4 B = cast(int4) _mm_mask_i32gather_epi32!2(src, &data[10], vindex, mask);
+    int4 C = cast(int4) _mm_mask_i32gather_epi32!4(src, &data[10], vindex, mask);
+    int[4] correctA = [9, -2, 10, 12];
+    int[4] correctB = [8, -2, 10, 14];
+    int[4] correctC = [6, -2, 10, 18];
+    assert(A.array == correctA);
+    assert(B.array == correctB);
+    assert(C.array == correctC);
+}
+
+
+
 // TODO __m256i _mm256_i32gather_epi32 (int const* base_addr, __m256i vindex, const int scale) pure @safe
 // TODO __m256i _mm256_mask_i32gather_epi32 (__m256i src, int const* base_addr, __m256i vindex, __m256i mask, const int scale) pure @safe
 // TODO __m128i _mm_i32gather_epi64 (__int64 const* base_addr, __m128i vindex, const int scale) pure @safe
@@ -4970,9 +5032,11 @@ unittest
 
 
 /+
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.gather.d.d")
-int4 __builtin_ia32_gatherd_d(int4, const void*, int4, int4, byte);
+// IN GCC parlance:
+// v4si => int4
+// v4sf => float4
+// v4df = double4
+// v4di => long 4
 
 pragma(LDC_intrinsic, "llvm.x86.avx2.gather.d.d.256")
 int8 __builtin_ia32_gatherd_d256(int8, const void*, int8, int8, byte);
