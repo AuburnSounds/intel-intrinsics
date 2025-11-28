@@ -245,9 +245,7 @@ unittest
 
         if ( ( abs(groundTruth / approx) - 1 ) >= epsilon)
         {
-            import core.stdc.stdio;
-            debug printf("approxEquals (%g, %g, %g) failed\n", groundTruth, approx, epsilon);
-            debug printf("ratio is %f\n", abs(groundTruth / approx) - 1);
+            assert(false);
         }
 
         return ( abs(groundTruth / approx) - 1 ) < epsilon;
@@ -282,8 +280,6 @@ unittest
             {
                 if (!approxEquals(phobosValue, v.array[i], 3.4e-6))
                 {
-                    import core.stdc.stdio;
-                    printf("x = %f   truth = %f vs estimate = %fn", x, phobosValue, v.array[i]);
                     assert(false);
                 }
             }
