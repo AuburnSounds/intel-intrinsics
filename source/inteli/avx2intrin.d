@@ -1854,7 +1854,7 @@ unittest
 /// `scale` should be 1, 2, 4 or 8.
 __m128i _mm_i32gather_epi32(int scale)(const(int)* base_addr, __m128i vindex) @system
 {
-    __m128i src = void;
+    __m128i src;
     return _mm_mask_i32gather_epi32!scale(src, base_addr, vindex, _mm_set1_epi32(-1));
 }
 unittest
@@ -1929,7 +1929,7 @@ unittest
 /// `scale` should be 1, 2, 4 or 8.
 __m256i _mm256_i32gather_epi32(int scale)(const(int)* base_addr, __m256i vindex) @system
 {
-    __m256i src = void;
+    __m256i src;
     return _mm256_mask_i32gather_epi32!scale(src, base_addr, vindex, _mm256_set1_epi32(-1));
 }
 unittest
@@ -2007,7 +2007,7 @@ unittest
 /// `scale` should be 1, 2, 4 or 8.
 __m128i _mm_i32gather_epi64(int scale)(const(long)* base_addr, __m128i vindex) @system
 {
-    __m128i src = void;
+    __m128i src;
     return _mm_mask_i32gather_epi64!scale(src, base_addr, vindex, _mm_set1_epi64x(-1));
 }
 unittest
@@ -2074,7 +2074,7 @@ unittest
 /// `scale` should be 1, 2, 4 or 8.
 __m256i _mm256_i32gather_epi64(int scale)(const(long)* base_addr, __m128i vindex) @system
 {
-    __m256i src = void;
+    __m256i src;
     return _mm256_mask_i32gather_epi64!scale(src, base_addr, vindex, _mm256_set1_epi64x(-1));
 }
 unittest
