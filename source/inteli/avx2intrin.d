@@ -2,7 +2,7 @@
 * AVX2 intrinsics.
 * https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#techs=AVX2
 *
-* Copyright: Guillaume Piolat 2022-2024.
+* Copyright: Guillaume Piolat 2022-2025.
 *            Johan Engelen 2022.
 *            cet 2024.
 * License:   $(LINK2 http://www.boost.org/LICENSE_1_0.txt, Boost License 1.0)

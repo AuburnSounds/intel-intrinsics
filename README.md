@@ -21,23 +21,27 @@
 
 ## Features
 
+[All supported intrinsics here](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#techs=MMX&ssetechs=SSE,SSE2,SSE3,SSSE3,SSE4_1,SSE4_2&avxnewtechs=AVX,AVX2).
+
 ### SIMD intrinsics with `_mm_` prefix
 
 |       | DMD x86/x86_64        | LDC x86/x86_64         | LDC arm64            | GDC x86_64              |
 |-------|-----------------------|------------------------|----------------------|-------------------------|
-| MMX   | Yes but ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes                      | Yes    | Yes |
+| MMX   | Yes | Yes                      | Yes    | Yes |
 | SSE   | Yes | Yes                      | Yes    | Yes |
-| SSE2  | Yes but ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes                      | Yes    | Yes |
-| SSE3  | Yes but ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes (`-mattr=+sse3`)   | Yes    | Yes (`-msse3`) |
+| SSE2  | Yes | Yes                      | Yes    | Yes |
+| SSE3  | Yes | Yes (`-mattr=+sse3`)   | Yes    | Yes (`-msse3`) |
 | SSSE3 | Yes (`-mcpu`) | Yes (`-mattr=+ssse3`)  | Yes    | Yes  (`-mssse3`) |
-| SSE4.1| Yes but ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes (`-mattr=+sse4.1`) | Yes    | Yes  (`-msse4.1`) |
-| SSE4.2| Yes but ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes (`-mattr=+sse4.2`) | Yes (`-mattr=+crc`)   | Yes (`-msse4.2`) |
-| BMI2  | Yes but ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes (`-mattr=+bmi2`)   | Yes | Yes (`-mbmi2`)  |
-| AVX   | Yes but ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | Yes (`-mattr=+avx`) | Yes | Yes (`-mavx`) |
-| F16C   | WIP, ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | WIP (`-mattr=+f16c`) | WIP | WIP (`-mf16c`) |
-| AVX2  | WIP and ([#42](https://github.com/AuburnSounds/intel-intrinsics/issues/42)) | WIP (`-mattr=+avx2`) | WIP | WIP (`-mavx2`) |
+| SSE4.1| Yes | Yes (`-mattr=+sse4.1`) | Yes    | Yes  (`-msse4.1`) |
+| SSE4.2| Yes | Yes (`-mattr=+sse4.2`) | Yes (`-mattr=+crc`)   | Yes (`-msse4.2`) |
+| BMI2  | Yes | Yes (`-mattr=+bmi2`)   | Yes | Yes (`-mbmi2`)  |
+| AVX   | Yes | Yes (`-mattr=+avx`) | Yes | Yes (`-mavx`) |
+| F16C   | WIP | WIP (`-mattr=+f16c`) | WIP | WIP (`-mf16c`) |
+| AVX2  | WIP | WIP (`-mattr=+avx2`) | WIP | WIP (`-mavx2`) |
 
-The intrinsics implemented follow the syntax and semantics at: https://software.intel.com/sites/landingpage/IntrinsicsGuide/
+The intrinsics implemented follow the syntax and semantics at: 
+  - https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htm
+  - https://www.officedaytime.com/simd512e/
 
 The philosophy (and guarantee) of `intel-intrinsics` is:
  - `intel-intrinsics` generates optimal code else it's a bug.
@@ -54,11 +58,11 @@ The philosophy (and guarantee) of `intel-intrinsics` is:
 
 though most of the time you will deal with:
 ```d
-alias __m128 = float4; 
+alias __m128  = float4; 
 alias __m128i = int4;
 alias __m128d = double2;
-alias __m64 = long1;
-alias __m256 = float8; 
+alias __m64   = long1;
+alias __m256  = float8; 
 alias __m256i = long4;
 alias __m256d = double4;
 ```
@@ -92,15 +96,14 @@ __m128 add_4x_floats(__m128 a, __m128 b)
 
 ### Individual element access
 
-It is recommended to do it in that way for maximum portability:
 ```d
 __m128i A;
 
-// recommended portable way to set a single SIMD element
-A.ptr[0] = 42; 
+// set a single SIMD element (here, in an int4)
+A[0] = 42; 
 
-// recommended portable way to get a single SIMD element
-int elem = A.array[0];
+// get a single SIMD element (here, in an int4)
+int elem = A[0];
 ```
 
 
@@ -120,9 +123,17 @@ The problem with introducing new names is that you need hundreds of new identifi
 
 - **Documentation**
 There is a convenient online guide provided by Intel:
-https://software.intel.com/sites/landingpage/IntrinsicsGuide/
+https://www.intel.com/content/www/us/en/docs/intrinsics-guide/
 Without that Intel documentation, it's impractical to write sizeable SIMD code.
 
+## Recommended for maximum reach on consumer machines
+
+If you'd like to distribute software to consumers, it's safest to
+target SSE3 with `dflags: ["-mattr=+sse3"]`.
+- Apple Rosetta support up to AVX2.
+- Microsoft Prism supports up to SSE4.2.
+
+**Hence it's reach-limiting for consumer target to target above SSE4.2.**
 
 ### Who is using it?
 
