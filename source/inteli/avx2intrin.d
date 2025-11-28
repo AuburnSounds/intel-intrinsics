@@ -2134,9 +2134,12 @@ unittest
     assert(A.array == correctA);
 }
 
-// Note: the floating point gather reuse the integer intrinsics, which gives 
-// the wrong type hint at instruction level however the semantics and execution speed
+// Note: the floating point gathers reuse the integer gathers
 
+/// Gather double-precision (64-bit) floating-point elements from memory using 32-bit indices. 
+/// 64-bit elements are loaded from addresses starting at `base_addr` and offset by each 32-bit 
+/// element in `vindex` (each index is scaled by the factor in `scale`). Gathered elements are returned.
+/// `scale` should be 1, 2, 4 or 8.
 __m128d _mm_i32gather_pd(int scale)(const(double)* base_addr, __m128i vindex) @system
 {
     return cast(__m128d) _mm_i32gather_epi64!scale(cast(const(long)*) base_addr, vindex);
@@ -2151,6 +2154,11 @@ unittest
     assert(A.array == correctA);
 }
 
+/// Gather double-precision (64-bit) floating-point elements from memory using 32-bit indices. 
+/// 64-bit elements are loaded from addresses starting at `base_addr` and offset by each 32-bit 
+/// element in `vindex` (each index is scaled by the factor in `scale`). Gathered elements are merged using `mask` 
+/// (elements are copied from `src` when the highest bit is not set in the corresponding element). 
+/// `scale` should be 1, 2, 4 or 8.
 __m128d _mm_mask_i32gather_pd(int scale)(__m128d src, const(double)* base_addr, __m128i vindex, __m128d mask) @system
 {
     return cast(__m128d) _mm_mask_i32gather_epi64!scale(cast(__m128i)src, cast(const(long)*) base_addr, vindex, cast(__m128i)mask);
@@ -2167,6 +2175,10 @@ unittest
     assert(A.array == correctA);
 }
 
+/// Gather double-precision (64-bit) floating-point elements from memory using 32-bit indices. 
+/// 64-bit elements are loaded from addresses starting at `base_addr` and offset by each 32-bit 
+/// element in `vindex` (each index is scaled by the factor in `scale`). Gathered elements are returned.
+/// `scale` should be 1, 2, 4 or 8.
 __m256d _mm256_i32gather_pd(int scale)(const(double)* base_addr, __m128i vindex) @system
 {
     return cast(__m256d) _mm256_i32gather_epi64!scale(cast(const(long)*) base_addr, vindex);
@@ -2181,6 +2193,11 @@ unittest
     assert(A.array == correctA);
 }
 
+/// Gather double-precision (64-bit) floating-point elements from memory using 32-bit indices. 
+/// 64-bit elements are loaded from addresses starting at `base_addr` and offset by each 32-bit 
+/// element in `vindex` (each index is scaled by the factor in `scale`). Gathered elements are merged using `mask` 
+/// (elements are copied from `src` when the highest bit is not set in the corresponding element). 
+/// `scale` should be 1, 2, 4 or 8.
 __m256d _mm256_mask_i32gather_pd(int scale)(__m256d src, const(double)* base_addr, __m128i vindex, __m256d mask) @system
 {
     return cast(__m256d) _mm256_mask_i32gather_epi64!scale(cast(__m256i)src, cast(const(long)*) base_addr, vindex, cast(__m256i)mask);
@@ -2197,6 +2214,10 @@ unittest
     assert(A.array == correctA);
 }
 
+/// Gather single-precision (32-bit) floating-point elements from memory using 32-bit indices. 
+/// 32-bit elements are loaded from addresses starting at `base_addr` and offset by each 32-bit 
+/// element in `vindex` (each index is scaled by the factor in `scale`). Gathered elements are returned.
+/// `scale` should be 1, 2, 4 or 8.
 __m128 _mm_i32gather_ps(int scale)(const(float)* base_addr, __m128i vindex) @system
 {
     return cast(__m128) _mm_i32gather_epi32!scale(cast(const(int)*) base_addr, vindex);
@@ -2211,6 +2232,11 @@ unittest
     assert(A.array == correctA);
 }
 
+/// Gather single-precision (32-bit) floating-point elements from memory using 32-bit indices.
+/// 32-bit elements are loaded from addresses starting at `base_addr` and offset by each 32-bit 
+/// element in `vindex` (each index is scaled by the factor in `scale`). Gathered elements are merged using `mask` 
+/// (elements are copied from `src` when the highest bit is not set in the corresponding element). 
+/// `scale` should be 1, 2, 4 or 8.
 __m128 _mm_mask_i32gather_ps(int scale)(__m128 src, const(float)* base_addr, __m128i vindex, __m128 mask) @system
 {
     return cast(__m128) _mm_mask_i32gather_epi32!scale(cast(__m128i)src, cast(const(int)*) base_addr, vindex, cast(__m128i)mask);
@@ -2231,6 +2257,10 @@ unittest
     assert(A.array == correctA);
 }
 
+/// Gather single-precision (32-bit) floating-point elements from memory using 32-bit indices. 
+/// 32-bit elements are loaded from addresses starting at `base_addr` and offset by each 32-bit 
+/// element in `vindex` (each index is scaled by the factor in `scale`). Gathered elements are returned.
+/// `scale` should be 1, 2, 4 or 8.
 __m256 _mm256_i32gather_ps(int scale)(const(float)* base_addr, __m256i vindex) @system
 {
     return cast(__m256) _mm256_i32gather_epi32!scale(cast(const(int)*) base_addr, vindex);
@@ -2245,6 +2275,11 @@ unittest
     assert(A.array == correctA);
 }
 
+/// Gather single-precision (32-bit) floating-point elements from memory using 32-bit indices. 
+/// 32-bit elements are loaded from addresses starting at `base_addr` and offset by each 32-bit 
+/// element in `vindex` (each index is scaled by the factor in `scale`). Gathered elements are merged using `mask` 
+/// (elements are copied from `src` when the highest bit is not set in the corresponding element). 
+/// `scale` should be 1, 2, 4 or 8.
 __m256 _mm256_mask_i32gather_ps(int scale)(__m256 src, const(float)* base_addr, __m256i vindex, __m256 mask) @system
 {
     return cast(__m256) _mm256_mask_i32gather_epi32!scale(cast(__m256i)src, cast(const(int)*) base_addr, vindex, cast(__m256i)mask);
