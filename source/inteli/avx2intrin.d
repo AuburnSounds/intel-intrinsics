@@ -2301,8 +2301,70 @@ unittest
     assert(A.array == correctA);
 }
 
-// TODO __m128i _mm_i64gather_epi32 (int const* base_addr, __m128i vindex, const int scale) pure @safe
-// TODO __m128i _mm_mask_i64gather_epi32 (__m128i src, int const* base_addr, __m128i vindex, __m128i mask, const int scale) pure @safe
+/// Gather 32-bit integers from memory using 64-bit indices. 32-bit elements are loaded 
+/// from addresses starting at `base_addr` and offset by each 64-bit element in `vindex` 
+/// (each index is scaled by the factor in `scale`). Return gathered elements. 
+/// `scale` should be 1, 2, 4 or 8.
+__m128i _mm_i64gather_epi32(int scale)(const(int)* base_addr, __m128i vindex) @system
+{
+    __m128i src;
+    return _mm_mask_i64gather_epi32!scale(src, base_addr, vindex, _mm_set1_epi32(-1));
+}
+unittest
+{
+    int[8] data = [0, 1, 2, 3, 
+                   4, 5, 6, 7]; 
+    __m128i vindex = _mm_setr_epi64(-2, 4);
+    int4 A = cast(int4) _mm_i64gather_epi32!2(&data[1], vindex);
+    int[4] correctA = [0, 3, 0, 0];
+    assert(A.array == correctA);
+}
+
+/// Gather 32-bit integers from memory using 64-bit indices. 32-bit elements are loaded 
+/// from addresses starting at `base_addr` and offset by each 64-bit element in `vindex` 
+/// (each index is scaled by the factor in `scale`). Gathered elements are merged using 
+/// `mask` (elements are copied from `src` when the highest bit is not set in the 
+/// corresponding element). `scale` should be 1, 2, 4 or 8.
+__m128i _mm_mask_i64gather_epi32(int scale)(__m128i src, const(int)* base_addr, __m128i vindex, __m128i mask) @system
+{
+    static assert(isValidSIBScale(scale));
+
+    {
+        __m128i r;
+        long2 vindexl = cast(long2)vindex;
+        int4 srci = cast(int4)src;
+        int4 maski = cast(int4)mask;
+        for (int n = 0; n < 2; ++n)
+        {
+            long index = vindexl.array[n];
+            long offset = index * scale;
+            void* p = cast(void*)(base_addr);
+            if (maski.array[n] < 0)
+                r.ptr[n] = *cast(int*)(p + offset);
+            else
+                r.ptr[n] = srci.array[n];
+        }
+        r.ptr[2] = 0;
+        r.ptr[3] = 0;
+        return r;
+    }
+}
+unittest
+{
+    int[24] data = [0, 1, 2, 3, 
+                    4, 5, 6, 7, 
+                    8, 9, 10, 11, 
+                    12, 13, 14, 15,
+                    16, 17, 18, 19,
+                    20, 21, 22, 23];
+    __m128i src    = _mm_setr_epi32(-1, -2, -3, -4);
+    __m128i mask   = _mm_setr_epi32(-4,  4, -1, -2);
+    __m128i vindex = _mm_setr_epi64(-4,  8);
+    int4 C = cast(int4) _mm_mask_i64gather_epi32!4(src, &data[10], vindex, mask);
+    int[4] correctC = [6, -2, 0, 0];
+    assert(C.array == correctC);
+}
+
 // TODO __m128i _mm256_i64gather_epi32 (int const* base_addr, __m256i vindex, const int scale) pure @safe
 // TODO __m128i _mm256_mask_i64gather_epi32 (__m128i src, int const* base_addr, __m256i vindex, __m128i mask, const int scale) pure @safe
 // TODO __m128i _mm_i64gather_epi64 (__int64 const* base_addr, __m128i vindex, const int scale) pure @safe
