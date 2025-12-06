@@ -2669,7 +2669,10 @@ unittest
     assert(A.array == correctA);
 }
 
-
+/// Gather single-precision (32-bit) floating-point elements from memory using 64-bit indices. 
+/// 32-bit elements are loaded from addresses starting at `base_addr` and offset by each 64-bit 
+/// element in `vindex` (each index is scaled by the factor in `scale`). Gathered elements are returned.
+/// `scale` should be 1, 2, 4 or 8.
 __m128 _mm_i64gather_ps(int scale)(const(float)* base_addr, __m128i vindex) @system
 {
     return cast(__m128) _mm_i64gather_epi32!scale(cast(const(int)*)base_addr, vindex);
@@ -2684,6 +2687,11 @@ unittest
     assert(A.array == correctA);
 }
 
+/// Gather single-precision (32-bit) floating-point elements from memory using 64-bit indices.
+/// 32-bit elements are loaded from addresses starting at `base_addr` and offset by each 64-bit 
+/// element in `vindex` (each index is scaled by the factor in `scale`). Gathered elements are merged using `mask` 
+/// (elements are copied from `src` when the highest bit is not set in the corresponding element). 
+/// `scale` should be 1, 2, 4 or 8.
 __m128 _mm_mask_i64gather_ps(int scale)(__m128 src, const(float)* base_addr, __m128i vindex, __m128 mask) @system
 {
     return cast(__m128) _mm_mask_i64gather_epi32!scale(cast(__m128i) src, cast(const(int)*) base_addr, vindex, cast(__m128i) mask);
@@ -2704,6 +2712,10 @@ unittest
     assert(A.array == correctA);
 }
 
+/// Gather single-precision (32-bit) floating-point elements from memory using 64-bit indices. 
+/// 32-bit elements are loaded from addresses starting at `base_addr` and offset by each 64-bit 
+/// element in `vindex` (each index is scaled by the factor in `scale`). Gathered elements are returned.
+/// `scale` should be 1, 2, 4 or 8.
 __m128 _mm256_i64gather_ps(int scale)(const(float)* base_addr, __m256i vindex) @system
 {
     return cast(__m128) _mm256_i64gather_epi32!scale(cast(const(int)*)base_addr, vindex);
@@ -2718,6 +2730,11 @@ unittest
     assert(A.array == correctA);
 }
 
+/// Gather single-precision (32-bit) floating-point elements from memory using 64-bit indices.
+/// 32-bit elements are loaded from addresses starting at `base_addr` and offset by each 64-bit 
+/// element in `vindex` (each index is scaled by the factor in `scale`). Gathered elements are merged using `mask` 
+/// (elements are copied from `src` when the highest bit is not set in the corresponding element). 
+/// `scale` should be 1, 2, 4 or 8.
 __m128 _mm256_mask_i64gather_ps(int scale)(__m128 src, const(float)* base_addr, __m256i vindex, __m128 mask) @system
 {
     return cast(__m128) _mm256_mask_i64gather_epi32!scale(cast(__m128i) src, cast(const(int)*) base_addr, vindex, cast(__m128i) mask);
@@ -5828,56 +5845,3 @@ private bool isValidSIBScale(const int scale)
     // Encoded using two SIB bits in the x86 instruction
     return scale == 1 || scale == 2 || scale == 4 || scale == 8;
 }
-
-/+
-// IN GCC parlance:
-// v4si => int4
-// v4sf => float4
-// v4df = double4
-// v4di => long 4
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.gather.d.d.256")
-int8 __builtin_ia32_gatherd_d256(int8, const void*, int8, int8, byte);
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.gather.d.pd")
-double2 __builtin_ia32_gatherd_pd(double2, const void*, int4, double2, byte);
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.gather.d.pd.256")
-double4 __builtin_ia32_gatherd_pd256(double4, const void*, int4, double4, byte);
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.gather.d.ps")
-float4 __builtin_ia32_gatherd_ps(float4, const void*, int4, float4, byte);
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.gather.d.ps.256")
-float8 __builtin_ia32_gatherd_ps256(float8, const void*, int8, float8, byte);
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.gather.d.q")
-long2 __builtin_ia32_gatherd_q(long2, const void*, int4, long2, byte);
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.gather.d.q.256")
-long4 __builtin_ia32_gatherd_q256(long4, const void*, int4, long4, byte);
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.gather.q.d")
-int4 __builtin_ia32_gatherq_d(int4, const void*, long2, int4, byte);
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.gather.q.d.256")
-int4 __builtin_ia32_gatherq_d256(int4, const void*, long4, int4, byte);
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.gather.q.pd")
-double2 __builtin_ia32_gatherq_pd(double2, const void*, long2, double2, byte);
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.gather.q.pd.256")
-double4 __builtin_ia32_gatherq_pd256(double4, const void*, long4, double4, byte);
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.gather.q.ps")
-float4 __builtin_ia32_gatherq_ps(float4, const void*, long2, float4, byte);
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.gather.q.ps.256")
-float4 __builtin_ia32_gatherq_ps256(float4, const void*, long4, float4, byte);
-
-
-
-pragma(LDC_intrinsic, "llvm.x86.avx2.gather.q.q.256")
-long4 __builtin_ia32_gatherq_q256(long4, const void*, long4, long4, byte);
-
-+/

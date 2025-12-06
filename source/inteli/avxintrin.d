@@ -4987,5 +4987,5 @@ unittest
     assert(R.array == correct);
 }
 
-// __m128i _mm_cvtps_ph (__m128 a, int imm8) TODO
+// __m128i _mm_cvtps_ph (__m128 a, int imm8) TODO F16C
 // __m128i _mm256_cvtps_ph (__m256 a, int imm8) TODO
