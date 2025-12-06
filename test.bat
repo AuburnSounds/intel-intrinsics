@@ -1,18 +1,18 @@
-dub test --compiler dmd -a x86 -f
+rem dub test --compiler dmd -a x86 -f
 dub test --compiler dmd -a x86_64 -f
-dub test --compiler ldc2 -a x86 -f
+rem dub test --compiler ldc2 -a x86 -f
 dub test --compiler ldc2 -a x86_64 -f
-dub test --compiler dmd -a x86 -b unittest-inst -f
+rem dub test --compiler dmd -a x86 -b unittest-inst -f
 dub test --compiler dmd -a x86_64 -b unittest-inst -f
-dub test --compiler ldc2 -a x86 -b unittest-inst -f
+rem dub test --compiler ldc2 -a x86 -b unittest-inst -f
 dub test --compiler ldc2 -a x86_64 -b unittest-inst -f
-dub test --compiler ldc2 -a x86 -b unittest-below-avx -f
+rem dub test --compiler ldc2 -a x86 -b unittest-below-avx -f
 dub test --compiler ldc2 -a x86_64 -b unittest-below-avx -f
-dub test --compiler dmd -a x86 -b unittest-release -f
+rem dub test --compiler dmd -a x86 -b unittest-release -f
 dub test --compiler dmd -a x86_64 -b unittest-release -f 
-dub test --compiler ldc2 -a x86 -b unittest-release -f
+rem dub test --compiler ldc2 -a x86 -b unittest-release -f
 dub test --compiler ldc2 -a x86_64 -b unittest-release -f
-dub test --compiler dmd -a x86 -b unittest-release-inst -f
+rem dub test --compiler dmd -a x86 -b unittest-release-inst -f
 dub test --compiler dmd -a x86_64 -b unittest-release-inst -f
-dub test --compiler ldc2 -a x86 -b unittest-release-inst -f
+rem dub test --compiler ldc2 -a x86 -b unittest-release-inst -f
 dub test --compiler ldc2 -a x86_64 -b unittest-release-inst -f

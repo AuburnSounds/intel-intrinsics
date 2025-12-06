@@ -2451,15 +2451,132 @@ unittest
     assert(B.array == correctB);
     assert(C.array == correctC);
 }
-// TODO __m128i _mm_i64gather_epi64 (__int64 const* base_addr, __m128i vindex, const int scale) pure @safe
-// TODO __m128i _mm_mask_i64gather_epi64 (__m128i src, __int64 const* base_addr, __m128i vindex, __m128i mask, const int scale) pure @safe
+
+/// Gather 64-bit integers from memory using 64-bit indices. 64-bit elements are loaded 
+/// from addresses starting at `base_addr` and offset by each 64-bit element in `vindex` 
+/// (each index is scaled by the factor in `scale`). Gathered elements are returned. 
+/// `scale` should be 1, 2, 4 or 8.
+__m128i _mm_i64gather_epi64(int scale)(const(long)* base_addr, __m128i vindex) @system
+{
+    __m128i src;
+    return _mm_mask_i64gather_epi64!scale(src, base_addr, vindex, _mm_set1_epi64x(-1));
+}
+unittest
+{
+    long[8] data = [0, 1, 2, 3, 
+                    4, 5, 6, 7]; 
+    __m128i vindex = _mm_setr_epi64(-4, 24);
+    long2 A = cast(long2) _mm_i64gather_epi64!2(&data[1], vindex);
+    long[2] correctA = [0, 7];
+    assert(A.array == correctA);
+}
+
+/// Gather 64-bit integers from memory using 32-bit indices. 64-bit elements are loaded 
+/// from addresses starting at `base_addr` and offset by each 32-bit element in `vindex` 
+/// (each index is scaled by the factor in `scale`). Gathered elements are merged using mask 
+/// (elements are copied from `src` when the highest bit is not set in the corresponding element). 
+/// `scale` should be 1, 2, 4 or 8.
+__m128i _mm_mask_i64gather_epi64(int scale)(__m128i src, const(long)* base_addr, __m128i vindex, __m128i mask) @system
+{
+    static assert(isValidSIBScale(scale));
+    //TODO
+/*    static if (GDC_with_AVX2)
+    {
+        return cast(__m128i) __builtin_ia32_gathersiv2di(cast(long2)src, base_addr, cast(int4)vindex, cast(long2)mask, scale);
+    } */
+    static if (LDC_with_AVX2)
+    {
+        return cast(__m128i) __builtin_ia32_gatherq_q(cast(long2)src, base_addr, cast(long2)vindex, cast(long2)mask, scale);
+    }
+    else
+    {
+        // Note: top 2 indexes in vindex are unused
+        long2 r;
+        long2 vindexi = cast(long2)vindex;
+        long2 srci = cast(long2)src;
+        long2 maski = cast(long2)mask;
+        for (int n = 0; n < 2; ++n)
+        {
+            long index = vindexi.array[n];
+            long offset = index * scale;
+            void* p = cast(void*)(base_addr);
+            if (maski.array[n] < 0)
+                r.ptr[n] = *cast(long*)(p + offset);
+            else
+                r.ptr[n] = srci.array[n];
+        }
+        return cast(__m128i)r;
+    }
+}
+unittest
+{
+    long[8] data = [0, 1, 2, 3, 
+                    4, 5, 6, 7]; 
+    __m128i src    = _mm_setr_epi64(-1, -2);
+    __m128i mask   = _mm_setr_epi64(0, -1);
+    __m128i vindex = _mm_setr_epi64(-400, 3*8);
+    long2 A = cast(long2) _mm_mask_i64gather_epi64!2(src, &data[1], vindex, mask);
+    long2 B = cast(long2) _mm_mask_i64gather_epi64!1(src, &data[1], vindex, mask);
+    long[2] correctA = [-1, 7];
+    long[2] correctB = [-1, 4];
+    assert(A.array == correctA);
+    assert(B.array == correctB);
+}
+
+
 // TODO __m256i _mm256_i64gather_epi64 (__int64 const* base_addr, __m256i vindex, const int scale) pure @safe
 // TODO __m256i _mm256_mask_i64gather_epi64 (__m256i src, __int64 const* base_addr, __m256i vindex, __m256i mask, const int scale) pure @safe
 
-// TODO __m128d _mm_i64gather_pd (double const* base_addr, __m128i vindex, const int scale) pure @safe
-// TODO __m128d _mm_mask_i64gather_pd (__m128d src, double const* base_addr, __m128i vindex, __m128d mask, const int scale) pure @safe
-// TODO __m256d _mm256_i64gather_pd (double const* base_addr, __m256i vindex, const int scale) pure @safe
-// TODO __m256d _mm256_mask_i64gather_pd (__m256d src, double const* base_addr, __m256i vindex, __m256d mask, const int scale) pure @safe
+/// Gather double-precision (64-bit) floating-point elements from memory using 64-bit indices. 
+/// 64-bit elements are loaded from addresses starting at `base_addr` and offset by each 64-bit 
+/// element in `vindex` (each index is scaled by the factor in `scale`). Gathered elements are 
+/// returned. `scale` should be 1, 2, 4 or 8.
+__m128d _mm_i64gather_pd(int scale)(const(double)* base_addr, __m128i vindex) @system
+{
+    return cast(__m128d) _mm_i64gather_epi64!scale(cast(const(long)*)base_addr, vindex);
+}
+unittest
+{
+    double[8] data = [0.0, 1.0, 2.0, 3.0, 
+                      4.0, 5.0, 6.0, 7.0]; 
+    __m128i vindex = _mm_setr_epi64(-4, 24);
+    __m128d A = _mm_i64gather_pd!2(&data[1], vindex);
+    double[2] correctA = [0.0, 7.0];
+    assert(A.array == correctA);
+}
+
+/// Gather double-precision (64-bit) floating-point elements from memory using 64-bit indices. 
+/// 64-bit elements are loaded from addresses starting at `base_addr` and offset by each 64-bit 
+/// element in `vindex` (each index is scaled by the factor in `scale`). Gathered elements are merged 
+/// into result using `mask` (elements are copied from `src` when the highest bit is not set in the 
+/// corresponding element). `scale` should be 1, 2, 4 or 8.
+__m128d _mm_mask_i64gather_pd(int scale)(__m128d src, const(double)* base_addr, __m128i vindex, __m128d mask) @system
+{
+    return cast(__m128d) _mm_mask_i64gather_epi64!scale(cast(__m128i)src, cast(const(long)*)base_addr, vindex, cast(__m128i) mask);
+}
+unittest
+{
+    double[8] data = [0.0, 1.0, 2.0, 3.0, 
+                      4.0, 5.0, 6.0, 7.0]; 
+    __m128d src    = _mm_setr_pd(-1.0, -2.0);
+    __m128d mask   = _mm_setr_pd(0.0, -1.0);
+    __m128i vindex = _mm_setr_epi64(-400, 3*8);
+    __m128d A = _mm_mask_i64gather_pd!2(src, &data[1], vindex, mask);
+    double[2] correctA = [-1.0, 7.0];
+    assert(A.array == correctA);
+}
+
+/*
+__m256d _mm256_i64gather_pd(int scale)(const(double)* base_addr, __m256i vindex) @system
+{
+    return cast(__m256d) _mm256_i64gather_epi64!scale(cast(const(long)*)base_addr, vindex);
+}
+
+__m256d _mm256_mask_i64gather_pd(int scale)(__m256d src, const(double)* base_addr, __m256i vindex, __m256d mask) @system
+{
+    return cast(__m256d) _mm_mask_i64gather_epi64!scale(cast(__m256i)src, cast(const(long)*)base_addr, vindex, cast(__m256i) mask);
+}*/
+
 // TODO __m128 _mm_i64gather_ps (float const* base_addr, __m128i vindex, const int scale) pure @safe
 // TODO __m128 _mm_mask_i64gather_ps (__m128 src, float const* base_addr, __m128i vindex, __m128 mask, const int scale) pure @safe
 // TODO __m128 _mm256_i64gather_ps (float const* base_addr, __m256i vindex, const int scale) pure @safe
@@ -5603,8 +5720,7 @@ float4 __builtin_ia32_gatherq_ps(float4, const void*, long2, float4, byte);
 pragma(LDC_intrinsic, "llvm.x86.avx2.gather.q.ps.256")
 float4 __builtin_ia32_gatherq_ps256(float4, const void*, long4, float4, byte);
 
-pragma(LDC_intrinsic, "llvm.x86.avx2.gather.q.q")
-long2 __builtin_ia32_gatherq_q(long2, const void*, long2, long2, byte);
+
 
 pragma(LDC_intrinsic, "llvm.x86.avx2.gather.q.q.256")
 long4 __builtin_ia32_gatherq_q256(long4, const void*, long4, long4, byte);
