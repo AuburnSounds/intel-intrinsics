@@ -2284,7 +2284,7 @@ __m256 _mm256_mask_i32gather_ps(int scale)(__m256 src, const(float)* base_addr, 
 {
     return cast(__m256) _mm256_mask_i32gather_epi32!scale(cast(__m256i)src, cast(const(int)*) base_addr, vindex, cast(__m256i)mask);
 }
-unittest
+unittest 
 {
     float[24] data = [0.0f, 1.0f, 2.0f, 3.0f,
                       4.0f, 5.0f, 6.0f, 7.0f,
@@ -2318,7 +2318,7 @@ unittest
     int4 A = cast(int4) _mm_i64gather_epi32!2(&data[1], vindex);
     int[4] correctA = [0, 3, 0, 0];
     assert(A.array == correctA);
-}
+} 
 
 /// Gather 32-bit integers from memory using 64-bit indices. 32-bit elements are loaded 
 /// from addresses starting at `base_addr` and offset by each 64-bit element in `vindex` 
@@ -2523,9 +2523,73 @@ unittest
     assert(B.array == correctB);
 }
 
+/// Gather 64-bit integers from memory using 64-bit indices. 
+/// 64-bit elements are loaded from addresses starting at `base_addr` and 
+/// offset by each 64-bit element in `vindex` (each index is scaled by the 
+/// factor in `scale`). Gathered elements are returned. 
+/// `scale` should be 1, 2, 4 or 8.
+__m256i _mm256_i64gather_epi64(int scale)(const(long)* base_addr, __m256i vindex) @system
+{
+    __m256i src;
+    return _mm256_mask_i64gather_epi64!scale(src, base_addr, vindex, _mm256_set1_epi64x(-1));
+}
+unittest
+{
+    long[8] data = [0, 1, 2, 3, 
+                    4, 5, 6, 7]; 
+    __m256i vindex = _mm256_setr_epi64(-4, 24, 12, 4);
+    long4 A = cast(long4) _mm256_i64gather_epi64!2(&data[1], vindex);
+    long[4] correctA = [0, 7, 4, 2];
+    assert(A.array == correctA);
+}
 
-// TODO __m256i _mm256_i64gather_epi64 (__int64 const* base_addr, __m256i vindex, const int scale) pure @safe
-// TODO __m256i _mm256_mask_i64gather_epi64 (__m256i src, __int64 const* base_addr, __m256i vindex, __m256i mask, const int scale) pure @safe
+/// Gather 64-bit integers from memory using 64-bit indices. 
+/// 64-bit elements are loaded from addresses starting at `base_addr` and offset by each
+/// 64-bit element in `vindex` (each index is scaled by the factor in `scale`). 
+/// Gathered elements are merged into `dst` using mask (elements are copied from `src`
+/// when the highest bit is not set in the corresponding element). 
+/// `scale` should be 1, 2, 4 or 8.
+__m256i _mm256_mask_i64gather_epi64(int scale)(__m256i src, const(long)* base_addr, __m256i vindex, __m256i mask) @system
+{
+    static assert(isValidSIBScale(scale));
+    static if (LDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_gatherq_q256(cast(long4)src, base_addr, cast(long4)vindex, cast(long4)mask, scale);
+    }
+    else static if (GDC_with_AVX2)
+    {
+        return cast(__m256i) __builtin_ia32_gatherdiv4di (cast(long4)src, base_addr, cast(long4)vindex, cast(long4)mask, scale);
+    }
+    else 
+    {
+        long4 r;
+        long4 vindexi = cast(long4)vindex;
+        long4 srci = cast(long4)src;
+        long4 maski = cast(long4)mask;
+        for (int n = 0; n < 4; ++n)
+        {
+            long index = vindexi.array[n];
+            long offset = index * scale;
+            void* p = cast(void*)(base_addr);
+            if (maski.array[n] < 0)
+                r.ptr[n] = *cast(long*)(p + offset);
+            else
+                r.ptr[n] = srci.array[n];
+        }
+        return cast(__m256i)r;
+    }
+}
+unittest
+{
+    long[8] data = [0, 1, 2, 3, 
+                    4, 5, 6, 7]; 
+    __m256i src    = _mm256_setr_epi64(-1, -2, -3, -4);
+    __m256i mask   = _mm256_setr_epi64(0, -1, 0, -1);
+    __m256i vindex = _mm256_setr_epi64(-400, 3*8, 420, 4);
+    long4 A = cast(long4) _mm256_mask_i64gather_epi64!2(src, &data[1], vindex, mask);
+    long[4] correctA = [-1, 7, -3, 2];
+    assert(A.array == correctA);
+}
 
 /// Gather double-precision (64-bit) floating-point elements from memory using 64-bit indices. 
 /// 64-bit elements are loaded from addresses starting at `base_addr` and offset by each 64-bit 
@@ -2548,7 +2612,7 @@ unittest
 /// Gather double-precision (64-bit) floating-point elements from memory using 64-bit indices. 
 /// 64-bit elements are loaded from addresses starting at `base_addr` and offset by each 64-bit 
 /// element in `vindex` (each index is scaled by the factor in `scale`). Gathered elements are merged 
-/// into result using `mask` (elements are copied from `src` when the highest bit is not set in the 
+/// into `dst` using `mask` (elements are copied from `src` when the highest bit is not set in the 
 /// corresponding element). `scale` should be 1, 2, 4 or 8.
 __m128d _mm_mask_i64gather_pd(int scale)(__m128d src, const(double)* base_addr, __m128i vindex, __m128d mask) @system
 {
