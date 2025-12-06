@@ -2479,12 +2479,12 @@ unittest
 __m128i _mm_mask_i64gather_epi64(int scale)(__m128i src, const(long)* base_addr, __m128i vindex, __m128i mask) @system
 {
     static assert(isValidSIBScale(scale));
-    //TODO
-/*    static if (GDC_with_AVX2)
+
+    static if (GDC_with_AVX2)
     {
-        return cast(__m128i) __builtin_ia32_gathersiv2di(cast(long2)src, base_addr, cast(int4)vindex, cast(long2)mask, scale);
-    } */
-    static if (LDC_with_AVX2)
+        return cast(__m128i) __builtin_ia32_gatherdiv2di(cast(long2)src, base_addr, cast(long2)vindex, cast(long2)mask, scale);
+    }
+    else static if (LDC_with_AVX2)
     {
         return cast(__m128i) __builtin_ia32_gatherq_q(cast(long2)src, base_addr, cast(long2)vindex, cast(long2)mask, scale);
     }
