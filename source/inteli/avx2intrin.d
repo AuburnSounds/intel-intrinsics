@@ -2329,6 +2329,15 @@ __m128i _mm_mask_i64gather_epi32(int scale)(__m128i src, const(int)* base_addr, 
 {
     static assert(isValidSIBScale(scale));
 
+    static if (GDC_with_AVX2)
+    {
+        return cast(__m128i) __builtin_ia32_gatherdiv4si(cast(int4)src, base_addr, cast(long2)vindex, cast(int4)mask, scale);
+    }
+    else static if (LDC_with_AVX2)
+    {
+        return cast(__m128i) __builtin_ia32_gatherq_d(cast(int4)src, base_addr, cast(long2)vindex, cast(int4)mask, scale);
+    }
+    else
     {
         __m128i r;
         long2 vindexl = cast(long2)vindex;
