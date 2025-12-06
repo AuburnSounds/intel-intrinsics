@@ -2670,11 +2670,73 @@ unittest
 }
 
 
-// TODO __m128 _mm_i64gather_ps (float const* base_addr, __m128i vindex, const int scale) pure @safe
-// TODO __m128 _mm_mask_i64gather_ps (__m128 src, float const* base_addr, __m128i vindex, __m128 mask, const int scale) pure @safe
-// TODO __m128 _mm256_i64gather_ps (float const* base_addr, __m256i vindex, const int scale) pure @safe
-// TODO __m128 _mm256_mask_i64gather_ps (__m128 src, float const* base_addr, __m256i vindex, __m128 mask, const int scale) pure @safe
+__m128 _mm_i64gather_ps(int scale)(const(float)* base_addr, __m128i vindex) @system
+{
+    return cast(__m128) _mm_i64gather_epi32!scale(cast(const(int)*)base_addr, vindex);
+}
+unittest
+{
+    float[8] data = [0.0f, 1.0f, 2.0f, 3.0f, 
+                     4.0f, 5.0f, 6.0f, 7.0f]; 
+    __m128i vindex = _mm_setr_epi64(-2, 12);
+    __m128 A = _mm_i64gather_ps!2(&data[1], vindex);
+    float[4] correctA = [0.0f, 7.0f, 0.0f, 0.0f];
+    assert(A.array == correctA);
+}
 
+__m128 _mm_mask_i64gather_ps(int scale)(__m128 src, const(float)* base_addr, __m128i vindex, __m128 mask) @system
+{
+    return cast(__m128) _mm_mask_i64gather_epi32!scale(cast(__m128i) src, cast(const(int)*) base_addr, vindex, cast(__m128i) mask);
+}
+unittest
+{
+    float[24] data = [0.0f, 1.0f, 2.0f, 3.0f, 
+                      4.0f, 5.0f, 6.0f, 7.0f, 
+                      8.0f, 9.0f, 10.0f, 11.0f, 
+                      12.0f, 13.0f, 14.0f, 15.0f,
+                      16.0f, 17.0f, 18.0f, 19.0f,
+                      20.0f, 21.0f, 22.0f, 23.0f];
+    __m128 src    = _mm_setr_ps(-1.0f, -2.0f, -3.0f, -4.0f);
+    __m128 mask   = _mm_setr_ps(-4.0f,  4.0f, -1.0f, -2.0f);
+    __m128i vindex = _mm_setr_epi64(-4,  4);
+    __m128 A = _mm_mask_i64gather_ps!1(src, &data[10], vindex, mask);
+    float[4] correctA = [9.0f, -2.0f, 0.0f, 0.0f];
+    assert(A.array == correctA);
+}
+
+__m128 _mm256_i64gather_ps(int scale)(const(float)* base_addr, __m256i vindex) @system
+{
+    return cast(__m128) _mm256_i64gather_epi32!scale(cast(const(int)*)base_addr, vindex);
+}
+unittest
+{
+    float[8] data = [0.0f, 1.0f, 2.0f, 3.0f, 
+                     4.0f, 5.0f, 6.0f, 7.0f]; 
+    __m256i vindex = _mm256_setr_epi64(-1, 0, 2, 1);
+    __m128 A = _mm256_i64gather_ps!4(&data[3], vindex);
+    float[4] correctA = [2.0f, 3.0f, 5.0f, 4.0f];
+    assert(A.array == correctA);
+}
+
+__m128 _mm256_mask_i64gather_ps(int scale)(__m128 src, const(float)* base_addr, __m256i vindex, __m128 mask) @system
+{
+    return cast(__m128) _mm256_mask_i64gather_epi32!scale(cast(__m128i) src, cast(const(int)*) base_addr, vindex, cast(__m128i) mask);
+}
+unittest 
+{
+    float[24] data = [0.0f, 1.0f, 2.0f, 3.0f,
+                      4.0f, 5.0f, 6.0f, 7.0f,
+                      8.0f, 9.0f, 10.0f, 11.0f,
+                      12.0f, 13.0f, 14.0f, 15.0f,
+                      16.0f, 17.0f, 18.0f, 19.0f,
+                      20.0f, 21.0f, 22.0f, 23.0f];
+    __m128 src    = _mm_setr_ps(-1.0f, -2.0f, -3.0f, -4.0f);
+    __m128 mask   = _mm_setr_ps(-4.0f, 4.0f, -1.0f, -2.0f);
+    __m256i vindex = _mm256_setr_epi64(-4, 4, 0, 8);
+    __m128 A = _mm256_mask_i64gather_ps!2(src, &data[10], vindex, mask);
+    float[4] correctA = [8.0f, -2.0f, 10.0f, 14.0f];
+    assert(A.array == correctA);
+}
 
 /// Copy `a` to result, then insert 128 bits from `b` into result at the location specified by 
 /// `imm8`.
