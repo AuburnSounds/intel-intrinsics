@@ -2630,16 +2630,45 @@ unittest
     assert(A.array == correctA);
 }
 
-/*
+/// Gather double-precision (64-bit) floating-point elements from memory using 64-bit indices.
+/// 64-bit elements are loaded from addresses starting at `base_addr` and offset by each 64-bit
+/// element in `vindex` (each index is scaled by the factor in `scale`). Gathered elements are returned.
+/// `scale` should be 1, 2, 4 or 8.
 __m256d _mm256_i64gather_pd(int scale)(const(double)* base_addr, __m256i vindex) @system
 {
     return cast(__m256d) _mm256_i64gather_epi64!scale(cast(const(long)*)base_addr, vindex);
 }
+unittest
+{
+    double[8] data = [0.0, 1.0, 2.0, 3.0,
+                      4.0, 5.0, 6.0, 7.0];
+    __m256i vindex = _mm256_setr_epi64(-4, 24, 0, 12);
+    __m256d A = _mm256_i64gather_pd!2(&data[1], vindex);
+    double[4] correctA = [0.0, 7.0, 1.0, 4.0];
+    assert(A.array == correctA);
+}
 
+/// Gather double-precision (64-bit) floating-point elements from memory using 64-bit indices. 
+/// 64-bit elements are loaded from addresses starting at `base_addr` and offset by each 64-bit 
+/// element in `vindex` (each index is scaled by the factor in `scale`). Gathered elements are merged using `mask` 
+/// (elements are copied from `src` when the highest bit is not set in the corresponding element). 
+/// `scale` should be 1, 2, 4 or 8.
 __m256d _mm256_mask_i64gather_pd(int scale)(__m256d src, const(double)* base_addr, __m256i vindex, __m256d mask) @system
 {
-    return cast(__m256d) _mm_mask_i64gather_epi64!scale(cast(__m256i)src, cast(const(long)*)base_addr, vindex, cast(__m256i) mask);
-}*/
+    return cast(__m256d) _mm256_mask_i64gather_epi64!scale(cast(__m256i)src, cast(const(long)*)base_addr, vindex, cast(__m256i) mask);
+}
+unittest
+{    
+    double[8] data = [0.0, 1.0, 2.0, 3.0,
+                      4.0, 5.0, 6.0, 7.0];
+    __m256d src    = _mm256_setr_pd(-1.0, -2.0, -3.0, -4.0);
+    __m256d mask   = _mm256_setr_pd(0.0, -1.0, 0.0, -1.0);
+    __m256i vindex = _mm256_setr_epi64(-400, 3*8, 420, 4);
+    __m256d A = _mm256_mask_i64gather_pd!2(src, &data[1], vindex, mask);
+    double[4] correctA = [-1.0, 7.0, -3.0, 2.0];
+    assert(A.array == correctA);
+}
+
 
 // TODO __m128 _mm_i64gather_ps (float const* base_addr, __m128i vindex, const int scale) pure @safe
 // TODO __m128 _mm_mask_i64gather_ps (__m128 src, float const* base_addr, __m128i vindex, __m128 mask, const int scale) pure @safe
