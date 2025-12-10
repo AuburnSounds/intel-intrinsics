@@ -37,7 +37,7 @@
 | BMI2  | Yes | Yes (`-mattr=+bmi2`)   | Yes | Yes (`-mbmi2`)  |
 | AVX   | Yes | Yes (`-mattr=+avx`) | Yes | Yes (`-mavx`) |
 | F16C   | WIP | WIP (`-mattr=+f16c`) | WIP | WIP (`-mf16c`) |
-| AVX2  | WIP | WIP (`-mattr=+avx2`) | WIP | WIP (`-mavx2`) |
+| AVX2  | Yes | Yes (`-mattr=+avx2`) | Yes | Yes (`-mavx2`) |
 
 The intrinsics implemented follow the syntax and semantics at: 
   - https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.htm
@@ -131,7 +131,7 @@ Without that Intel documentation, it's impractical to write sizeable SIMD code.
 If you'd like to distribute software to consumers, it's safest to
 target SSE3 with `dflags: ["-mattr=+sse3"]`.
 - Apple Rosetta support up to AVX2.
-- Microsoft Prism supports up to SSE4.2.
+- Microsoft Prism barely support AVX/AVX as of Dec 2025.
 
 **Hence it's reach-limiting for consumer target to target above SSE4.2.**
 
