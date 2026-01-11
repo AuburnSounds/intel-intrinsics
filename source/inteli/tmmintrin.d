@@ -405,6 +405,62 @@ unittest
     }
 }
 
+/// Reverse endianness of 16-bit integers in `a`.
+__m128i _mm_bswap_epi16 (__m128i a) pure @safe // #BONUS
+{
+    __m128i order = _mm_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
+    return _mm_shuffle_epi8(a, order);
+}
+unittest
+{
+    __m128i A = _mm_setr_epi16(0x1122, 0x3344, 0, -1, 0x1122, 0x3344, 0, -1);
+    short8 R = cast(short8) _mm_bswap_epi16(A);
+    short[8] correct = [0x2211, 0x4433, 0, -1, 0x2211, 0x4433, 0, -1];
+    assert(R.array == correct);
+}
+
+/// Reverse endianness of 32-bit integers in `a`.
+__m128i _mm_bswap_epi32 (__m128i a) pure @safe // #BONUS
+{
+    __m128i order = _mm_setr_epi8(3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12);
+    return _mm_shuffle_epi8(a, order);
+}
+unittest
+{
+    __m128i A = _mm_setr_epi32(0x11223344, 0x33445566, 0, -1);
+    int4 R = cast(int4) _mm_bswap_epi32(A);
+    int[4] correct = [0x44332211, 0x66554433, 0, -1];
+    assert(R.array == correct);
+}
+
+/// Reverse endianness of 64-bit integers in `a`.
+__m128i _mm_bswap_epi64 (__m128i a) pure @safe // #BONUS
+{
+    __m128i order = _mm_setr_epi8(7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8);
+    return _mm_shuffle_epi8(a, order);
+}
+unittest
+{
+    __m128i A = _mm_setr_epi64(0x11223344_55667788, -1);
+    long2 R = cast(long2) _mm_bswap_epi64(A);
+    long[2] correct = [0x88776655_44332211, -1];
+    assert(R.array == correct);
+}
+
+/// Reverse endianness of 128-bit register `a`.
+__m128i _mm_bswap_si128 (__m128i a) pure @safe // #BONUS
+{
+    __m128i order = _mm_setr_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
+    return _mm_shuffle_epi8(a, order);
+}
+unittest
+{
+    __m128i A = _mm_setr_epi64(0x11223344_55667788, -1);
+    long2 R = cast(long2) _mm_bswap_si128(A);
+    long[2] correct = [-1, 0x88776655_44332211, ];
+    assert(R.array == correct);
+}
+
 /// Horizontally add adjacent pairs of 16-bit integers in `a` and `b`, and pack the signed 16-bit results.
 __m128i _mm_hadd_epi16 (__m128i a, __m128i b) pure @trusted
 {
