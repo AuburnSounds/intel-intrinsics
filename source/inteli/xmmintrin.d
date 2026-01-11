@@ -1751,6 +1751,23 @@ unittest
     assert(R.array == correct);
 }
 
+/// Move the upper 2 32-bit integer elements from `b` to the lower 2 elements of result, and 
+/// copy the upper 2 elements from `a` to the upper 2 elements of dst.
+__m128i _mm_movehl_epi32 (__m128i a, __m128i b) pure @trusted
+{
+    a.ptr[0] = b.array[2];
+    a.ptr[1] = b.array[3];
+    return a;
+}
+unittest
+{
+    __m128i A = _mm_setr_epi32(1, 2, 3, 4);
+    __m128i B = _mm_setr_epi32(5, 6, 7, 8);
+    __m128i R = _mm_movehl_epi32(A, B);
+    int[4] correct = [7, 8, 3, 4];
+    assert(R.array == correct);
+}
+
 /// Move the lower 2 single-precision (32-bit) floating-point elements from `b` to the upper 2 elements of result, and 
 /// copy the lower 2 elements from `a` to the lower 2 elements of result
 __m128 _mm_movelh_ps (__m128 a, __m128 b) pure @trusted
@@ -1773,6 +1790,23 @@ unittest
     __m128 B = _mm_setr_ps(5.0f, 6.0f, 7.0f, 8.0f);
     __m128 R = _mm_movelh_ps(A, B);
     float[4] correct = [1.0f, 2.0f, 5.0f, 6.0f];
+    assert(R.array == correct);
+}
+
+/// Move the lower 2 32-bit integers `b` to the upper 2 elements of result, and 
+/// copy the lower 2 elements from `a` to the lower 2 elements of result
+__m128i _mm_movelh_epi32 (__m128i a, __m128i b) pure @trusted // #BONUS
+{
+    a.ptr[2] = b.array[0];
+    a.ptr[3] = b.array[1];
+    return a;
+}
+unittest
+{
+    __m128i A = _mm_setr_epi32(1, 2, 3, 4);
+    __m128i B = _mm_setr_epi32(5, 6, 7, 8);
+    __m128i R = _mm_movelh_epi32(A, B);
+    int[4] correct = [1, 2, 5, 6];
     assert(R.array == correct);
 }
 
@@ -2966,6 +3000,37 @@ unittest
     float[4] r1 = [1.0f, 5, 9, 13];
     float[4] r2 = [2.0f, 6, 10, 14];
     float[4] r3 = [3.0f, 7, 11, 15];
+    assert(l0.array == r0);
+    assert(l1.array == r1);
+    assert(l2.array == r2);
+    assert(l3.array == r3);
+}
+
+/// Transpose the 4x4 matrix formed by the 4 rows of 32-bit integer elements in row0, row1, 
+/// row2, and row3, and store the transposed matrix in these vectors (row0 now contains column 0, etc.).
+void _MM_TRANSPOSE4_EPI32 (ref __m128i row0, ref __m128i row1, ref __m128i row2, ref __m128i row3) pure @safe // #BONUS
+{
+    __m128i tmp3, tmp2, tmp1, tmp0;
+    tmp0 = _mm_unpacklo_epi32(row0, row1);
+    tmp2 = _mm_unpacklo_epi32(row2, row3);
+    tmp1 = _mm_unpackhi_epi32(row0, row1);
+    tmp3 = _mm_unpackhi_epi32(row2, row3);
+    row0 = _mm_movelh_epi32(tmp0, tmp2);
+    row1 = _mm_movehl_epi32(tmp2, tmp0);
+    row2 = _mm_movelh_epi32(tmp1, tmp3);
+    row3 = _mm_movehl_epi32(tmp3, tmp1);
+}
+unittest
+{
+    __m128i l0 = _mm_setr_epi32(0, 1, 2, 3);
+    __m128i l1 = _mm_set_epi32(7, 6, 5, 4);
+    __m128i l2 = _mm_setr_epi32(8, 9, 10, 11);
+    __m128i l3 = _mm_setr_epi32(12, 13, 14, 15);
+    _MM_TRANSPOSE4_EPI32(l0, l1, l2, l3);
+    int[4] r0 = [0, 4, 8, 12];
+    int[4] r1 = [1, 5, 9, 13];
+    int[4] r2 = [2, 6, 10, 14];
+    int[4] r3 = [3, 7, 11, 15];
     assert(l0.array == r0);
     assert(l1.array == r1);
     assert(l2.array == r2);
