@@ -4900,12 +4900,28 @@ unittest
 
 // F16C start here
 
+enum _MM_FROUND_TO_NEAREST_INT = 0,
+     _MM_FROUND_TO_NEG_INF     = 1,
+     _MM_FROUND_TO_POS_INF     = 2,
+     _MM_FROUND_TO_ZERO        = 3,
+     _MM_FROUND_CUR_DIRECTION  = 4,
+     _MM_FROUND_RAISE_EXC      = 0,
+     _MM_FROUND_NO_EXC         = 8,
+     _MM_FROUND_NINT           = 0,
+     _MM_FROUND_FLOOR = _MM_FROUND_RAISE_EXC | _MM_FROUND_TO_NEG_INF,
+     _MM_FROUND_CEIL  = _MM_FROUND_RAISE_EXC | _MM_FROUND_TO_POS_INF,
+     _MM_FROUND_TRUNC = _MM_FROUND_RAISE_EXC | _MM_FROUND_TO_ZERO,
+     _MM_FROUND_RINT  = _MM_FROUND_RAISE_EXC | _MM_FROUND_CUR_DIRECTION,
+     _MM_FROUND_NEARBYINT = _MM_FROUND_NO_EXC | _MM_FROUND_CUR_DIRECTION;
+
 /// Convert 4 packed half-precision (16-bit) floating-point elements 
 /// in `a` to packed single-precision (32-bit) floating-point elements.
 /// Note: Only lowest 64-bit of input considered.
 ///       Preserve infinities, sign of zeroes, and NaN-ness.
 __m128 _mm_cvtph_ps(__m128i a) pure @trusted
 {
+    // PERF ARM
+
     short8 sa = cast(short8)a;
 
     static if (LDC_with_F16C)
@@ -4987,5 +5003,78 @@ unittest
     assert(R.array == correct);
 }
 
-// __m128i _mm_cvtps_ph (__m128 a, int imm8) TODO F16C
+/// Convert packed single-precision (32-bit) floating-point elements in a to 
+/// packed half-precision (16-bit) floating-point elements.
+/// Rounding is done according to the imm8[2:0] parameter, which can be one of:
+/// - _MM_FROUND_TO_NEAREST_INT // round to nearest
+/// - _MM_FROUND_TO_NEG_INF     // round down
+/// - _MM_FROUND_TO_POS_INF     // round up
+/// - _MM_FROUND_TO_ZERO        // truncate
+/// - _MM_FROUND_CUR_DIRECTION  // use MXCSR.RC; see _MM_SET_ROUNDING_MODE
+__m128i _mm_cvtps_ph(int imm8)(__m128 a)
+{
+    // Only nearest rounding is supported
+    static assert((imm8 & 3) == _MM_FROUND_TO_NEAREST_INT);
+
+    static if (LDC_with_F16C)
+    {
+        return cast(__m128i) __builtin_ia32_vcvtps2ph(a, imm8);
+    }
+    else
+    {
+        // Source: stb_image_resize2.h
+        // Fabian Giesen's round-to-nearest-even float to half routine
+        __m128  msign       = cast(__m128) _mm_set1_epi32(0x80000000);
+        __m128  justsign    = _mm_and_ps(msign, a);
+        __m128  absf        = _mm_xor_ps(a, justsign);
+        __m128i absf_int    = cast(__m128i) absf;
+        __m128i f16max      = _mm_set1_epi32((127 + 16) << 23);
+        __m128  b_isnan     = _mm_cmpunord_ps(absf, absf); // is this a NaN?
+        __m128i b_isregular = _mm_cmpgt_epi32(f16max, absf_int); // (sub)normalized or special?
+        __m128i c_nanbit    = _mm_set1_epi32(0x200);
+        __m128i c_infty_as_fp16 = _mm_set1_epi32(0x7c00);
+        __m128i nanbit      = _mm_and_si128(_mm_castps_si128(b_isnan), c_nanbit);
+        __m128i inf_or_nan  = _mm_or_si128(nanbit, c_infty_as_fp16); // output for specials
+
+        __m128i min_normal  = _mm_set1_epi32( (127 - 14) << 23 ); // smallest FP32 that yields a normalized FP16
+        __m128i b_issub     = _mm_cmpgt_epi32(min_normal, absf_int);
+        __m128i c_subnorm_magic = _mm_set1_epi32( ((127 - 15) + (23 - 10) + 1) << 23 );
+
+        // "result is subnormal" path
+        __m128  subnorm1    = _mm_add_ps(absf, cast(__m128) c_subnorm_magic); // magic value to round output mantissa
+        __m128i subnorm2    = _mm_sub_epi32(cast(__m128i)(subnorm1), c_subnorm_magic); // subtract out bias
+
+        // "result is normal" path
+        __m128i mantoddbit  = _mm_slli_epi32(absf_int, 31 - 13); // shift bit 13 (mantissa LSB) to sign
+        __m128i mantodd     = _mm_srai_epi32(mantoddbit, 31); // -1 if FP16 mantissa odd, else 0
+
+        __m128i c_normal_bias = _mm_set1_epi32(0xfff - ((127 - 15) << 23) );
+        __m128i round1      = _mm_add_epi32(absf_int, c_normal_bias);
+        __m128i round2      = _mm_sub_epi32(round1, mantodd); // if mantissa LSB odd, bias towards rounding up (RTNE)
+        __m128i normal      = _mm_srli_epi32(round2, 13); // rounded result
+
+        // combine the two non-specials
+        __m128i nonspecial  = _mm_or_si128(_mm_and_si128(subnorm2, b_issub), _mm_andnot_si128(b_issub, normal));
+
+        // merge in specials as well
+        __m128i joined      = _mm_or_si128(_mm_and_si128(nonspecial, b_isregular), _mm_andnot_si128(b_isregular, inf_or_nan));
+
+        __m128i sign_shift  = _mm_srai_epi32(_mm_castps_si128(justsign), 16);
+        __m128i final_ = _mm_or_si128(joined, sign_shift);
+        return _mm_packs_epi32(final_, _mm_setzero_si128());
+    }
+}
+unittest
+{
+    float[4] A = [0.0f, -0.0f, 0.0f, -float.infinity];
+    short8 RA = cast(short8) _mm_cvtps_ph!_MM_FROUND_TO_NEAREST_INT(_mm_loadu_ps(A.ptr));
+    short[8] correctA = [0, cast(short)-32768, 0, cast(short)0xFC00, 0, 0, 0, 0];
+    assert(RA.array == correctA);
+
+    float[4] B = [float.infinity, 210.0f, -210.0f,  32.0000001f];
+    short8 RB = cast(short8) _mm_cvtps_ph!_MM_FROUND_TO_NEAREST_INT(_mm_loadu_ps(B.ptr));
+    short[8] correctB = [0x7C00, 0x5A90, cast(short)0xDA90, 0x5000, 0, 0, 0, 0];
+    assert(RB.array == correctB);
+}
+
 // __m128i _mm256_cvtps_ph (__m256 a, int imm8) TODO
