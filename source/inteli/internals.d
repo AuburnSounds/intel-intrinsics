@@ -429,6 +429,7 @@ enum GDC_or_LDC_with_SSE41 = GDC_with_SSE41 || LDC_with_SSE41;
 enum GDC_or_LDC_with_SSE42 = GDC_with_SSE42 || LDC_with_SSE42;
 
 enum GDC_or_LDC_with_AVX  = GDC_with_AVX  || LDC_with_AVX;
+enum GDC_or_LDC_with_F16C = GDC_with_F16C || LDC_with_F16C;
 enum GDC_or_LDC_with_AVX2 = GDC_with_AVX2 || LDC_with_AVX2;
 enum GDC_or_LDC_with_SHA  = GDC_with_SHA  || LDC_with_SHA;
 enum GDC_or_LDC_with_BMI2 = GDC_with_BMI2 || LDC_with_BMI2;
