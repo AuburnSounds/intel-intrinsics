@@ -5004,19 +5004,26 @@ unittest
 }
 
 /// Convert packed single-precision (32-bit) floating-point elements in a to 
-/// packed half-precision (16-bit) floating-point elements.
-/// Rounding is done according to the imm8[2:0] parameter, which can be one of:
+/// packed half-precision (16-bit) floating-point elements USING NEAREST ROUNDING.
+///
+/// Normally rounding is done according to the imm8[2:0] parameter, which can be one of:
 /// - _MM_FROUND_TO_NEAREST_INT // round to nearest
 /// - _MM_FROUND_TO_NEG_INF     // round down
 /// - _MM_FROUND_TO_POS_INF     // round up
 /// - _MM_FROUND_TO_ZERO        // truncate
 /// - _MM_FROUND_CUR_DIRECTION  // use MXCSR.RC; see _MM_SET_ROUNDING_MODE
+///
+/// HOWEVER here only nearest rounding is supported, this is ensured statically.
+/// Note: Preserve infinities, sign of zeroes, and NaN-ness.
 __m128i _mm_cvtps_ph(int imm8)(__m128 a)
 {
     // Only nearest rounding is supported
+    // If you REALLY need another rounding mode, contact intel-intrinsics authors.
     static assert((imm8 & 3) == _MM_FROUND_TO_NEAREST_INT);
 
-    static if (LDC_with_F16C)
+    // PERF NEON
+
+    static if (GDC_or_LDC_with_F16C)
     {
         return cast(__m128i) __builtin_ia32_vcvtps2ph(a, imm8);
     }
@@ -5077,4 +5084,45 @@ unittest
     assert(RB.array == correctB);
 }
 
-// __m128i _mm256_cvtps_ph (__m256 a, int imm8) TODO
+/// Convert packed single-precision (32-bit) floating-point elements in a to 
+/// packed half-precision (16-bit) floating-point elements USING NEAREST ROUNDING.
+///
+/// Normally rounding is done according to the imm8[2:0] parameter, which can be one of:
+/// - _MM_FROUND_TO_NEAREST_INT // round to nearest
+/// - _MM_FROUND_TO_NEG_INF     // round down
+/// - _MM_FROUND_TO_POS_INF     // round up
+/// - _MM_FROUND_TO_ZERO        // truncate
+/// - _MM_FROUND_CUR_DIRECTION  // use MXCSR.RC; see _MM_SET_ROUNDING_MODE
+///
+/// HOWEVER here only nearest rounding is supported, this is ensured statically.
+/// Note: Preserve infinities, sign of zeroes, and NaN-ness.
+__m128i _mm256_cvtps_ph(int imm8)(__m256 a)
+{
+    // Only nearest rounding is supported
+    // If you REALLY need another rounding mode, contact intel-intrinsics authors.
+    static assert((imm8 & 3) == _MM_FROUND_TO_NEAREST_INT);
+
+    // PERF NEON
+    static if (GDC_or_LDC_with_F16C)
+    {
+        return cast(__m128i) __builtin_ia32_vcvtps2ph256(a, imm8);
+    }
+    else
+    {
+        __m128 a_lo = _mm256_extractf128_ps!0(a);
+        __m128 a_hi = _mm256_extractf128_ps!1(a);
+        long2 r_lo = cast(long2) _mm_cvtps_ph!imm8(a_lo);
+        long2 r_hi = cast(long2) _mm_cvtps_ph!imm8(a_hi);
+        long2 r;
+        r.ptr[0] = r_lo.array[0];
+        r.ptr[1] = r_hi.array[0];
+        return cast(__m128i) r;
+    }
+}
+unittest
+{
+    float[8] A = [0.0f, -0.0f, 0.0f, -float.infinity, float.infinity, 210.0f, -210.0f,  32.0000001f];
+    short8 R = cast(short8) _mm256_cvtps_ph!_MM_FROUND_TO_NEAREST_INT(_mm256_loadu_ps(A.ptr));
+    short[8] correct = [0, -32768, 0, cast(short)0xFC00, 0x7C00, 0x5A90, cast(short)0xDA90, 0x5000];
+    assert(R.array == correct);
+}

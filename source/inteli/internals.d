@@ -67,6 +67,7 @@ version(GNU)
         enum GDC_with_SSE41 = false;
         enum GDC_with_SSE42 = false;
         enum GDC_with_AVX = false;
+        enum GDC_with_F16C = false;
         enum GDC_with_AVX2 = false;
         enum GDC_with_SHA = false;
         enum GDC_with_BMI2 = false;
@@ -92,32 +93,38 @@ version(GNU)
         enum GDC_with_SSE = true; // We don't have a way to detect that at CT, but we assume it's there
         enum GDC_with_SSE2 = true; // We don't have a way to detect that at CT, but we assume it's there
 
-        static if (__VERSION__ >= 2100) // Starting at GDC 12.1
+        // Starting at GDC 12.1, detect capabilities with __traits(compiles).
+        // Before GCC 11.3, no reliable way to detect instruction sets.
+        // We start above detection at GCC 12, with DMDFE 2.100, which
+        // is more conservative.
+        static if (__VERSION__ >= 2100) 
         {
             enum GDC_with_SSE3 = __traits(compiles, __builtin_ia32_haddps);
             enum GDC_with_SSSE3 = __traits(compiles, __builtin_ia32_pmulhrsw128);
             enum GDC_with_SSE41 = __traits(compiles, __builtin_ia32_dpps);
             enum GDC_with_SSE42 = __traits(compiles, __builtin_ia32_pcmpgtq);
             enum GDC_with_AVX = __traits(compiles, __builtin_ia32_vbroadcastf128_pd256);
+            enum GDC_with_F16C = __traits(compiles, __builtin_ia32_vcvtps2ph);
             enum GDC_with_AVX2 = __traits(compiles, __builtin_ia32_gathersiv2df);
+            enum GDC_with_SHA = __traits(compiles, __builtin_ia32_sha256msg1);
             enum GDC_with_BMI2 = __traits(compiles, __builtin_ia32_pext_si);
 
         }
         else
         {
-            // Before GCC 11.3, no reliable way to detect instruction sets.
-            // We start above detection at GCC 12, with DMDFE 2.100, which
-            // is more conservative.
+            
             enum GDC_with_SSE3 = false;
             enum GDC_with_SSSE3 = false;
             enum GDC_with_SSE41 = false;
             enum GDC_with_SSE42 = false;
             enum GDC_with_AVX = false;
+            enum GDC_with_F16C = false;
             enum GDC_with_AVX2 = false;
+            enum GDC_with_SHA = false;
             enum GDC_with_BMI2 = false;
         }
 
-        enum GDC_with_SHA = false; // TODO: detect that
+        
     }
     else
     {
@@ -130,6 +137,7 @@ version(GNU)
         enum GDC_with_SSE41 = false;
         enum GDC_with_SSE42 = false;
         enum GDC_with_AVX = false;
+        enum GDC_with_F16C = false;
         enum GDC_with_AVX2 = false;
         enum GDC_with_SHA = false;
         enum GDC_with_BMI2 = false;
@@ -146,6 +154,7 @@ else
     enum GDC_with_SSE41 = false;
     enum GDC_with_SSE42 = false;
     enum GDC_with_AVX = false;
+    enum GDC_with_F16C = false;
     enum GDC_with_AVX2 = false;
     enum GDC_with_SHA = false;
     enum GDC_with_BMI2 = false;
@@ -972,7 +981,14 @@ version(unittest)
     {
         printf("%d %d %d %d\n",
               v.array[0], v.array[1], v.array[2], v.array[3]);
-    }  
+    }
+
+    void _mm_print_short8(short8 v) @trusted
+    {
+        printf("%d %d %d %d %d %d %d %d\n",
+               v.array[0], v.array[1], v.array[2], v.array[3],
+               v.array[4], v.array[5], v.array[6], v.array[7]);
+    } 
 
     void _mm_print_epi16(__m128i v) @trusted
     {
