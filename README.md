@@ -1,4 +1,4 @@
-
+-
 # intel-intrinsics
 
 [![Travis Status](https://api.travis-ci.com/AuburnSounds/intel-intrinsics.svg?branch=master)](https://travis-ci.com/AuburnSounds/intel-intrinsics)
@@ -36,7 +36,7 @@
 | SSE4.2| Yes | Yes (`-mattr=+sse4.2`) | Yes (`-mattr=+crc`)   | Yes (`-msse4.2`) |
 | BMI2  | Yes | Yes (`-mattr=+bmi2`)   | Yes | Yes (`-mbmi2`)  |
 | AVX   | Yes | Yes (`-mattr=+avx`) | Yes | Yes (`-mavx`) |
-| F16C   | WIP | WIP (`-mattr=+f16c`) | WIP | WIP (`-mf16c`) |
+| F16C   | Yes | Yes (`-mattr=+f16c`) | Yes | Yes (`-mf16c`) |
 | AVX2  | Yes | Yes (`-mattr=+avx2`) | Yes | Yes (`-mavx2`) |
 
 The intrinsics implemented follow the syntax and semantics at: 
@@ -163,6 +163,8 @@ target SSE3 with `dflags: ["-mattr=+sse3"]`.
 
 - Masked load/store MUST address fully addressable memory, even if their mask is zero. Pad your buffers.
 - Some AVX float comparisons have an option to signal quiet NaN. This is not followed by intel-intrinsics.
+- The F16C conversions from 32-bit floating point to 16-bit floating point DO NOT respect rounding mode. 
+  It could be any of them, though most of the case this should be nearest.
 
 
 
