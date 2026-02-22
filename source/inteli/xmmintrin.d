@@ -1797,8 +1797,19 @@ unittest
 /// copy the lower 2 elements from `a` to the lower 2 elements of result
 __m128i _mm_movelh_epi32 (__m128i a, __m128i b) pure @trusted // #BONUS
 {
-    a.ptr[2] = b.array[0];
-    a.ptr[3] = b.array[1];
+    version(DigitalMars)
+    {
+        // Crash in DMD 2.098 with -O -inline -a x86
+        // not sure when it was fixed
+        pragma(inline, false);
+        a.ptr[2] = b.array[0];
+        a.ptr[3] = b.array[1];
+    }
+    else
+    {
+        a.ptr[2] = b.array[0];
+        a.ptr[3] = b.array[1];
+    }
     return a;
 }
 unittest
