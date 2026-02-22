@@ -4920,11 +4920,14 @@ enum _MM_FROUND_TO_NEAREST_INT = 0,
 ///       Preserve infinities, sign of zeroes, and NaN-ness.
 __m128 _mm_cvtph_ps(__m128i a) pure @trusted
 {
-    // PERF ARM
-
     short8 sa = cast(short8)a;
 
-    static if (LDC_with_F16C)
+    static if (LDC_with_ARM64)
+    {
+        short4 h = cast(short4) (cast(long2)a).array[0];
+        return vcvt_f32_f16(h);
+    }
+    else static if (LDC_with_F16C)
     {
         // Note: clang has a __builtin_ia32_vcvtph2ps256 but we don't
         // Note: LLVM IR fpext leads to  call __extendhfsf2@PLT
@@ -5013,7 +5016,7 @@ unittest
 /// - _MM_FROUND_TO_ZERO        // truncate
 /// - _MM_FROUND_CUR_DIRECTION  // use MXCSR.RC; see _MM_SET_ROUNDING_MODE
 ///
-/// HOWEVER here only nearest rounding is supported, this is ensured statically.
+/// HOWEVER BUG: here only nearest rounding is supported, this is ensured statically.
 /// Note: Preserve infinities, sign of zeroes, and NaN-ness.
 __m128i _mm_cvtps_ph(int imm8)(__m128 a)
 {
@@ -5021,9 +5024,25 @@ __m128i _mm_cvtps_ph(int imm8)(__m128 a)
     // If you REALLY need another rounding mode, contact intel-intrinsics authors.
     static assert((imm8 & 3) == _MM_FROUND_TO_NEAREST_INT);
 
-    // PERF NEON
+    static if (LDC_with_ARM64)
+    {
+        // BUG: this has semantics different from the x86
+        // version. vcvt_f16_f32 uses FPCR, while the x86
+        // path uses nearest-rounding. 
 
-    static if (GDC_or_LDC_with_F16C)
+        short8 r;
+        short4 h = vcvt_f16_f32(a);
+        r.ptr[0] = h.array[0];
+        r.ptr[1] = h.array[1];
+        r.ptr[2] = h.array[2];
+        r.ptr[3] = h.array[3];
+        r.ptr[4] = 0;
+        r.ptr[5] = 0;
+        r.ptr[6] = 0;
+        r.ptr[7] = 0;
+        return cast(__m128i) r;
+    }
+    else static if (GDC_or_LDC_with_F16C)
     {
         return cast(__m128i) __builtin_ia32_vcvtps2ph(a, imm8);
     }
@@ -5102,8 +5121,28 @@ __m128i _mm256_cvtps_ph(int imm8)(__m256 a)
     // If you REALLY need another rounding mode, contact intel-intrinsics authors.
     static assert((imm8 & 3) == _MM_FROUND_TO_NEAREST_INT);
 
-    // PERF NEON
-    static if (GDC_or_LDC_with_F16C)
+    static if (LDC_with_ARM64)
+    {
+        // BUG: this has semantics different from the x86
+        // version. vcvt_f16_f32 uses FPCR, while the x86
+        // path uses nearest-rounding. 
+
+        __m128 a_lo = _mm256_extractf128_ps!0(a);
+        __m128 a_hi = _mm256_extractf128_ps!1(a);
+        short8 r;
+        short4 h1 = vcvt_f16_f32(a_lo);
+        short4 h2 = vcvt_f16_f32(a_hi);
+        r.ptr[0] = h1.array[0];
+        r.ptr[1] = h1.array[1];
+        r.ptr[2] = h1.array[2];
+        r.ptr[3] = h1.array[3];
+        r.ptr[4] = h2.array[0];
+        r.ptr[5] = h2.array[1];
+        r.ptr[6] = h2.array[2];
+        r.ptr[7] = h2.array[3];
+        return cast(__m128i) r;
+    }
+    else static if (GDC_or_LDC_with_F16C)
     {
         return cast(__m128i) __builtin_ia32_vcvtps2ph256(a, imm8);
     }

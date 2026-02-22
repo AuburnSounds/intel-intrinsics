@@ -1684,6 +1684,14 @@ static if (LDC_with_ARM64)
         int4 vcvtzq_s32_f32(float4 a) pure @safe;
 
 
+    // float4 <=> half4
+
+    pragma(LDC_intrinsic, "llvm.aarch64.neon.vcvtfp2hf")
+        short4 vcvt_f16_f32(float4 a) pure @safe;
+
+    pragma(LDC_intrinsic, "llvm.aarch64.neon.vcvthf2fp")
+        float4 vcvt_f32_f16(short4 a) pure @safe;
+
     // double2 => long2
 
     pragma(LDC_intrinsic, "llvm.aarch64.neon.fcvtms.v2i64.v2f64")
