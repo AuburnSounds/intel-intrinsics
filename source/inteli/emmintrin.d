@@ -834,8 +834,7 @@ __m128i _mm_cmpgt_epi8 (__m128i a, __m128i b) pure @safe
     }
     else
     {
-        // Note: __builtin_ia32_pcmpgtb128 is buggy, do not use with GDC
-        // TODO: re-check that
+        // Note: __builtin_ia32_pcmpgtb128 is buggy on some old GDC, do not use
         return cast(__m128i) greaterMask!byte16(cast(byte16)a, cast(byte16)b);
     }
 }
@@ -4086,7 +4085,7 @@ __m128i _mm_slli_si128(ubyte bytes)(__m128i op) pure @trusted
     }
     else static if (GDC_with_SSE2)
     {
-        pragma(inline, true); // else it doesn't seem to be inlined at all by GDC TODO _mm_srli_si128
+        pragma(inline, true); // else it doesn't seem to be inlined at all by GDC PERF do it in _mm_srli_si128 and check
         return cast(__m128i) __builtin_ia32_pslldqi128(cast(long2)op, cast(ubyte)(bytes * 8)); 
     }
     else static if (LDC_with_optimizations)
