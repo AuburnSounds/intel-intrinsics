@@ -4924,7 +4924,12 @@ __m128 _mm_cvtph_ps(__m128i a) pure @trusted
 
     static if (LDC_with_ARM64)
     {
-        short4 h = cast(short4) (cast(long2)a).array[0];
+        short4 h;
+        short8 as = cast(short8) a;
+        h.ptr[0] = as.array[0];
+        h.ptr[1] = as.array[1];
+        h.ptr[2] = as.array[2];
+        h.ptr[3] = as.array[3];
         return vcvt_f32_f16(h);
     }
     else static if (LDC_with_F16C)
