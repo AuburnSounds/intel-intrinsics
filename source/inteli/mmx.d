@@ -140,7 +140,7 @@ unittest
 }
 
 /// Compare packed 16-bit integers in `a` and `b` for equality.
-__m64 _mm_cmpeq_pi16 (__m64 a, __m64 b) pure @safe
+__m64 _mm_cmpeq_pi16 (__m64 a, __m64 b) pure @trusted
 {
     static if (SIMD_COMPARISON_MASKS_8B)
     {
@@ -150,10 +150,21 @@ __m64 _mm_cmpeq_pi16 (__m64 a, __m64 b) pure @safe
     {
         return cast(__m64) __builtin_ia32_pcmpeqw(cast(short4)a, cast(short4)b);        
     }
+    else version(LDC)
+    {
+        return cast(__m64) equalMask!short4(cast(short4)a, cast(short4)b);
+    }
     else
     {
-        // TODO: replace with plain code unless LDC
-        return cast(__m64) equalMask!short4(cast(short4)a, cast(short4)b);
+        short4 r;
+        short4 sa = cast(short4)a;
+        short4 sb = cast(short4)b;
+        foreach(int i; 0..4)
+        {
+            bool cond = sa.array[i] == sb.array[i];
+            r.ptr[i] = cond ? -1 : 0;
+        }
+        return cast(__m64)r;
     }
 }
 unittest
@@ -166,7 +177,7 @@ unittest
 }
 
 /// Compare packed 32-bit integers in `a` and `b` for equality.
-__m64 _mm_cmpeq_pi32 (__m64 a, __m64 b) pure @safe
+__m64 _mm_cmpeq_pi32 (__m64 a, __m64 b) pure @trusted
 {
     static if (SIMD_COMPARISON_MASKS_8B)
     {
@@ -176,10 +187,21 @@ __m64 _mm_cmpeq_pi32 (__m64 a, __m64 b) pure @safe
     {        
         return cast(__m64) __builtin_ia32_pcmpeqd(cast(int2)a, cast(int2)b);
     }
+    else version(LDC)
+    {
+        return cast(__m64) equalMask!int2(cast(int2)a, cast(int2)b);
+    }
     else
     {
-        // TODO: replace with plain code
-        return cast(__m64) equalMask!int2(cast(int2)a, cast(int2)b);
+        int2 r;
+        int2 ia = cast(int2)a;
+        int2 ib = cast(int2)b;
+        foreach(int i; 0..2)
+        {
+            bool cond = ia.array[i] == ib.array[i];
+            r.ptr[i] = cond ? -1 : 0;
+        }
+        return cast(__m64)r;
     }
 }
 unittest
@@ -192,7 +214,7 @@ unittest
 }
 
 /// Compare packed 8-bit integers in `a` and `b` for equality,
-__m64 _mm_cmpeq_pi8 (__m64 a, __m64 b) pure @safe
+__m64 _mm_cmpeq_pi8 (__m64 a, __m64 b) pure @trusted
 {
     static if (SIMD_COMPARISON_MASKS_8B)
     {
@@ -202,9 +224,21 @@ __m64 _mm_cmpeq_pi8 (__m64 a, __m64 b) pure @safe
     {        
         return cast(__m64) __builtin_ia32_pcmpeqb(cast(ubyte8)a, cast(ubyte8)b);
     }
-    else
+    else version(LDC)
     {
         return cast(__m64) equalMask!byte8(cast(byte8)a, cast(byte8)b);
+    }
+    else
+    {
+        byte8 r;
+        byte8 ba = cast(byte8)a;
+        byte8 bb = cast(byte8)b;
+        foreach(int i; 0..8)
+        {
+            bool cond = ba.array[i] == bb.array[i];
+            r.ptr[i] = cond ? -1 : 0;
+        }
+        return cast(__m64)r;
     }
 }
 unittest
@@ -229,6 +263,7 @@ __m64 _mm_cmpgt_pi16 (__m64 a, __m64 b) pure @safe
     }
     else
     {
+        // TODO: plain code instead, except when LDC
         return cast(__m64) greaterMask!short4(cast(short4)a, cast(short4)b);
     }
 }
@@ -254,6 +289,7 @@ __m64 _mm_cmpgt_pi32 (__m64 a, __m64 b) pure @safe
     }
     else
     {
+        // TODO: plain code instead, except when LDC
         return cast(__m64) greaterMask!int2(cast(int2)a, cast(int2)b);
     }
 }
@@ -267,7 +303,7 @@ unittest
 }
 
 /// Compare packed signed 8-bit integers in `a` and `b` for greater-than.
-__m64 _mm_cmpgt_pi8 (__m64 a, __m64 b) pure @safe
+__m64 _mm_cmpgt_pi8 (__m64 a, __m64 b) pure @trusted
 {
     static if (SIMD_COMPARISON_MASKS_8B)
     {
@@ -277,9 +313,21 @@ __m64 _mm_cmpgt_pi8 (__m64 a, __m64 b) pure @safe
     {
         return cast(__m64) __builtin_ia32_pcmpgtb (cast(ubyte8)a, cast(ubyte8)b);
     }
-    else
+    else version(LDC)
     {
         return cast(__m64) greaterMask!byte8(cast(byte8)a, cast(byte8)b);
+    }
+    else
+    {
+        byte8 ba = cast(byte8)a;
+        byte8 bb = cast(byte8)b;
+        byte8 r;
+        foreach(int i; 0..8)
+        {
+            bool cond = ba.array[i] > bb.array[i];
+            r.ptr[i] = cond ? -1 : 0;
+        }
+        return cast(__m64)r;
     }
 }
 unittest
