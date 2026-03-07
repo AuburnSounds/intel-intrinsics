@@ -572,6 +572,7 @@ __m128i _mm_cmpeq_epi16 (__m128i a, __m128i b) pure @safe
     }
     else
     {
+        // TODO: replace by plain code except when LDC
         return cast(__m128i) equalMask!short8(cast(short8)a, cast(short8)b);
     }
 }
@@ -597,6 +598,7 @@ __m128i _mm_cmpeq_epi32 (__m128i a, __m128i b) pure @safe
     }
     else
     {
+        // TODO: replace with plain code
         return equalMask!__m128i(a, b);
     }
 }
@@ -622,6 +624,7 @@ __m128i _mm_cmpeq_epi8 (__m128i a, __m128i b) pure @safe
     }
     else
     {
+        // TODO: replace by plain code except when LDC
         return cast(__m128i) equalMask!byte16(cast(byte16)a, cast(byte16)b);
     }
 }
@@ -788,6 +791,7 @@ __m128i _mm_cmpgt_epi16 (__m128i a, __m128i b) pure @safe
     }
     else
     {
+        // TODO: plain code instead, except when LDC
         return cast(__m128i) greaterMask!short8(cast(short8)a, cast(short8)b);
     }
 }
@@ -813,6 +817,7 @@ __m128i _mm_cmpgt_epi32 (__m128i a, __m128i b) pure @safe
     }
     else
     {
+        // TODO: plain code instead, except when LDC
         return cast(__m128i)( greaterMask!int4(a, b));
     }
 }
@@ -828,13 +833,14 @@ unittest
 /// Compare packed 8-bit integers in `a` and `b` for greater-than.
 __m128i _mm_cmpgt_epi8 (__m128i a, __m128i b) pure @safe
 {
+    // Note: __builtin_ia32_pcmpgtb128 is buggy on some old GDC, do not use
     static if (SIMD_COMPARISON_MASKS_16B)
     {
         return cast(__m128i)(cast(byte16)a > cast(byte16)b);
     }
     else
     {
-        // Note: __builtin_ia32_pcmpgtb128 is buggy on some old GDC, do not use
+        // TODO: plain code instead, except when LDC
         return cast(__m128i) greaterMask!byte16(cast(byte16)a, cast(byte16)b);
     }
 }

@@ -152,6 +152,7 @@ __m64 _mm_cmpeq_pi16 (__m64 a, __m64 b) pure @safe
     }
     else
     {
+        // TODO: replace with plain code unless LDC
         return cast(__m64) equalMask!short4(cast(short4)a, cast(short4)b);
     }
 }
@@ -177,6 +178,7 @@ __m64 _mm_cmpeq_pi32 (__m64 a, __m64 b) pure @safe
     }
     else
     {
+        // TODO: replace with plain code
         return cast(__m64) equalMask!int2(cast(int2)a, cast(int2)b);
     }
 }

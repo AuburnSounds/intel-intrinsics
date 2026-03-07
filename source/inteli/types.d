@@ -231,6 +231,7 @@ else
         }
     }
 
+    // TODO: remove eventually, when all related todos are done
     Vec equalMask(Vec)(Vec a, Vec b) @trusted // for floats, equivalent to "oeq" comparison
     {
         enum size_t Count = Vec.array.length;
@@ -243,6 +244,7 @@ else
         return result;
     }
 
+    // TODO: remove eventually, when all related todos are done
     Vec greaterMask(Vec)(Vec a, Vec b) @trusted // for floats, equivalent to "ogt" comparison
     {
         enum size_t Count = Vec.array.length;
