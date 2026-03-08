@@ -1640,16 +1640,18 @@ long _mm_cvtsd_si64 (__m128d a) @trusted
 {
     static if (LDC_with_SSE2)
     {
-        version (X86_64)
-        {
-            return __builtin_ia32_cvtsd2si64(a);
-        }
-        else
-        {
-            // Note: In 32-bit x86, there is no way to convert from float/double to 64-bit integer
-            // using SSE instructions only. So the builtin doesn't exist for this arch.
-            return convertDoubleToInt64UsingMXCSR(a[0]);
-        }
+        // This used to be __builtin_ia32_cvtsd2si64 in x86_64
+        // however this broke with LDC 1.42.
+        // because the compiler would exchange positions of
+        // MXCSR setting and cvtsd2si calls, which can lead to 
+        // a wrong rounding mode.
+        // Using convertDoubleToInt64UsingMXCSR instead works
+        // because its asm block blocks such optimizations.
+        // Saw no such issue with _mm_cvtsd_si32, didn't test much.
+
+        // Note: In 32-bit x86, there is no way to convert from float/double to 64-bit integer
+        // using SSE instructions only. So the builtin doesn't exist for this arch.
+        return convertDoubleToInt64UsingMXCSR(a[0]);
     }
     else
     {
