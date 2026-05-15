@@ -270,31 +270,31 @@ unittest
 static if (MMXSizedVectorsAreEmulated)
 {
     /// MMX-like SIMD types
-    struct float2
+    align(8) struct float2
     {
         float[2] array;
         mixin VectorOps!(float2, float[2]);
     }
 
-    struct byte8
+    align(8) struct byte8
     {
         byte[8] array;
         mixin VectorOps!(byte8, byte[8]);
     }
 
-    struct short4
+    align(8) struct short4
     {
         short[4] array;
         mixin VectorOps!(short4, short[4]);
     }
 
-    struct int2
+    align(8) struct int2
     {
         int[2] array;
         mixin VectorOps!(int2, int[2]);
     }
 
-    struct long1
+    align(8) struct long1
     {
         long[1] array;
         mixin VectorOps!(long1, long[1]);
@@ -322,37 +322,37 @@ static if (SSESizedVectorsAreEmulated)
 {
     /// SSE-like SIMD types
 
-    struct float4
+    align(16) struct float4
     {
         float[4] array;
         mixin VectorOps!(float4, float[4]);
     }
 
-    struct byte16
+    align(16) struct byte16
     {
         byte[16] array;
         mixin VectorOps!(byte16, byte[16]);
     }
 
-    struct short8
+    align(16) struct short8
     {
         short[8] array;
         mixin VectorOps!(short8, short[8]);
     }
 
-    struct int4
+    align(16) struct int4
     {
         int[4] array;
         mixin VectorOps!(int4, int[4]);
     }
 
-    struct long2
+    align(16) struct long2
     {
         long[2] array;
         mixin VectorOps!(long2, long[2]);
     }
 
-    struct double2
+    align(16) struct double2
     {
         double[2] array;
         mixin VectorOps!(double2, double[2]);
@@ -371,37 +371,37 @@ static if (AVXSizedVectorsAreEmulated)
 {
     /// AVX-like SIMD types
 
-    struct float8
+    align(32) struct float8
     {
         float[8] array;
         mixin VectorOps!(float8, float[8]);
     }
 
-    struct byte32
+    align(32) struct byte32
     {
         byte[32] array;
         mixin VectorOps!(byte32, byte[32]);
     }
 
-    struct short16
+    align(32) struct short16
     {
         short[16] array;
         mixin VectorOps!(short16, short[16]);
     }
 
-    struct int8
+    align(32) struct int8
     {
         int[8] array;
         mixin VectorOps!(int8, int[8]);
     }
 
-    struct long4
+    align(32) struct long4
     {
         long[4] array;
         mixin VectorOps!(long4, long[4]);
     }
 
-    struct double4
+    align(32) struct double4
     {
         double[4] array;
         mixin VectorOps!(double4, double[4]);

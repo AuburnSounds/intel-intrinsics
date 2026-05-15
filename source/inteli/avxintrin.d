@@ -117,7 +117,7 @@ nothrow @nogc:
 
 /// Compute the absolute value of packed 32-bit floating-point elements in `a`.
 /// #BONUS.
-__m256 _mm256_abs_ps (__m256 a) @trusted
+__m256 _mm256_abs_ps (__m256 a) pure @safe
 {
     int8 mask = 0x7fff_ffff;
     return cast(__m256)((cast(int8)a) & mask);
@@ -132,7 +132,7 @@ unittest
 
 /// Compute the absolute value of packed 64-bit floating-point elements in `a`.
 /// #BONUS.
-__m256d _mm256_abs_pd (__m256d a) @trusted
+__m256d _mm256_abs_pd (__m256d a) pure @safe
 {
     long4 mask = 0x7fff_ffff_ffff_ffff;
     return cast(__m256d)((cast(long4)a) & mask);
