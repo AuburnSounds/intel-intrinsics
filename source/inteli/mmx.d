@@ -13,7 +13,7 @@ import inteli.internals;
 import inteli.xmmintrin;
 import inteli.emmintrin;
 
-nothrow @nogc:
+nothrow @nogc @safe:
 
 // Important: you don't need to call _mm_empty when using "MMX" capabilities of intel-intrinsics,
 // since it just generates the right IR and cleaning-up FPU registers is up to the codegen.
@@ -22,7 +22,7 @@ nothrow @nogc:
 
 
 /// Add packed 16-bit integers in `a` and `b`.
-__m64 _mm_add_pi16 (__m64 a, __m64 b)
+__m64 _mm_add_pi16 (__m64 a, __m64 b) @safe
 {
     return cast(__m64)(cast(short4)a + cast(short4)b);
 }
@@ -34,7 +34,7 @@ unittest
 }
 
 /// Add packed 32-bit integers in `a` and `b`.
-__m64 _mm_add_pi32 (__m64 a, __m64 b)
+__m64 _mm_add_pi32 (__m64 a, __m64 b) @safe
 {
     return cast(__m64)(cast(int2)a + cast(int2)b);
 }
@@ -46,7 +46,7 @@ unittest
 }
 
 /// Add packed 8-bit integers in `a` and `b`.
-__m64 _mm_add_pi8 (__m64 a, __m64 b)
+__m64 _mm_add_pi8 (__m64 a, __m64 b) @safe
 {
     return cast(__m64)(cast(byte8)a + cast(byte8)b);
 }
@@ -59,7 +59,7 @@ unittest
 
 /// Add packed 16-bit integers in `a` and `b` using signed saturation.
 // PERF: PADDSW not generated
-__m64 _mm_adds_pi16(__m64 a, __m64 b) pure @trusted
+__m64 _mm_adds_pi16(__m64 a, __m64 b) pure @safe
 {
     return to_m64(_mm_adds_epi16(to_m128i(a), to_m128i(b)));
 }
@@ -73,7 +73,7 @@ unittest
 
 /// Add packed 8-bit integers in `a` and `b` using signed saturation.
 // PERF: PADDSB not generated
-__m64 _mm_adds_pi8(__m64 a, __m64 b) pure @trusted
+__m64 _mm_adds_pi8(__m64 a, __m64 b) pure @safe
 {
     return to_m64(_mm_adds_epi8(to_m128i(a), to_m128i(b)));
 }
@@ -87,7 +87,7 @@ unittest
 
 /// Add packed 16-bit integers in `a` and `b` using unsigned saturation.
 // PERF: PADDUSW not generated
-__m64 _mm_adds_pu16(__m64 a, __m64 b) pure @trusted
+__m64 _mm_adds_pu16(__m64 a, __m64 b) pure @safe
 {
     return to_m64(_mm_adds_epu16(to_m128i(a), to_m128i(b)));
 }
@@ -101,7 +101,7 @@ unittest
 
 /// Add packed 8-bit integers in `a` and `b` using unsigned saturation.
 // PERF: PADDUSB not generated
-__m64 _mm_adds_pu8(__m64 a, __m64 b) pure @trusted
+__m64 _mm_adds_pu8(__m64 a, __m64 b) pure @safe
 {
     return to_m64(_mm_adds_epu8(to_m128i(a), to_m128i(b)));
 }
@@ -127,7 +127,7 @@ unittest
 }
 
 /// Compute the bitwise NOT of 64 bits (representing integer data) in `a` and then AND with `b`.
-__m64 _mm_andnot_si64 (__m64 a, __m64 b)
+__m64 _mm_andnot_si64 (__m64 a, __m64 b) @safe
 {
     return (~a) & b;
 }
@@ -572,7 +572,7 @@ deprecated alias
 /// Set packed 16-bit integers with the supplied values.
 __m64 _mm_set_pi16 (short e3, short e2, short e1, short e0) pure @trusted
 {
-    short[4] arr = [e0, e1, e2, e3];
+    align(8) short[4] arr = [e0, e1, e2, e3];
     return *cast(__m64*)(arr.ptr);
 }
 unittest
@@ -585,7 +585,7 @@ unittest
 /// Set packed 32-bit integers with the supplied values.
 __m64 _mm_set_pi32 (int e1, int e0) pure @trusted
 {
-    int[2] arr = [e0, e1];
+    align(8) int[2] arr = [e0, e1];
     return *cast(__m64*)(arr.ptr);
 }
 unittest
@@ -598,7 +598,7 @@ unittest
 /// Set packed 8-bit integers with the supplied values.
 __m64 _mm_set_pi8 (byte e7, byte e6, byte e5, byte e4, byte e3, byte e2, byte e1, byte e0) pure @trusted
 {
-    byte[8] arr = [e0, e1, e2, e3, e4, e5, e6, e7];
+    align(8) byte[8] arr = [e0, e1, e2, e3, e4, e5, e6, e7];
     return *cast(__m64*)(arr.ptr);
 }
 unittest
@@ -647,7 +647,7 @@ unittest
 /// Set packed 16-bit integers with the supplied values in reverse order.
 __m64 _mm_setr_pi16 (short e3, short e2, short e1, short e0) pure @trusted
 {
-    short[4] arr = [e3, e2, e1, e0];
+    align(8) short[4] arr = [e3, e2, e1, e0];
     return *cast(__m64*)(arr.ptr);
 }
 unittest
@@ -660,7 +660,7 @@ unittest
 /// Set packed 32-bit integers with the supplied values in reverse order.
 __m64 _mm_setr_pi32 (int e1, int e0) pure @trusted
 {
-    int[2] arr = [e1, e0];
+    align(8) int[2] arr = [e1, e0];
     return *cast(__m64*)(arr.ptr);
 }
 unittest
@@ -673,7 +673,7 @@ unittest
 /// Set packed 8-bit integers with the supplied values in reverse order.
 __m64 _mm_setr_pi8 (byte e7, byte e6, byte e5, byte e4, byte e3, byte e2, byte e1, byte e0) pure @trusted
 {
-    byte[8] arr = [e7, e6, e5, e4, e3, e2, e1, e0];
+    align(8) byte[8] arr = [e7, e6, e5, e4, e3, e2, e1, e0];
     return *cast(__m64*)(arr.ptr);
 }
 unittest
@@ -996,7 +996,7 @@ unittest
 }
 
 /// Unpack and interleave 8-bit integers from the high half of `a` and `b`.
-__m64 _mm_unpackhi_pi8 (__m64 a, __m64 b)
+__m64 _mm_unpackhi_pi8 (__m64 a, __m64 b) pure @trusted
 {
     static if (LDC_with_optimizations)
     {
@@ -1030,7 +1030,7 @@ unittest
 }
 
 /// Unpack and interleave 16-bit integers from the low half of `a` and `b`.
-__m64 _mm_unpacklo_pi16 (__m64 a, __m64 b)
+__m64 _mm_unpacklo_pi16 (__m64 a, __m64 b) pure @trusted
 {
     // Generates punpcklwd since LDC 1.0.0 -01
     short4 ia = cast(short4)a;
@@ -1073,7 +1073,7 @@ unittest
 }
 
 /// Unpack and interleave 8-bit integers from the low half of `a` and `b`.
-__m64 _mm_unpacklo_pi8 (__m64 a, __m64 b)
+__m64 _mm_unpacklo_pi8 (__m64 a, __m64 b) pure @trusted
 {
     static if (LDC_with_optimizations)
     {
@@ -1107,7 +1107,7 @@ unittest
 }
 
 /// Compute the bitwise XOR of 64 bits (representing integer data) in `a` and `b`.
-__m64 _mm_xor_si64 (__m64 a, __m64 b)
+__m64 _mm_xor_si64 (__m64 a, __m64 b) pure @safe
 {
     return a ^ b;
 }
