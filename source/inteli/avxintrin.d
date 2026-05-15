@@ -115,6 +115,36 @@ else
 
 nothrow @nogc:
 
+/// Compute the absolute value of packed 32-bit floating-point elements in `a`.
+/// #BONUS.
+__m256 _mm256_abs_ps (__m256 a) @trusted
+{
+    int8 mask = 0x7fff_ffff;
+    return cast(__m256)((cast(int8)a) & mask);
+}
+unittest
+{
+    __m256 A = _mm256_setr_ps(-0.0f, 10.0f, -42.0f, -float.infinity, -0.0f, 10.0f, -42.0f, -float.infinity);
+    __m256 R = _mm256_abs_ps(A);
+    float[8] correct =    [0.0f, 10.0f, 42.0f, +float.infinity, 0.0f, 10.0f, 42.0f, +float.infinity];
+    assert(R.array == correct);
+}
+
+/// Compute the absolute value of packed 64-bit floating-point elements in `a`.
+/// #BONUS.
+__m256d _mm256_abs_pd (__m256d a) @trusted
+{
+    long4 mask = 0x7fff_ffff_ffff_ffff;
+    return cast(__m256d)((cast(long4)a) & mask);
+}
+unittest
+{
+    __m256d A = _mm256_setr_pd(-0.0, 10.0, -42.0, -double.infinity);
+    __m256d R = _mm256_abs_pd(A);
+    double[4] correct =    [0.0, 10.0, 42.0, +double.infinity];
+    assert(R.array == correct);
+}
+
 /// Add packed double-precision (64-bit) floating-point elements in `a` and `b`.
 __m256d _mm256_add_pd (__m256d a, __m256d b) pure @trusted
 {
