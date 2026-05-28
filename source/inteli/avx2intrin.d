@@ -3006,6 +3006,43 @@ static if (!llvm256BitStackWorkaroundIn32BitX86)
     }
 }
 
+/// Store packed 64-bit integers from `a` into memory using `mask`
+/// (elements are not stored when the highest bit is not set in the corresponding element).
+/// See: "Note about mask load/store" to know why you must address valid memory only.
+void _mm_maskstore_epi64 (long* mem_addr, __m128i mask, __m128i a) @system
+{
+    _mm_maskstore_pd(cast(double*)mem_addr, mask, cast(__m128d)a);
+}
+unittest
+{
+    long[2] A = [0, 1];
+    __m128i M = _mm_setr_epi64(-1, 0);
+    __m128i B = _mm_setr_epi64( 2, 3);
+    _mm_maskstore_epi64(A.ptr, M, B);
+    long[2] correct = [2, 1];
+    assert(A == correct);
+}
+
+static if (!llvm256BitStackWorkaroundIn32BitX86)
+{
+    /// Store packed 64-bit integers from `a` into memory using `mask`
+    /// (elements are not stored when the highest bit is not set in the corresponding element).
+    /// See: "Note about mask load/store" to know why you must address valid memory only.
+    void _mm256_maskstore_epi64 (long* mem_addr, __m256i mask, __m256i a) @system
+    {
+        _mm256_maskstore_pd(cast(double*)mem_addr, mask, cast(__m256d)a);
+    }
+    unittest
+    {
+        long[4] A = [0, 1, 2, 3];
+        __m256i M = _mm256_setr_epi64x(-9, 0, -1, 0);
+        __m256i B = _mm256_setr_epi64x(2, 3, 4, 5);
+        _mm256_maskstore_epi64(A.ptr, M, B);
+        long[4] correct = [2, 1, 4, 3];
+        assert(A == correct);
+    }
+}
+
 /// Compare packed signed 16-bit integers in `a` and `b`, and return packed maximum values.
 __m256i _mm256_max_epi16 (__m256i a, __m256i b) pure @safe
 {
