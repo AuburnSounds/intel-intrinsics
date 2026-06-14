@@ -1,0 +1,246 @@
+
+================================================================================
+ xmmintrin.d (SSE1)
+================================================================================
+
+1. _mm_extract_pi16 — does not mask imm8 to 2 bits
+   - xmmintrin.d:1150. Hardware masks the selector to imm8 & 3; the code indexes
+     directly, so an out-of-spec immediate causes a range error / OOB read.
+     (_mm_insert_pi16 correctly masks.)
+   - Confidence: low (only out-of-spec immediates).
+
+   (Conversion intrinsics _mm_cvtss_si32/si64, _mm_cvt_ss2si, _mm_cvtps_pi32/pi16/pi8,
+    _mm_cvtt_ss2si, _mm_cvttss_si64 are affected by the internals.d helper/cast bugs
+    below.)
+
+
+
+================================================================================
+ emmintrin.d (SSE2)
+================================================================================
+
+3. _mm_cmpge_sd / _mm_cmpgt_sd — swapped-operand paths return b's upper element
+   - emmintrin.d:752-758 (cmpge_sd) and 880-886 (cmpgt_sd), DMD (DSIMD) and GDC.
+   - Intel: lower = compare result; copy the UPPER element from a.
+   - Code: CMPSD/builtin with swapped operands places the result in the first
+     operand's register, so dst[127:64] = b[127:64] instead of a[127:64]. GCC's
+     header adds a movsd wrapper that is missing here. LDC/fallback path is correct.
+   - Confidence: high.
+
+4. _mm_loadu_si16 — DMD DSIMD path sign-extends instead of zero-filling
+   - emmintrin.d:2211-2215, DMD_with_DSIMD (default for DMD x86_64).
+   - Intel: load 16 bits into lane 0, zero the remaining 112 bits.
+   - Code: `int r = *cast(short*)(mem_addr);` sign-extends, then MOVD loads all 32
+     bits, so a negative short leaves lane 1 = -1 instead of 0. Fix:
+     `int r = cast(ushort)*cast(short*)(mem_addr);`.
+   - Confidence: high.
+
+5. _mm_sll_epi16/32/64 and _mm_srl_epi16/32/64 — over-wide shift before range check
+   - emmintrin.d:3832-3841 (sll_epi32), 3874-3882 (sll_epi64), 3913-3922 (sll_epi16),
+     4404-4413 (srl_epi16), 4444-4454 (srl_epi32), 4485-4494 (srl_epi64). Fallback.
+   - The loop does `value << bits` / `>> bits` with the raw 64-bit count, then
+     zeroes the result if bits > N. Shifting >= operand width is poison in LLVM;
+     result is overwritten so it works today, but slli/srli/sra clamp BEFORE shifting.
+   - Confidence: medium (latent UB; no observed misbehavior).
+
+   (Float->int conversion bugs in cvtt*/cvt* are tracked under internals.d below,
+    since they share the helper / cast(int) root cause.)
+
+
+================================================================================
+ smmintrin.d (SSE4.1)
+================================================================================
+
+1. _mm_packus_epi32 fallback — wrap-around near int.min gives 65535 instead of 0
+   - smmintrin.d:1777-1785, generic fallback.
+   - Intel: signed 32-bit saturated to unsigned 16-bit; any negative input -> 0.
+   - Code: `a - 32768` wraps for a in [int.min, int.min+32767] -> packs saturates
+     to 0x7FFF -> +0x8000 -> 0xFFFF (65535) instead of 0.
+   - Confidence: high.
+
+2. _mm_ceil_* / _mm_floor_* — LDC ARM64 paths break large values and NaN
+   - smmintrin.d:324-428 (ceil_pd/ps/sd/ss) and 1037-1138 (floor_*), LDC_with_ARM64.
+   - Intel: returns the input unchanged when already integral (any magnitude),
+     NaN propagates.
+   - Code: round-trips through saturating int conversion (vcvtpq/vcvtmq), so values
+     >= 2^31 (ps) / 2^63 (pd) are corrupted and NaN -> 0.0. AArch64 frintp/frintm
+     (vrndpq/vrndmq) are exact and faster.
+   - Confidence: high.
+
+3. _mm_round_ps/pd/ss/sd — non-SSE4.1 fallbacks: int round-trip divergence
+   - smmintrin.d:1804-2019, generic fallback (DMD always; default LDC/GDC x86).
+   - Mode decoding and round-half-to-even are correct, but already-integral inputs
+     >= 2^31 (ps/ss) / 2^63 (pd/sd) come back as integer-indefinite, and NaN does
+     not stay NaN. Partially acknowledged in comments.
+   - Confidence: high (divergence certain; partially known).
+
+
+================================================================================
+ nmmintrin.d (SSE4.2)
+================================================================================
+
+1. cmpstrMask — signed-byte RANGES path does not compile
+   - nmmintrin.d:1274-1275, fallback path.
+   - `_mm_xor_si128(...)` called with ONE argument (it takes two). The 16-bit twin
+     at 1242-1243 correctly uses `~_mm_cmplt_epi16(...)`. Every cmpistr*/cmpestr*
+     with _SIDD_SBYTE_OPS | _SIDD_CMP_RANGES is broken on the fallback path.
+   - Confidence: high.
+
+2. cmpstrMask — 16-bit EQUAL_ORDERED path does not compile (drops accumulation)
+   - nmmintrin.d:1344: `R = _mm_and_si128(eqMask);` — one argument. The 8-bit twin
+     at 1370 correctly does `R = _mm_and_si128(R, eqMask);`. Any word-mode
+     equal-ordered (substring search) fails to compile on the fallback path.
+   - Confidence: high.
+
+3. Explicit word-mode lengths not clamped to 8 -> out-of-bounds read
+   - nmmintrin.d:1169-1173 (cmpstrMaskExplicit) and 1148-1151 (validMask16e).
+   - Intel clamps |la|/|lb| to 8 for word ops; the code clamps to 16, and
+     validMask16e(len) for len 9..16 reads MASK_DATA[-2..-16] — a 16-byte OOB read
+     before the array (memory-safety violation inside @trusted). Triggered by a
+     legal call like _mm_cmpestri!(_SIDD_UWORD_OPS|...)(a, 16, b, 16). Also
+     la = int.min survives `la = -la` as negative.
+   - Confidence: high.
+
+
+================================================================================
+ avxintrin.d (AVX)
+================================================================================
+
+1. _mm256_round_pd / _mm256_round_ps — fallback returns garbage for NaN/out-of-range
+   - avxintrin.d:2887-2943 (round_pd), 2957-2999 (round_ps); reached via
+     _mm256_floor_pd/ceil_pd (1345, 775) and floor_ps/ceil_ps on DMD and any
+     compiler without AVX/SSE4.1 builtins. Fallback.
+   - Intel: VROUNDPD/PS returns the input unchanged when already integral; NaN
+     propagates.
+   - Code: rounds through _mm_cvtsd_si64 / _mm_cvtps_epi32 and back, so |x| >= 2^63
+     (pd) / 2^31 (ps) and NaN become long.min/int.min. e.g.
+     _mm256_floor_pd(set1_pd(1e300)) -> -9.2e18.
+   - Confidence: medium-high.
+
+2. _mm256_cvttpd_epi32 / _mm256_cvttps_epi32 — fallback UB / wrong for NaN/out-of-range
+   - avxintrin.d:1100-1116 and 1126-1146. Fallback (DMD always; LDC/GDC without
+     AVX, incl. all ARM64 builds).
+   - Intel: CVTTPD2DQ/CVTTPS2DQ return 0x80000000 for NaN/out-of-range.
+   - Code: `cast(int)a.array[i]` -> LLVM fptosi is poison for NaN/out-of-range;
+     where it survives, ARM64 fcvtzs saturates (+inf -> 0x7FFFFFFF) instead of the
+     0x80000000 sentinel. (Same library-wide stance as the cvtt* in emmintrin /
+     internals.)
+   - Confidence: medium.
+
+3. _mm_cmp_* / _mm256_cmp_* — signaling predicates silently mapped to quiet
+   - avxintrin.d:825-889 via mapAVXFPComparison (internals.d:1118-1142).
+   - mapping[imm8 & 0x0f] folds all 32 predicates onto 16 quiet ones. Result bits
+     are correct for all 32; only the #IA-on-QNaN exception behavior is lost.
+   - Confidence: low / informational (library does not emulate FP exception flags).
+
+
+================================================================================
+ avx2intrin.d (AVX2)
+================================================================================
+
+1. _mm256_hsub_epi16 — split fallback computes 32-bit hsub instead of 16-bit
+   - avx2intrin.d:1784-1785, fallback (DMD always; LDC/GDC without AVX2).
+   - Calls _mm_hsub_epi32(a_lo, b_lo) / _mm_hsub_epi32(a_hi, b_hi) — wrong element
+     width, completely wrong results. The GDC/LDC AVX2 builtin path (phsubw256) is
+     correct.
+   - Confidence: high.
+
+2. _mm256_extract_epi8 — sign-extends instead of zero-extending
+   - avx2intrin.d:1642-1646 (single implementation, all paths).
+   - Intel: ZeroExtend32, returns 0..255. Code returns sa.ptr[index & 31] from a
+     byte32 -> -128..127. (_mm_extract_epi8 at smmintrin.d:1009 correctly uses
+     cast(ubyte).)
+   - Confidence: high.
+
+3. _mm256_extract_epi16 — sign-extends instead of zero-extending
+   - avx2intrin.d:1629-1633. Intel: zero-extend to 32 bits (0..65535); code
+     sign-extends. (_mm_extract_epi16 at emmintrin.d:1911 correctly uses cast(ushort).)
+   - Confidence: high.
+
+4. _mm_sllv_epi64 (and via split, _mm256_sllv_epi64) — count truncated to 32 bits
+   - avx2intrin.d:4741-4742, non-AVX2 fallback.
+   - `cast(uint)(lb.array[0]) < 64` truncates before the range check: a count of
+     2^32 passes the test and shifts by (count mod 64) instead of yielding 0.
+     Sibling _mm_srlv_epi64 (line 5291) correctly uses cast(ulong).
+   - Confidence: high (only for counts >= 2^32).
+
+5. _mm_sllv/srlv/srav_epi32 fallbacks — over-wide shift before masking (latent UB)
+   - avx2intrin.d:4677-4688 (sllv), 5227-5238 (srlv), 4938-4951 (srav).
+   - Shifts with counts >= 32 produce poison; ANDing poison with a runtime mask
+     does not sanitize it. Works today on x86, not guaranteed.
+   - Confidence: medium.
+
+
+================================================================================
+ bmi2intrin.d (BMI2)
+================================================================================
+
+1. bzhi helper — ignores the SDM's index[7:0] truncation
+   - bmi2intrin.d:75-92 (fallback + CTFE path for _bzhi_u32/_bzhi_u64).
+   - SDM: n := index[7:0]; the code compares the full 32-bit index. _bzhi_u32(a, 256):
+     hardware computes n=0 -> 0; fallback returns a unchanged. Also makes the CTFE
+     result differ from the runtime builtin on GDC/LDC-with-BMI2. Fix:
+     `index &= 0xFF;` before the comparison.
+   - Confidence: high.
+
+
+================================================================================
+ internals.d  (shared conversion helpers — affect many public cvt* intrinsics)
+================================================================================
+
+1. convertFloatToInt64UsingMXCSR / convertDoubleToInt64UsingMXCSR — wrong ties
+   rounding on ARM32 in round-to-nearest mode
+   - internals.d:636 and 772, LDC_with_ARM32, _MM_ROUND_NEAREST_ARM case.
+   - Intel: round-half-to-even (2.5 -> 2, 0.5 -> 0, -2.5 -> -2). Code uses
+     `llvm_round` = round-half-AWAY-from-zero (2.5 -> 3). The ARM64 path uses vcvtns
+     (ties-to-even) and the ARM32 32-bit converters use vcvtr (FPSCR) correctly.
+     Fix: llvm_rint/llvm_nearbyint or llvm.roundeven.
+   - Affects _mm_cvtss_si64 (xmmintrin.d:1047), _mm_cvtsd_si64 (emmintrin.d:1654)
+     on 32-bit ARM.
+   - Confidence: high.
+
+2. _mm_cvtss_si32 / _mm_cvt_ss2si / _mm_cvtps_pi32/pi16/pi8 — truncation instead of
+   MXCSR rounding on GDC non-x86
+   - internals.d:528-532 (also 584-588, 751-757), GNU non-x86 fallback:
+     `result = cast(int)value;` (in-code comment already flags "// BUG: this is
+     truncation instead of MXCSR").
+   - Intel: round per current mode (default nearest), so _mm_cvtss_si32(0.7f) must
+     be 1; this path returns 0 for every fractional input.
+   - Confidence: high.
+
+3. Float->int converters do not reproduce the x86 0x80000000 sentinel on ARM, and
+   the cast(int)/cast(long) fallbacks are UB
+   - internals.d:545-553, 601-608, 644-654, 781-790 (ARM64); 536-538, 592-594,
+     628-640, 764-776 (ARM32); 531, 587, 756, 891 (generic fallbacks). Also the
+     direct cast(int) cvtt* in emmintrin.d (_mm_cvttps_epi32 1838-1848,
+     _mm_cvttpd_epi32 1807-1816, _mm_cvttsd_si32 1856-1860, _mm_cvttsd_si64
+     1863-1868, _mm_cvtpd_epi32 ARM64 1430-1445) and xmmintrin.d (_mm_cvtt_ss2si
+     1079-1083, _mm_cvttss_si64 1100-1103).
+   - Intel: NaN/+-inf/out-of-range -> integer-indefinite 0x80000000 (/0x80..00).
+   - Code: ARM64 fcvtzs/fcvtns saturate (+overflow -> 0x7FFFFFFF, NaN -> 0); the
+     generic cast(int) lowers to fptosi = poison (true UB). _mm_cvtpd_epi32's ARM64
+     path keeps the low 32 bits of an s64 convert, yielding an arbitrary wrapped value.
+   - Confidence: medium (real divergence; possibly an accepted, but undocumented,
+     library-wide trade-off).
+
+
+================================================================================
+ math.d
+================================================================================
+
+1. _mm_exp_ps(+infinity) returns a finite value
+   - math.d:150: `x = _mm_min_ps(x, _ps_exp_hi)` clamps input to 88.376...
+   - exp(x) for x in (~88.73, +inf] should overflow to +inf; instead returns
+     ~2.35e38. (exp(-inf) == 0 works only by accident of the same clamp.) The doc
+     comment excludes NaN but not infinity (unlike log_ps/pow_ps).
+   - Confidence: low (likely accepted cephes-style clamping).
+
+
+================================================================================
+ shaintrin.d  (non-code / doc)
+================================================================================
+
+- The doc (ddoc) comments on the three SHA256 intrinsics are rotated: msg1 (line 95)
+  carries msg2's text, msg2 (line 132) carries rnds2's text, rnds2 (line 170)
+  carries msg1's text. Implementations are correct; only the doc strings are wrong.
+
