@@ -2213,7 +2213,7 @@ __m128i _mm_loadu_si16(const(void)* mem_addr) pure @trusted // TODO: should be @
 {
     static if (DMD_with_DSIMD)
     {
-        int r = *cast(short*)(mem_addr);
+        int r = *cast(ushort*)(mem_addr);
         return cast(__m128i) __simd(XMM.LODD, *cast(__m128i*)&r);
     }
     else version(DigitalMars)
