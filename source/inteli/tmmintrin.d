@@ -705,7 +705,7 @@ unittest
 
 
 /// Horizontally add adjacent pairs of 16-bit integers in `a` and `b`, and pack the signed 16-bit results.
-__m128i _mm_hsub_epi16 (__m128i a, __m128i b) @trusted
+__m128i _mm_hsub_epi16 (__m128i a, __m128i b) pure @trusted
 {
     // PERF DMD
     static if (GDC_with_SSSE3)

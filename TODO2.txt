@@ -8,15 +8,6 @@ These are in addition to the bugs already listed in TODO.txt.
  avx2intrin.d (AVX2)
 ================================================================================
 
-1. _mm_sllv_epi32 GDC/LDC path — wrong cast type for psllv4si builtin
-   - avx2intrin.d:4673.
-   - `__builtin_ia32_psllv4si(cast(byte16)a, cast(byte16)count)`:
-     psllv4si operates on four 32-bit integers (int4), but both arguments are
-     cast to byte16 (sixteen 8-bit bytes). The bit patterns are the same, but
-     the GCC/LDC builtin may reject or miscompile the wrong type.
-   - Fix: change both casts to `cast(int4)`.
-   - Confidence: high.
-
 2. _mm_srlv_epi32 GDC/LDC path — wrong cast type for psrlv4si builtin
    - avx2intrin.d:5224.
    - `__builtin_ia32_psrlv4si(cast(byte16)a, cast(byte16)count)`:
@@ -24,14 +15,6 @@ These are in addition to the bugs already listed in TODO.txt.
    - Fix: change both casts to `cast(int4)`.
    - Confidence: high.
 
-3. _mm256_hsub_epi16 unittest is misplaced — tests _mm256_hsub_epi32 instead
-   - avx2intrin.d:1789-1796, unittest block immediately after _mm256_hsub_epi16.
-   - The test uses `_mm256_setr_epi32` inputs and calls `_mm256_hsub_epi32`.
-     It is an exact copy of the _mm256_hsub_epi32 unittest. The fallback bug in
-     _mm256_hsub_epi16 (already in TODO.txt item 1) is therefore never caught
-     by the test suite.
-   - Fix: replace with a proper _mm256_hsub_epi16 test using short16 inputs.
-   - Confidence: high.
 
 4. _mm256_srav_epi32 unittest calls _mm_srav_epi32 — 256-bit variant never tested
    - avx2intrin.d:4981-4988, unittest block for _mm256_srav_epi32.

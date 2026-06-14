@@ -1781,17 +1781,18 @@ __m256i _mm256_hsub_epi16 (__m256i a, __m256i b) pure @safe
         __m128i a_hi = _mm256_extractf128_si256!1(a);
         __m128i b_lo = _mm256_extractf128_si256!0(b);
         __m128i b_hi = _mm256_extractf128_si256!1(b);
-        __m128i r_lo = _mm_hsub_epi32(a_lo, b_lo);
-        __m128i r_hi = _mm_hsub_epi32(a_hi, b_hi);
+        __m128i r_lo = _mm_hsub_epi16(a_lo, b_lo);
+        __m128i r_hi = _mm_hsub_epi16(a_hi, b_hi);
         return _mm256_set_m128i(r_hi, r_lo);
     }
 }
 unittest
 {
-    __m256i A = _mm256_setr_epi32(1, 2, int.min, 1, 1, 2, int.min, 1);
-    __m256i B = _mm256_setr_epi32(int.max, -1, 4, 4, int.max, -1, 4, 4);
-    int8 C = cast(int8) _mm256_hsub_epi32(A, B);
-    int[8] correct = [ -1, int.max, int.min, 0, -1, int.max, int.min, 0 ];
+    __m256i A = _mm256_setr_epi16(1, 2, short.min, 1, 1, 2, short.min, 1, 0, 1, 2, 3, 4, 5, 6, 7);
+    __m256i B = _mm256_setr_epi16(short.max, -1, 4, 4, short.max, -1, 4, 4, 7, 6, 5, 4, 3, 2, 1, 0);
+    short16 C = cast(short16) _mm256_hsub_epi16(A, B);
+    short[16] correct = [ -1, short.max, -1, short.max, short.min, 0, short.min, 0, 
+                          -1, -1, -1, -1, 1,  1,  1,  1 ];
     assert(C.array == correct);
 }
 
@@ -4670,7 +4671,7 @@ alias _mm256_slli_si256 = _mm256_bslli_epi128;
 __m128i _mm_sllv_epi32(__m128i a, __m128i count) pure @trusted
 {
     static if (GDC_with_AVX2 || LDC_with_AVX2)
-        return cast(__m128i)__builtin_ia32_psllv4si(cast(byte16)a, cast(byte16)count);
+        return cast(__m128i)__builtin_ia32_psllv4si(cast(int4)a, cast(int4)count);
     else
     {
         // UB if b[n] >= 32
