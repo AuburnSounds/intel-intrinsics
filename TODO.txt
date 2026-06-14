@@ -1,19 +1,4 @@
 
-================================================================================
- xmmintrin.d (SSE1)
-================================================================================
-
-1. _mm_extract_pi16 — does not mask imm8 to 2 bits
-   - xmmintrin.d:1150. Hardware masks the selector to imm8 & 3; the code indexes
-     directly, so an out-of-spec immediate causes a range error / OOB read.
-     (_mm_insert_pi16 correctly masks.)
-   - Confidence: low (only out-of-spec immediates).
-
-   (Conversion intrinsics _mm_cvtss_si32/si64, _mm_cvt_ss2si, _mm_cvtps_pi32/pi16/pi8,
-    _mm_cvtt_ss2si, _mm_cvttss_si64 are affected by the internals.d helper/cast bugs
-    below.)
-
-
 
 ================================================================================
  emmintrin.d (SSE2)

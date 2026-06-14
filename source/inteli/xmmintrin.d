@@ -1147,15 +1147,15 @@ unittest
 int _mm_extract_pi16 (__m64 a, int imm8)
 {
     short4 sa = cast(short4)a;
-    return cast(ushort)(sa.array[imm8]);
+    return cast(ushort)(sa.array[imm8 & 3]);
 }
 unittest
 {
     __m64 A = _mm_setr_pi16(-1, 6, 0, 4);
     assert(_mm_extract_pi16(A, 0) == 65535);
-    assert(_mm_extract_pi16(A, 1) == 6);
+    assert(_mm_extract_pi16(A, 1 + 12) == 6);
     assert(_mm_extract_pi16(A, 2) == 0);
-    assert(_mm_extract_pi16(A, 3) == 4);
+    assert(_mm_extract_pi16(A, 3 + 4) == 4);
 }
 
 /// Free aligned memory that was allocated with `_mm_malloc` or `_mm_realloc`.
