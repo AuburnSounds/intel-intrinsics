@@ -5,58 +5,6 @@ These are in addition to the bugs already listed in TODO.txt.
 
 
 ================================================================================
- emmintrin.d (SSE2)
-================================================================================
-
-1. _mm_cmpgt_sd unittest — upper-lane check compares long to double literal
-   - emmintrin.d:~900, unittest block.
-   - `(cast(long2)_mm_cmpgt_sd(A,B)).array[1] == 10.0`: array[1] is a long
-     containing the IEEE-754 bit pattern of 10.0 (~4.62e18). D promotes it to
-     double for the comparison, so the test checks ~4.62e18 == 10.0 which is
-     always false; the assertion never fires.  The intent is to verify the upper
-     element passes through as 10.0.
-   - Fix: `(cast(double2)_mm_cmpgt_sd(A,B)).array[1] == 10.0`
-     (matching the _mm_cmpeq_sd test pattern).
-   - Confidence: high.
-
-
-================================================================================
- smmintrin.d (SSE4.1)
-================================================================================
-
-1. _mm_cvtepi16_epi32 LDC path — return cast to wrong vector type
-   - smmintrin.d:500, LDC_with_optimizations path.
-   - `return cast(__m128d) LDCInlineIR!(...)`  casts the result to __m128d
-     (double2) instead of __m128i. The IR already emits `<4 x i32>`, so the
-     cast just reinterprets the 128-bit result as doubles; callers that expect
-     __m128i get the wrong type. The GDC and fallback paths are correct.
-   - Fix: change `cast(__m128d)` to `cast(__m128i)`.
-   - Confidence: high.
-
-
-================================================================================
- nmmintrin.d (SSE4.2)
-================================================================================
-
-1. _mm_cmpgt_epi64 unittest calls _mm_cmpgt_epi32 — function never tested
-   - nmmintrin.d:551, unittest block.
-   - `long2 R = cast(long2)(_mm_cmpgt_epi32(A, B));` calls the 32-bit compare
-     instead of _mm_cmpgt_epi64. The test passes even with a completely broken
-     _mm_cmpgt_epi64 implementation.
-   - Fix: replace with `cast(long2)(_mm_cmpgt_epi64(A, B))`.
-   - Confidence: high.
-
-2. _mm_cmpestrz unittest calls _mm_cmpestrs — function never tested
-   - nmmintrin.d:507-510, unittest block for _mm_cmpestrz.
-   - All four assert lines call `_mm_cmpestrs` (which checks `la`) instead of
-     `_mm_cmpestrz` (which checks `lb`). For the symmetric test inputs la==lb,
-     both functions return the same value, so the wrong-function calls always
-     pass. A broken _mm_cmpestrz goes entirely undetected.
-   - Fix: replace every `_mm_cmpestrs` call in that unittest with `_mm_cmpestrz`.
-   - Confidence: high.
-
-
-================================================================================
  avxintrin.d (AVX)
 ================================================================================
 

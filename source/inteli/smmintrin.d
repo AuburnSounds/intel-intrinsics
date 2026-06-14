@@ -497,7 +497,7 @@ __m128i _mm_cvtepi16_epi32 (__m128i a) @trusted
             %v = shufflevector <8 x i16> %0,<8 x i16> %0, <4 x i32> <i32 0, i32 1,i32 2, i32 3>
             %r = sext <4 x i16> %v to <4 x i32>
             ret <4 x i32> %r`;
-        return cast(__m128d) LDCInlineIR!(ir, int4, short8)(cast(short8)a);
+        return cast(__m128i) LDCInlineIR!(ir, int4, short8)(cast(short8)a);
     }
     else
     {

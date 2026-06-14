@@ -504,10 +504,10 @@ unittest
 {
     __m128i b;
     b = 0;
-    assert(_mm_cmpestrs!_SIDD_UBYTE_OPS(b, 15, b, 15) == 1);
-    assert(_mm_cmpestrs!_SIDD_UBYTE_OPS(b, 16, b, 16) == 0);
-    assert(_mm_cmpestrs!_SIDD_UBYTE_OPS(b, -15, b, -15) == 1);
-    assert(_mm_cmpestrs!_SIDD_UBYTE_OPS(b, -16, b, -16) == 0);
+    assert(_mm_cmpestrz!_SIDD_UBYTE_OPS(b, 15, b, 15) == 1);
+    assert(_mm_cmpestrz!_SIDD_UBYTE_OPS(b, 16, b, 16) == 0);
+    assert(_mm_cmpestrz!_SIDD_UBYTE_OPS(b, -15, b, -15) == 1);
+    assert(_mm_cmpestrz!_SIDD_UBYTE_OPS(b, -16, b, -16) == 0);
 }
 
 /// Compare packed signed 64-bit integers in a and b for greater-than.
@@ -548,7 +548,7 @@ unittest
     __m128i A = _mm_setr_epi64(-3,  2);
     __m128i B = _mm_setr_epi64(4, -2);
     long[2] correct = [ 0, -1 ];
-    long2 R = cast(long2)(_mm_cmpgt_epi32(A, B));
+    long2 R = cast(long2)(_mm_cmpgt_epi64(A, B));
     assert(R.array == correct);
 }
 
