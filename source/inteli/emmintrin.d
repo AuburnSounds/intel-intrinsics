@@ -1074,16 +1074,18 @@ __m128d _mm_cmpnge_pd (__m128d a, __m128d b) pure @safe
 /// the lower element, and copy the upper element from `a`.
 __m128d _mm_cmpnge_sd (__m128d a, __m128d b) pure @safe
 {
-    // Note: There is no __builtin_ia32_cmpngesd builtin.
     static if (GDC_with_SSE2)
     {
-        return __builtin_ia32_cmpltsd(b, a); 
+        __m128d r = __builtin_ia32_cmpnlesd(b, a);
+        r.ptr[1] = a.ptr[1];
+        return r;
     }
     else
     {
         return cast(__m128d) cmpsd!(FPComparison.ult)(a, b);
     }
 }
+
 
 /// Compare packed double-precision (64-bit) floating-point elements 
 /// in `a` and `b` for not-greater-than.
