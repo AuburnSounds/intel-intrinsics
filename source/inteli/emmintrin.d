@@ -3834,10 +3834,11 @@ __m128i _mm_sll_epi32 (__m128i a, __m128i count) pure @trusted
         int4 r = void;
         long2 lc = cast(long2)count;
         ulong bits = cast(ulong)(lc.array[0]);
-        foreach(i; 0..4)
-            r[i] = cast(uint)(a[i]) << bits;
         if (bits > 31)
             r = int4(0);
+        else
+            foreach(i; 0..4)
+                r[i] = cast(uint)(a[i]) << bits;
         return r;
     }
 }
@@ -3876,10 +3877,12 @@ __m128i _mm_sll_epi64 (__m128i a, __m128i count) pure @trusted
         long2 sa = cast(long2)a;
         long2 lc = cast(long2)count;
         ulong bits = cast(ulong)(lc.array[0]);
-        foreach(i; 0..2)
-            r.array[i] = cast(ulong)(sa.array[i]) << bits;
         if (bits > 63)
             r = long2(0);
+        else
+            foreach(i; 0..2)
+                r.array[i] = cast(ulong)(sa.array[i]) << bits;
+
         return cast(__m128i)r;
     }
 }
@@ -3916,10 +3919,11 @@ __m128i _mm_sll_epi16 (__m128i a, __m128i count) pure @trusted
         long2 lc = cast(long2)count;
         ulong bits = cast(ulong)(lc.array[0]);
         short8 r = void;
-        foreach(i; 0..8)
-            r.ptr[i] = cast(short)(cast(ushort)(sa.array[i]) << bits);
         if (bits > 15)
             r = short8(0);
+        else
+            foreach(i; 0..8)
+                r.ptr[i] = cast(short)(cast(ushort)(sa.array[i]) << bits);        
         return cast(int4)r;
     }
 }
@@ -4407,10 +4411,11 @@ __m128i _mm_srl_epi16 (__m128i a, __m128i count) pure @trusted
         long2 lc = cast(long2)count;
         ulong bits = cast(ulong)(lc.array[0]);
         short8 r = void;
-        foreach(i; 0..8)
-            r.ptr[i] = cast(short)(cast(ushort)(sa.array[i]) >> bits);
         if (bits > 15)
             r = short8(0);
+        else
+            foreach(i; 0..8)
+                r.ptr[i] = cast(short)(cast(ushort)(sa.array[i]) >> bits);        
         return cast(__m128i)r;
     }
 }
@@ -4446,12 +4451,15 @@ __m128i _mm_srl_epi32 (__m128i a, __m128i count) pure @trusted
         int4 r = void;
         long2 lc = cast(long2)count;
         ulong bits = cast(ulong)(lc.array[0]);
-        r.ptr[0] = cast(uint)(a.array[0]) >> bits;
-        r.ptr[1] = cast(uint)(a.array[1]) >> bits;
-        r.ptr[2] = cast(uint)(a.array[2]) >> bits;
-        r.ptr[3] = cast(uint)(a.array[3]) >> bits;
         if (bits > 31) // Same semantics as x86 instruction
             r = int4(0);
+        else
+        {
+            r.ptr[0] = cast(uint)(a.array[0]) >> bits;
+            r.ptr[1] = cast(uint)(a.array[1]) >> bits;
+            r.ptr[2] = cast(uint)(a.array[2]) >> bits;
+            r.ptr[3] = cast(uint)(a.array[3]) >> bits;
+        }        
         return r;
     }
 }
@@ -4488,10 +4496,13 @@ __m128i _mm_srl_epi64 (__m128i a, __m128i count) pure @trusted
         long2 sa = cast(long2)a;
         long2 lc = cast(long2)count;
         ulong bits = cast(ulong)(lc.array[0]);
-        r.ptr[0] = cast(ulong)(sa.array[0]) >> bits;
-        r.ptr[1] = cast(ulong)(sa.array[1]) >> bits;
         if (bits > 63)
             r = long2(0);
+        else
+        {
+            r.ptr[0] = cast(ulong)(sa.array[0]) >> bits;
+            r.ptr[1] = cast(ulong)(sa.array[1]) >> bits;
+        }        
         return cast(__m128i)r;
     }
 }

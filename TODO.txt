@@ -1,30 +1,6 @@
 
 
 ================================================================================
- emmintrin.d (SSE2)
-================================================================================
-
-3. _mm_cmpge_sd / _mm_cmpgt_sd — swapped-operand paths return b's upper element
-   - emmintrin.d:752-758 (cmpge_sd) and 880-886 (cmpgt_sd), DMD (DSIMD) and GDC.
-   - Intel: lower = compare result; copy the UPPER element from a.
-   - Code: CMPSD/builtin with swapped operands places the result in the first
-     operand's register, so dst[127:64] = b[127:64] instead of a[127:64]. GCC's
-     header adds a movsd wrapper that is missing here. LDC/fallback path is correct.
-   - Confidence: high.
-
-5. _mm_sll_epi16/32/64 and _mm_srl_epi16/32/64 — over-wide shift before range check
-   - emmintrin.d:3832-3841 (sll_epi32), 3874-3882 (sll_epi64), 3913-3922 (sll_epi16),
-     4404-4413 (srl_epi16), 4444-4454 (srl_epi32), 4485-4494 (srl_epi64). Fallback.
-   - The loop does `value << bits` / `>> bits` with the raw 64-bit count, then
-     zeroes the result if bits > N. Shifting >= operand width is poison in LLVM;
-     result is overwritten so it works today, but slli/srli/sra clamp BEFORE shifting.
-   - Confidence: medium (latent UB; no observed misbehavior).
-
-   (Float->int conversion bugs in cvtt*/cvt* are tracked under internals.d below,
-    since they share the helper / cast(int) root cause.)
-
-
-================================================================================
  smmintrin.d (SSE4.1)
 ================================================================================
 
