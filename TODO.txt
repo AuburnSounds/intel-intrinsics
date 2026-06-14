@@ -84,13 +84,6 @@
  avx2intrin.d (AVX2)
 ================================================================================
 
-1. _mm256_hsub_epi16 — split fallback computes 32-bit hsub instead of 16-bit
-   - avx2intrin.d:1784-1785, fallback (DMD always; LDC/GDC without AVX2).
-   - Calls _mm_hsub_epi32(a_lo, b_lo) / _mm_hsub_epi32(a_hi, b_hi) — wrong element
-     width, completely wrong results. The GDC/LDC AVX2 builtin path (phsubw256) is
-     correct.
-   - Confidence: high.
-
 2. _mm256_extract_epi8 — sign-extends instead of zero-extending
    - avx2intrin.d:1642-1646 (single implementation, all paths).
    - Intel: ZeroExtend32, returns 0..255. Code returns sa.ptr[index & 31] from a
