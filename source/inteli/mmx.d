@@ -352,17 +352,19 @@ unittest
     assert(A.array[0] == 0x100000002);
 }
 
-/// Copy 32-bit integer `a` to the lower elements of `dst`, and zero the upper element of `dst`.
+/// Copy 32-bit integer `a` to the lower elements of `dst`, and zero 
+/// the upper element of `dst`.
 __m64 _mm_cvtsi32_si64 (int a) pure @trusted
 {
-    __m64 r = void;
+    int2 r;
     r.ptr[0] = a;
-    return r;
+    r.ptr[1] = 0;
+    return cast(__m64)r;
 }
 unittest
 {
     __m64 R = _mm_cvtsi32_si64(-1);
-    assert(R.array[0] == -1);
+    assert(R.array[0] == 0xFFFFFFFFL);
 }
 
 /// Copy 64-bit integer `a` to `dst`.
