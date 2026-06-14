@@ -4075,7 +4075,7 @@ void _mm256_stream_si256 (__m256i * mem_addr, __m256i a) pure @trusted
     {
         enum prefix = `!0 = !{ i32 1 }`;
         enum ir = `
-            store <4 x i64> %1, <4 x i64>* %0, align 16, !nontemporal !0
+            store <4 x i64> %1, <4 x i64>* %0, align 32, !nontemporal !0
             ret void`;
         LDCInlineIREx!(prefix, ir, "", void, long4*, long4)(mem_addr, a);
     }

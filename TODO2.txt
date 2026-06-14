@@ -5,42 +5,6 @@ These are in addition to the bugs already listed in TODO.txt.
 
 
 ================================================================================
- avxintrin.d (AVX)
-================================================================================
-
-1. _mm256_max_pd, _mm256_max_ps, _mm256_min_pd, _mm256_min_ps — unit tests
-   missing assert, results silently never verified
-   - avxintrin.d:2151-2157 (_mm256_max_pd), 2183-2189 (_mm256_max_ps),
-     2211-2217 (_mm256_min_pd), 2243-2249 (_mm256_min_ps).
-   - Each unittest block computes the result into M and declares a `correct`
-     array but never calls `assert(M.array == correct)`. Any regression in
-     these four functions goes completely undetected by the test suite.
-   - Fix: add `assert(M.array == correct);` at the end of each unittest.
-   - Confidence: high.
-
-2. _mm256_min_pd unittest — wrong expected value at index 1
-   - avxintrin.d:2216.
-   - `double[4] correct = [1.0, 8.0, -9.0, 100000.0];`
-     A[1]=1.0, B[1]=8.0, min=1.0. The correct array has 8.0 at index 1 instead
-     of 1.0. (The assert is also missing — see bug 1 above — so this wrong value
-     has never actually been evaluated.)
-   - Fix: change `correct` to `[1.0, 1.0, -9.0, 100000.0]`.
-   - Confidence: high.
-
-3. _mm256_stream_si256 LDC inline IR — alignment declared as 16 instead of 32
-   - avxintrin.d:4074, LDC_with_InlineIREx path.
-   - The non-temporal store IR says `align 16`:
-       `store <4 x i64> %1, <4 x i64>* %0, align 16, !nontemporal !0`
-     Intel's vmovntdq requires a 32-byte aligned address; the intrinsic doc
-     string (lines 4062-4063) also states "must be aligned on a 32-byte
-     boundary". The sibling _mm256_stream_pd and _mm256_stream_ps LDC IR paths
-     correctly use `align 32`. This weaker alignment hint lets LLVM generate
-     a mis-aligned store on targets that lower vmovntdq with alignment checking.
-   - Fix: change `align 16` to `align 32` in that IR string.
-   - Confidence: high.
-
-
-================================================================================
  avx2intrin.d (AVX2)
 ================================================================================
 
