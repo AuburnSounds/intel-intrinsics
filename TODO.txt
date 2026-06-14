@@ -4,13 +4,6 @@
  smmintrin.d (SSE4.1)
 ================================================================================
 
-1. _mm_packus_epi32 fallback — wrap-around near int.min gives 65535 instead of 0
-   - smmintrin.d:1777-1785, generic fallback.
-   - Intel: signed 32-bit saturated to unsigned 16-bit; any negative input -> 0.
-   - Code: `a - 32768` wraps for a in [int.min, int.min+32767] -> packs saturates
-     to 0x7FFF -> +0x8000 -> 0xFFFF (65535) instead of 0.
-   - Confidence: high.
-
 2. _mm_ceil_* / _mm_floor_* — LDC ARM64 paths break large values and NaN
    - smmintrin.d:324-428 (ceil_pd/ps/sd/ss) and 1037-1138 (floor_*), LDC_with_ARM64.
    - Intel: returns the input unchanged when already integral (any magnitude),

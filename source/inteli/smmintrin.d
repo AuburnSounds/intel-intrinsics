@@ -1770,18 +1770,19 @@ __m128i _mm_packus_epi32 (__m128i a, __m128i b) pure @trusted
     else static if (LDC_with_ARM64)
     {
        int4 z;
-       z = 0;       
+       z = 0;
        return cast(__m128i) vcombine_u16(vqmovn_u32(vmaxq_s32(z, cast(int4)a)),
                                          vqmovn_u32(vmaxq_s32(z, cast(int4)b)));
     }
     else
     {
-        __m128i i32768 = _mm_set1_epi32(32768);
-        __m128i s32768 = _mm_set1_epi16(-32768);
-        a = _mm_sub_epi32(a, i32768);
-        b = _mm_sub_epi32(b, i32768);
-        __m128i clampedSigned = _mm_packs_epi32(a, b);
-        return _mm_add_epi16(clampedSigned, s32768);
+        __m128i max  = _mm_set1_epi32(65535);
+        __m128i tmpa = _mm_andnot_si128(_mm_srai_epi32(a, 31), a);
+        __m128i tmpb = _mm_andnot_si128(_mm_srai_epi32(b, 31), b);
+        return _mm_packs_epi32(
+            _mm_srai_epi32(_mm_slli_epi32(_mm_or_si128(tmpa, _mm_cmpgt_epi32(tmpa, max)), 16), 16),
+            _mm_srai_epi32(_mm_slli_epi32(_mm_or_si128(tmpb, _mm_cmpgt_epi32(tmpb, max)), 16), 16)
+        );
     }
 }
 unittest
@@ -1790,6 +1791,10 @@ unittest
     short8 R = cast(short8) _mm_packus_epi32(A, A);
     short[8] correct = [cast(short)65535, 0, 1000, 0, cast(short)65535, 0, 1000, 0];
     assert(R.array == correct);
+    __m128i B = _mm_setr_epi32(int.min, int.min + 32767, int.min + 32768, int.min + 32769);
+    short8 BB = cast(short8) _mm_packus_epi32(B, B);
+    short[8] correct2 = [cast(short)0, 0, 0, 0, 0, 0, 0, 0];
+    assert(BB.array == correct2);
 }
 
 
