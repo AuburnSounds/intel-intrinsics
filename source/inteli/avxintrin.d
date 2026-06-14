@@ -2154,6 +2154,7 @@ unittest
     __m256d B = _mm256_setr_pd(1.0, 8.0,  0.0, 100000.0);
     __m256d M = _mm256_max_pd(A, B);
     double[4] correct =       [4.0, 8.0, 0.0, double.infinity];
+    assert(M.array == correct);
 }
 
 /// Compare packed single-precision (32-bit) floating-point elements in `a` and `b`, and return 
@@ -2186,6 +2187,7 @@ unittest
     __m256 B = _mm256_setr_ps(1.0, 8.0,  0.0, 100000.0f     , 4, 3, 2, 1);
     __m256 M = _mm256_max_ps(A, B);
     float[8] correct =       [4.0, 8.0,  0.0, float.infinity , 4, 3, 3, 4];
+    assert(M.array == correct);
 }
 
 // Compare packed double-precision (64-bit) floating-point elements in `a` and `b`, and return 
@@ -2213,7 +2215,8 @@ unittest
     __m256d A = _mm256_setr_pd(4.0, 1.0, -9.0, double.infinity);
     __m256d B = _mm256_setr_pd(1.0, 8.0,  0.0, 100000.0);
     __m256d M = _mm256_min_pd(A, B);
-    double[4] correct =       [1.0, 8.0, -9.0, 100000.0];
+    double[4] correct =       [1.0, 1.0, -9.0, 100000.0];
+    assert(M.array == correct);
 }
 
 /// Compare packed single-precision (32-bit) floating-point elements in `a` and `b`, and return 
@@ -2246,6 +2249,7 @@ unittest
     __m256 B = _mm256_setr_ps(1.0, 8.0,  0.0, 100000.0f     , 4, 3, 2, 1);
     __m256 M = _mm256_min_ps(A, B);
     float[8] correct =       [1.0, 1.0, -9.0, 100000.0f     , 1, 2, 2, 1];
+    assert(M.array == correct);
 }
 
 /// Duplicate even-indexed double-precision (64-bit) floating-point elements from `a`.
