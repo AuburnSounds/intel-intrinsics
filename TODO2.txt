@@ -1,0 +1,152 @@
+
+
+Bugs found by AI review (not yet in TODO.txt)
+These are in addition to the bugs already listed in TODO.txt.
+
+
+================================================================================
+ emmintrin.d (SSE2)
+================================================================================
+
+1. _mm_cmpgt_sd unittest — upper-lane check compares long to double literal
+   - emmintrin.d:~900, unittest block.
+   - `(cast(long2)_mm_cmpgt_sd(A,B)).array[1] == 10.0`: array[1] is a long
+     containing the IEEE-754 bit pattern of 10.0 (~4.62e18). D promotes it to
+     double for the comparison, so the test checks ~4.62e18 == 10.0 which is
+     always false; the assertion never fires.  The intent is to verify the upper
+     element passes through as 10.0.
+   - Fix: `(cast(double2)_mm_cmpgt_sd(A,B)).array[1] == 10.0`
+     (matching the _mm_cmpeq_sd test pattern).
+   - Confidence: high.
+
+
+================================================================================
+ smmintrin.d (SSE4.1)
+================================================================================
+
+1. _mm_cvtepi16_epi32 LDC path — return cast to wrong vector type
+   - smmintrin.d:500, LDC_with_optimizations path.
+   - `return cast(__m128d) LDCInlineIR!(...)`  casts the result to __m128d
+     (double2) instead of __m128i. The IR already emits `<4 x i32>`, so the
+     cast just reinterprets the 128-bit result as doubles; callers that expect
+     __m128i get the wrong type. The GDC and fallback paths are correct.
+   - Fix: change `cast(__m128d)` to `cast(__m128i)`.
+   - Confidence: high.
+
+
+================================================================================
+ nmmintrin.d (SSE4.2)
+================================================================================
+
+1. _mm_cmpgt_epi64 unittest calls _mm_cmpgt_epi32 — function never tested
+   - nmmintrin.d:551, unittest block.
+   - `long2 R = cast(long2)(_mm_cmpgt_epi32(A, B));` calls the 32-bit compare
+     instead of _mm_cmpgt_epi64. The test passes even with a completely broken
+     _mm_cmpgt_epi64 implementation.
+   - Fix: replace with `cast(long2)(_mm_cmpgt_epi64(A, B))`.
+   - Confidence: high.
+
+2. _mm_cmpestrz unittest calls _mm_cmpestrs — function never tested
+   - nmmintrin.d:507-510, unittest block for _mm_cmpestrz.
+   - All four assert lines call `_mm_cmpestrs` (which checks `la`) instead of
+     `_mm_cmpestrz` (which checks `lb`). For the symmetric test inputs la==lb,
+     both functions return the same value, so the wrong-function calls always
+     pass. A broken _mm_cmpestrz goes entirely undetected.
+   - Fix: replace every `_mm_cmpestrs` call in that unittest with `_mm_cmpestrz`.
+   - Confidence: high.
+
+
+================================================================================
+ avxintrin.d (AVX)
+================================================================================
+
+1. _mm256_max_pd, _mm256_max_ps, _mm256_min_pd, _mm256_min_ps — unit tests
+   missing assert, results silently never verified
+   - avxintrin.d:2151-2157 (_mm256_max_pd), 2183-2189 (_mm256_max_ps),
+     2211-2217 (_mm256_min_pd), 2243-2249 (_mm256_min_ps).
+   - Each unittest block computes the result into M and declares a `correct`
+     array but never calls `assert(M.array == correct)`. Any regression in
+     these four functions goes completely undetected by the test suite.
+   - Fix: add `assert(M.array == correct);` at the end of each unittest.
+   - Confidence: high.
+
+2. _mm256_min_pd unittest — wrong expected value at index 1
+   - avxintrin.d:2216.
+   - `double[4] correct = [1.0, 8.0, -9.0, 100000.0];`
+     A[1]=1.0, B[1]=8.0, min=1.0. The correct array has 8.0 at index 1 instead
+     of 1.0. (The assert is also missing — see bug 1 above — so this wrong value
+     has never actually been evaluated.)
+   - Fix: change `correct` to `[1.0, 1.0, -9.0, 100000.0]`.
+   - Confidence: high.
+
+3. _mm256_stream_si256 LDC inline IR — alignment declared as 16 instead of 32
+   - avxintrin.d:4074, LDC_with_InlineIREx path.
+   - The non-temporal store IR says `align 16`:
+       `store <4 x i64> %1, <4 x i64>* %0, align 16, !nontemporal !0`
+     Intel's vmovntdq requires a 32-byte aligned address; the intrinsic doc
+     string (lines 4062-4063) also states "must be aligned on a 32-byte
+     boundary". The sibling _mm256_stream_pd and _mm256_stream_ps LDC IR paths
+     correctly use `align 32`. This weaker alignment hint lets LLVM generate
+     a mis-aligned store on targets that lower vmovntdq with alignment checking.
+   - Fix: change `align 16` to `align 32` in that IR string.
+   - Confidence: high.
+
+
+================================================================================
+ avx2intrin.d (AVX2)
+================================================================================
+
+1. _mm_sllv_epi32 GDC/LDC path — wrong cast type for psllv4si builtin
+   - avx2intrin.d:4673.
+   - `__builtin_ia32_psllv4si(cast(byte16)a, cast(byte16)count)`:
+     psllv4si operates on four 32-bit integers (int4), but both arguments are
+     cast to byte16 (sixteen 8-bit bytes). The bit patterns are the same, but
+     the GCC/LDC builtin may reject or miscompile the wrong type.
+   - Fix: change both casts to `cast(int4)`.
+   - Confidence: high.
+
+2. _mm_srlv_epi32 GDC/LDC path — wrong cast type for psrlv4si builtin
+   - avx2intrin.d:5224.
+   - `__builtin_ia32_psrlv4si(cast(byte16)a, cast(byte16)count)`:
+     same issue as bug 1 above; psrlv4si expects int4, not byte16.
+   - Fix: change both casts to `cast(int4)`.
+   - Confidence: high.
+
+3. _mm256_hsub_epi16 unittest is misplaced — tests _mm256_hsub_epi32 instead
+   - avx2intrin.d:1789-1796, unittest block immediately after _mm256_hsub_epi16.
+   - The test uses `_mm256_setr_epi32` inputs and calls `_mm256_hsub_epi32`.
+     It is an exact copy of the _mm256_hsub_epi32 unittest. The fallback bug in
+     _mm256_hsub_epi16 (already in TODO.txt item 1) is therefore never caught
+     by the test suite.
+   - Fix: replace with a proper _mm256_hsub_epi16 test using short16 inputs.
+   - Confidence: high.
+
+4. _mm256_srav_epi32 unittest calls _mm_srav_epi32 — 256-bit variant never tested
+   - avx2intrin.d:4981-4988, unittest block for _mm256_srav_epi32.
+   - The block is an exact copy of the _mm_srav_epi32 unittest above it: uses
+     `_mm_setr_epi32` (128-bit), casts to `int4`, and calls `_mm_srav_epi32`.
+     _mm256_srav_epi32 is never exercised.
+   - Fix: use `_mm256_setr_epi32` (eight elements), cast to `int8`, call
+     `_mm256_srav_epi32`.
+   - Confidence: high.
+
+
+================================================================================
+ mmx.d (MMX)
+================================================================================
+
+1. _mm_cvtm64_si64 unittest never calls the function under test
+   - mmx.d:348-353.
+   - The test declares `__m64 A = _mm_setr_pi32(2, 1)`, creates an unused
+     `long1 lA = cast(long1)A`, then asserts `A.array[0] == 0x100000002`.
+     The assertion checks the raw input value (effectively testing
+     _mm_setr_pi32), but _mm_cvtm64_si64 is never called and its return value
+     is never captured or verified. A completely broken implementation would
+     still pass.
+   - Fix:
+       long r = _mm_cvtm64_si64(A);
+       assert(r == 0x100000002);
+   - Also: inside the function body (line 345), `long1 la = cast(long1)a` is
+     computed but never used (dead code); `a.array[0]` is returned directly.
+   - Confidence: high.
+
