@@ -1075,7 +1075,7 @@ __m128d _mm_cmpnge_sd (__m128d a, __m128d b) pure @trusted
     static if (GDC_with_SSE2)
     {
         __m128d r = __builtin_ia32_cmpnlesd(b, a);
-        r.ptr[1] = a.ptr[1];
+        r.ptr[1] = a.array[1];
         return r;
     }
     else
@@ -1107,7 +1107,7 @@ __m128d _mm_cmpngt_sd (__m128d a, __m128d b) pure @trusted
     static if (GDC_with_SSE2)
     {
         __m128d r = __builtin_ia32_cmpnltsd(b, a);
-        r.ptr[1] = a.ptr[1];
+        r.ptr[1] = a.array[1];
         return r;
     }
     else
