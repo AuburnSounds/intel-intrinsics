@@ -749,13 +749,11 @@ __m128d _mm_cmpge_pd (__m128d a, __m128d b) pure @safe
 /// lower element, and copy the upper element from `a`.
 __m128d _mm_cmpge_sd (__m128d a, __m128d b) pure @safe
 {
-    static if (DMD_with_DSIMD)
+    static if (GDC_with_SSE2)
     {
-        return cast(__m128d) __simd(XMM.CMPSD, b, a, 2);
-    }
-    else static if (GDC_with_SSE2)
-    {
-        return __builtin_ia32_cmplesd(b, a);
+        __m128d r = __builtin_ia32_cmplesd(b, a);
+        r.ptr[1] = a.ptr[1];
+        return r;
     }
     else
     {
@@ -764,11 +762,12 @@ __m128d _mm_cmpge_sd (__m128d a, __m128d b) pure @safe
 }
 unittest
 {
-    __m128d A = _mm_setr_pd(1.0, 0.0);
+    __m128d A = _mm_setr_pd(1.0, 10.0);
     __m128d B = _mm_setr_pd(double.nan, 0.0);
     __m128d C = _mm_setr_pd(2.0, 0.0);
     assert( (cast(long2)_mm_cmpge_sd(A, A)).array[0] == -1);
     assert( (cast(long2)_mm_cmpge_sd(A, B)).array[0] ==  0);
+    assert( (cast(long2)_mm_cmpge_sd(A, B)).array[1] ==  0x4024000000000000); // = 10.0
     assert( (cast(long2)_mm_cmpge_sd(A, C)).array[0] ==  0);
     assert( (cast(long2)_mm_cmpge_sd(B, A)).array[0] ==  0);
     assert( (cast(long2)_mm_cmpge_sd(B, B)).array[0] ==  0);
@@ -877,13 +876,11 @@ __m128d _mm_cmpgt_pd (__m128d a, __m128d b) pure @safe
 /// and copy the upper element from `a`.
 __m128d _mm_cmpgt_sd (__m128d a, __m128d b) pure @safe
 {
-    static if (DMD_with_DSIMD)
+    static if (GDC_with_SSE2)
     {
-        return cast(__m128d) __simd(XMM.CMPSD, b, a, 1);
-    }
-    else static if (GDC_with_SSE2)
-    {
-        return __builtin_ia32_cmpltsd(b, a);
+        __m128d r = __builtin_ia32_cmpltsd(b, a);
+        r.ptr[1] = a.ptr[1];
+        return r;
     }
     else
     {
@@ -892,10 +889,11 @@ __m128d _mm_cmpgt_sd (__m128d a, __m128d b) pure @safe
 }
 unittest
 {
-    __m128d A = _mm_setr_pd(1.0, 0.0);
+    __m128d A = _mm_setr_pd(1.0, 10.0);
     __m128d B = _mm_setr_pd(double.nan, 0.0);
     __m128d C = _mm_setr_pd(2.0, 0.0);
     assert( (cast(long2)_mm_cmpgt_sd(A, A)).array[0] ==  0);
+    assert( (cast(long2)_mm_cmpgt_sd(A, B)).array[1] ==  0x4024000000000000);
     assert( (cast(long2)_mm_cmpgt_sd(A, B)).array[0] ==  0);
     assert( (cast(long2)_mm_cmpgt_sd(A, C)).array[0] ==  0);
     assert( (cast(long2)_mm_cmpgt_sd(B, A)).array[0] ==  0);

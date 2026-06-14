@@ -12,14 +12,6 @@
      header adds a movsd wrapper that is missing here. LDC/fallback path is correct.
    - Confidence: high.
 
-4. _mm_loadu_si16 — DMD DSIMD path sign-extends instead of zero-filling
-   - emmintrin.d:2211-2215, DMD_with_DSIMD (default for DMD x86_64).
-   - Intel: load 16 bits into lane 0, zero the remaining 112 bits.
-   - Code: `int r = *cast(short*)(mem_addr);` sign-extends, then MOVD loads all 32
-     bits, so a negative short leaves lane 1 = -1 instead of 0. Fix:
-     `int r = cast(ushort)*cast(short*)(mem_addr);`.
-   - Confidence: high.
-
 5. _mm_sll_epi16/32/64 and _mm_srl_epi16/32/64 — over-wide shift before range check
    - emmintrin.d:3832-3841 (sll_epi32), 3874-3882 (sll_epi64), 3913-3922 (sll_epi16),
      4404-4413 (srl_epi16), 4444-4454 (srl_epi32), 4485-4494 (srl_epi64). Fallback.
