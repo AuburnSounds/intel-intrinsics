@@ -348,8 +348,7 @@ long _mm_cvtm64_si64 (__m64 a) pure @safe
 unittest
 {
     __m64 A = _mm_setr_pi32(2, 1);
-    long1 lA = cast(long1)A;
-    assert(A.array[0] == 0x100000002);
+    assert(_mm_cvtm64_si64(A) == 0x100000002);
 }
 
 /// Copy 32-bit integer `a` to the lower elements of `dst`, and zero 

@@ -78,23 +78,3 @@ These are in addition to the bugs already listed in TODO.txt.
      `_mm256_srav_epi32`.
    - Confidence: high.
 
-
-================================================================================
- mmx.d (MMX)
-================================================================================
-
-1. _mm_cvtm64_si64 unittest never calls the function under test
-   - mmx.d:348-353.
-   - The test declares `__m64 A = _mm_setr_pi32(2, 1)`, creates an unused
-     `long1 lA = cast(long1)A`, then asserts `A.array[0] == 0x100000002`.
-     The assertion checks the raw input value (effectively testing
-     _mm_setr_pi32), but _mm_cvtm64_si64 is never called and its return value
-     is never captured or verified. A completely broken implementation would
-     still pass.
-   - Fix:
-       long r = _mm_cvtm64_si64(A);
-       assert(r == 0x100000002);
-   - Also: inside the function body (line 345), `long1 la = cast(long1)a` is
-     computed but never used (dead code); `a.array[0]` is returned directly.
-   - Confidence: high.
-
