@@ -285,7 +285,7 @@ __m64 _mm_cmpgt_pi32 (__m64 a, __m64 b) pure @safe
     }
     else static if (GDC_with_MMX)
     {
-        return cast(__m64) __builtin_ia32_pcmpgtw (cast(short4)a, cast(short4)b);
+        return cast(__m64) __builtin_ia32_pcmpgtd(cast(int2)a, cast(int2)b);
     }
     else
     {
