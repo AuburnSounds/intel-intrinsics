@@ -209,7 +209,27 @@ version(LDC)
             enum bool LDC_with_optimizations = false;
     }
 
-    version(ARM)
+    version(WebAssembly)
+    {
+        enum LDC_with_ARM32 = false;
+        enum LDC_with_ARM64 = false;
+        enum LDC_with_ARM64_CRC = false;
+        enum LDC_with_SSE = false;
+        enum LDC_with_SSE2 = false;
+        enum LDC_with_SSE3 = false;
+        enum LDC_with_SSSE3 = false;
+        enum LDC_with_SSE41 = false;
+        enum LDC_with_SSE42 = false;
+        enum LDC_with_CRC32 = false;
+        enum LDC_with_AVX = false;
+        enum LDC_with_F16C = false;
+        enum LDC_with_AVX2 = false;
+        enum LDC_with_SHA = false;
+        enum LDC_with_BMI2 = false;
+        enum LDC_with_WASM32 = (void*).sizeof == 4;
+        enum LDC_with_WASM64 = (void*).sizeof == 8;
+    }
+    else version(ARM)
     {
         public import ldc.gccbuiltins_arm;
 
@@ -228,6 +248,8 @@ version(LDC)
         enum LDC_with_AVX2 = false;
         enum LDC_with_SHA = false;
         enum LDC_with_BMI2 = false;
+        enum LDC_with_WASM32 = false;
+        enum LDC_with_WASM64 = false;
     }
     else version(AArch64)
     {
@@ -247,6 +269,8 @@ version(LDC)
         enum LDC_with_AVX2 = false;
         enum LDC_with_SHA = false;
         enum LDC_with_BMI2 = false;
+        enum LDC_with_WASM32 = false;
+        enum LDC_with_WASM64 = false;
     }
     else static if (some_x86)
     {
@@ -288,6 +312,8 @@ version(LDC)
         enum LDC_with_AVX2 = __traits(targetHasFeature, "avx2") && LDC_with_ia32_builtins;
         enum LDC_with_SHA = __traits(targetHasFeature, "sha") && LDC_with_ia32_builtins;
         enum LDC_with_BMI2 = __traits(targetHasFeature, "bmi2") && LDC_with_ia32_builtins;
+        enum LDC_with_WASM32 = false;
+        enum LDC_with_WASM64 = false;
     }
     else
     {
@@ -306,6 +332,8 @@ version(LDC)
         enum LDC_with_AVX2 = false;
         enum LDC_with_SHA = false;
         enum LDC_with_BMI2 = false;
+        enum LDC_with_WASM32 = false;
+        enum LDC_with_WASM64 = false;
     }
 
     // Should we use inline x86 assembly with DMD syntax, in LDC?
@@ -342,6 +370,8 @@ else
     enum LDC_with_AVX2 = false;
     enum LDC_with_SHA = false;
     enum LDC_with_BMI2 = false;
+    enum LDC_with_WASM32 = false;
+    enum LDC_with_WASM64 = false;
 
     enum LDC_with_InlineIREx = false;
     enum bool LDC_with_optimizations = false;
@@ -352,6 +382,7 @@ enum LDC_with_x86_asm = LDC_with_32b_x86_asm || LDC_with_64b_x86_asm;
 
 
 enum LDC_with_ARM = LDC_with_ARM32 | LDC_with_ARM64;
+enum LDC_with_WASM = LDC_with_WASM32 | LDC_with_WASM64;
 
 version(DigitalMars)
 {
