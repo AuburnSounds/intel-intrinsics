@@ -478,6 +478,25 @@ else
     enum SIMD_COMPARISON_MASKS_32B = false;
 }
 
+static if (LDC_with_WASM)
+{
+    // Note: this fake control word follow the x86 format.
+    // This is a #TLS variable!
+    // Only the 2 rounding mode bits will be used.
+    // This defaults to: _MM_ROUND_NEAREST.
+    static uint _mm_WASM_CW = 0x9fff;
+
+    package uint wasm_get_fpcr() nothrow @nogc @trusted
+    {
+        return _mm_WASM_CW;
+    }
+
+    package void wasm_set_fpcr(uint cw) nothrow @nogc @trusted
+    {
+        _mm_WASM_CW = cw;
+    }
+}
+
 
 static if (LDC_with_ARM32)
 {
@@ -582,13 +601,10 @@ int convertFloatToInt32UsingMXCSR(float value) @trusted
             case _MM_ROUND_TOWARD_ZERO_ARM: result = vcvts_s32_f32(value);  break;
         }
     }
-    else
+    else static if (LDC_with_WASM)
     {
-        asm pure nothrow @nogc @trusted
-        {
-            cvtss2si EAX, value;
-            mov result, EAX;
-        }
+        // BUG: this is truncation instead of MXCSR
+        result = cast(int)value;
     }
     return result;
 }
@@ -637,6 +653,11 @@ int convertDoubleToInt32UsingMXCSR(double value) @trusted
             case _MM_ROUND_UP_ARM:          result = vcvtps_s32_f64(value); break;
             case _MM_ROUND_TOWARD_ZERO_ARM: result = vcvts_s32_f64(value);  break;
         }
+    }
+    else static if (LDC_with_WASM)
+    {
+        // BUG: this is truncation instead of MXCSR
+        result = cast(int)value;
     }
     else
     {

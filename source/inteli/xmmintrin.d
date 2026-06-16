@@ -1243,6 +1243,8 @@ uint _mm_getcsr() @trusted
         }
         return cw;
     }
+    else static if (LDC_with_WASM)
+        return wasm_get_fpcr();
     else version(GNU)
     {
         static if (GDC_with_SSE)
@@ -2476,6 +2478,10 @@ void _mm_setcsr(uint controlWord) @trusted
         if (controlWord & _MM_FLUSH_ZERO_MASK)
             fpscr |= _MM_FLUSH_ZERO_MASK_ARM;
         arm_set_fpcr(fpscr);
+    }
+    else static if (LDC_with_WASM)
+    {
+        wasm_set_fpcr(controlWord);
     }
     else version(GNU)
     {
