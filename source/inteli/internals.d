@@ -606,6 +606,14 @@ int convertFloatToInt32UsingMXCSR(float value) @trusted
         // BUG: this is truncation instead of MXCSR
         result = cast(int)value;
     }
+    else
+    {
+        asm pure nothrow @nogc @trusted
+        {
+            cvtss2si EAX, value;
+            mov result, EAX;
+        }
+    }
     return result;
 }
 
