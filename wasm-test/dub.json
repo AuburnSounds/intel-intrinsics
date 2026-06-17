@@ -1,0 +1,16 @@
+{
+    "name": "wasm-test",
+    "importPaths": ["source"],
+    "sourcePaths": ["source", "../source"],
+    "dependencies": {
+        "intel-intrinsics": { "path": ".." },
+        "nurt": ">=0.2.1"        
+    },
+
+    "buildTypes" : {
+        
+        "testing": {
+            "buildOptions": ["unittests"]
+        },
+    }
+}

@@ -225,11 +225,11 @@ __m128 _mm_pow_ps(__m128 base, float exponent) pure @safe
 
 unittest
 {
-    import std.math;
+    import core.stdc.math: fabs, pow, log, exp, isnan, isfinite;
 
     bool approxEquals(double groundTruth, double approx, double epsilon) pure @trusted @nogc nothrow
     {
-        if (!isFinite(groundTruth))
+        if (!isfinite(groundTruth))
             return true; // no need to approximate where this is NaN or infinite
 
         if (groundTruth == 0) // the approximaton should produce zero too if needed
@@ -240,15 +240,15 @@ unittest
         if (approx == 0)
         {
             // If the approximation produces zero, the error should be below 140 dB
-            return ( abs(groundTruth) < 1e-7 );
+            return ( fabs(groundTruth) < 1e-7 );
         }
 
-        if ( ( abs(groundTruth / approx) - 1 ) >= epsilon)
+        if ( ( fabs(groundTruth / approx) - 1 ) >= epsilon)
         {
             assert(false);
         }
 
-        return ( abs(groundTruth / approx) - 1 ) < epsilon;
+        return ( fabs(groundTruth / approx) - 1 ) < epsilon;
     }
 
     // test _mm_log_ps
@@ -301,7 +301,7 @@ unittest
       //  assert(isInfinity(R[0]) && R[0] < 0); // log(+0.0f) = -infinity
       // DOESN'T PASS
       //  assert(isInfinity(R[1]) && R[1] < 0); // log(-0.0f) = -infinity
-        assert(isNaN(R.array[2])); // log(negative number) = NaN
+        assert(isnan(R.array[2])); // log(negative number) = NaN
 
         // DOESN'T PASS
         //assert(isNaN(R[3])); // log(NaN) = NaN
@@ -322,7 +322,7 @@ unittest
                     double powBase = mantissa2 * 2.0 ^^ exponent2;
                     double phobosValue = pow(powBase, powExponent);
                     float fPhobos = phobosValue;
-                    if (!isFinite(fPhobos)) continue;
+                    if (!isfinite(fPhobos)) continue;
                      __m128 v = _mm_pow_ps(_mm_set1_ps(powBase), _mm_set1_ps(powExponent));
 
                     foreach(i; 0..4)
