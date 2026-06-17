@@ -1205,7 +1205,7 @@ FPComparison mapAVXFPComparison(int imm8) pure @safe
 // Useful for DMD and testing
 private bool compareFloat(T)(FPComparison comparison, T a, T b) pure @safe
 {
-    bool unordered = isnan(a) || isnan(b);
+    bool unordered = inteli_isnan(a) || inteli_isnan(b);
     final switch(comparison) with(FPComparison)
     {
         case false_: return false;
@@ -2037,7 +2037,7 @@ version(unittest)
 
 // needed because in old GDC from travis, core.stdc.math.isnan isn't pure
 
-bool isnan(float x) pure @trusted
+bool inteli_isnan(float x) pure @trusted
 {
     uint u = *cast(uint*)(&x);
     bool result = ((u & 0x7F800000) == 0x7F800000) && (u & 0x007FFFFF);
@@ -2046,16 +2046,16 @@ bool isnan(float x) pure @trusted
 unittest
 {
     float x = float.nan;
-    assert(isnan(x));
+    assert(inteli_isnan(x));
 
     x = 0;
-    assert(!isnan(x));
+    assert(!inteli_isnan(x));
     
     x = float.infinity;
-    assert(!isnan(x));
+    assert(!inteli_isnan(x));
 }
 
-bool isnan(double x) pure @trusted
+bool inteli_isnan(double x) pure @trusted
 {
     ulong u = *cast(ulong*)(&x);
     return ((u & 0x7FF00000_00000000) == 0x7FF00000_00000000) && (u & 0x000FFFFF_FFFFFFFF);
@@ -2063,11 +2063,25 @@ bool isnan(double x) pure @trusted
 unittest
 {
     double x = double.nan;
-    assert(isnan(x));
+    assert(inteli_isnan(x));
 
     x = 0;
-    assert(!isnan(x));
+    assert(!inteli_isnan(x));
     
     x = double.infinity;
-    assert(!isnan(x));
+    assert(!inteli_isnan(x));
+}
+
+bool inteli_isfinite(float x) pure @trusted
+{
+    uint u = *cast(uint*)(&x);
+    bool result = (u & 0x7fffffff) < 0x7f800000;
+    return result;
+}
+
+bool inteli_isfinite(double x) pure @trusted
+{
+    ulong u = *cast(ulong*)(&x);
+    bool result = (u & 0x7fffffff_ffffffff) < 0x7ffUL << 52;
+    return result;
 }

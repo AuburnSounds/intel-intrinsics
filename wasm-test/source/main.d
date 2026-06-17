@@ -43,10 +43,13 @@ int main(string[] args)
         printf("*** %.*s\n", cast(int)modName.length, modName.ptr);
         foreach(test; __traits(getUnitTests, module_)) 
         {
-            string name = fullyQualifiedName!test;
-            printf("%.*s\n", cast(int)name.length, name.ptr);
-printf("LOL\n");
+            enum string name = test.stringof;
+
+            printf("%.*s :: ", cast(int)modName.length, modName.ptr);
+            printf("%.*s", cast(int)name.length, name.ptr);
+            fflush(stdout);
             test();
+            printf(" -> OK\n");
         }
             //tests ~= Test(fullyQualifiedName!test, getTestName!test, getTestLocation!test, &test);
     }
