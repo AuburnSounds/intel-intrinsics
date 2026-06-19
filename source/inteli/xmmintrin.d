@@ -1450,19 +1450,7 @@ __m128 _mm_loadu_ps(const(float)* mem_addr) pure @trusted
     }
     else static if (LDC_with_optimizations)
     {
-        static if (LDC_with_optimizations)
-        {
-            return loadUnaligned!(__m128)(mem_addr);
-        }
-        else
-        {
-            __m128 result;
-            result.ptr[0] = mem_addr[0];
-            result.ptr[1] = mem_addr[1];
-            result.ptr[2] = mem_addr[2];
-            result.ptr[3] = mem_addr[3];
-            return result;
-        }
+        return loadUnaligned!(__m128)(mem_addr);
     }
     else version(DigitalMars)
     {

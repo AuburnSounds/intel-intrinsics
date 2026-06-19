@@ -37,6 +37,12 @@ alias allModules = TypeTuple!(inteli.avx2intrin,
 
 int main(string[] args)
 {
+    runUnittests();
+    return 0;
+}
+
+void runUnittests()
+{
     foreach(module_; allModules) 
     {
         enum modName = module_.stringof;
@@ -55,7 +61,6 @@ int main(string[] args)
     }
 
     printf("All tests passed.\n");
-    return 0;
 }
 
 

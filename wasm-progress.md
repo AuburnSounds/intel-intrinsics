@@ -1,0 +1,642 @@
+# `_mm_` intrinsics by D file
+
+This lists every `_mm_` intrinsic (functions and aliases), grouped per source file, in the order they appear in each file.
+
+## xmmintrin.d
+
+- [x] `_mm_add_ps`
+- [x] `_mm_add_ss`
+- [x] `_mm_and_ps`
+- [x] `_mm_andnot_ps`
+- [ ] `_mm_avg_pu16` // need builtin
+- [ ] `_mm_avg_pu8`  // need builtin
+- [x] `_mm_cmpeq_ps`
+- [x] `_mm_cmpeq_ss`
+- [x] `_mm_cmpge_ps`
+- [x] `_mm_cmpge_ss`
+- [x] `_mm_cmpgt_ps`
+- [x] `_mm_cmpgt_ss`
+- [x] `_mm_cmple_ps`
+- [x] `_mm_cmple_ss`
+- [x] `_mm_cmplt_ps`
+- [x] `_mm_cmplt_ss`
+- [x] `_mm_cmpneq_ps`
+- [x] `_mm_cmpneq_ss`
+- [x] `_mm_cmpnge_ps`
+- [x] `_mm_cmpnge_ss`
+- [x] `_mm_cmpngt_ps`
+- [x] `_mm_cmpngt_ss`
+- [x] `_mm_cmpnle_ps`
+- [x] `_mm_cmpnle_ss`
+- [x] `_mm_cmpnlt_ps`
+- [x] `_mm_cmpnlt_ss`
+- [x] `_mm_cmpord_ps`
+- [x] `_mm_cmpord_ss`
+- [x] `_mm_cmpunord_ps`
+- [x] `_mm_cmpunord_ss`
+- [x] `_mm_comieq_ss`
+- [x] `_mm_comige_ss`
+- [x] `_mm_comigt_ss`
+- [x] `_mm_comile_ss`
+- [x] `_mm_comilt_ss`
+- [x] `_mm_comineq_ss`
+- [ ] `_mm_cvt_ps2pi` NEED emmintrin.d
+- [x] `_mm_cvt_si2ss`
+- [ ] `_mm_cvtpi16_ps`
+- [ ] `_mm_cvtpi32_ps`
+- [ ] `_mm_cvtpi32x2_ps`
+- [ ] `_mm_cvtpi8_ps`
+- [ ] `_mm_cvtps_pi16`
+- [ ] `_mm_cvtps_pi32`
+- [ ] `_mm_cvtps_pi8`
+- [ ] `_mm_cvtpu16_ps`
+- [ ] `_mm_cvtpu8_ps`
+- [ ] `_mm_cvtsi32_ss`
+- [ ] `_mm_cvtsi64_ss`
+- [ ] `_mm_cvtss_f32`
+- [ ] `_mm_cvtss_si32`
+- [ ] `_mm_cvtss_si64`
+- [ ] `_mm_cvtt_ss2si`
+- [ ] `_mm_cvtt_ps2pi`
+- [x] `_mm_cvttss_si64`
+- [x] `_mm_div_ps`
+- [x] `_mm_div_ss`
+- [ ] `_mm_extract_pi16`
+- [x] `_mm_free`
+- [ ] `_mm_getcsr`
+- [ ] `_mm_insert_pi16`
+- [x] `_mm_load_ps`
+- [ ] `_mm_load_ps1`
+- [ ] `_mm_load_ss`
+- [ ] `_mm_loadh_pi`
+- [ ] `_mm_loadl_pi`
+- [ ] `_mm_loadr_ps`
+- [ ] `_mm_loadu_ps`
+- [x] `_mm_malloc`
+- [ ] `_mm_maskmove_si64`
+- [ ] `_mm_max_pi16`
+- [ ] `_mm_max_ps`
+- [ ] `_mm_max_pu8`
+- [ ] `_mm_min_pi16`
+- [ ] `_mm_min_ps`
+- [ ] `_mm_min_pu8`
+- [ ] `_mm_min_ss`
+- [ ] `_mm_move_ss`
+- [ ] `_mm_movehl_ps`
+- [ ] `_mm_movehl_epi32`
+- [ ] `_mm_movelh_ps`
+- [ ] `_mm_movelh_epi32`
+- [ ] `_mm_movemask_pi8`
+- [ ] `_mm_movemask_ps`
+- [ ] `_mm_mul_ps`
+- [ ] `_mm_mul_ss`
+- [ ] `_mm_mulhi_pu16`
+- [ ] `_mm_or_ps`
+- [ ] `_mm_prefetch`
+- [ ] `_mm_rcp_ps`
+- [ ] `_mm_rcp_ss`
+- [x] `_mm_realloc`
+- [x] `_mm_realloc_discard`
+- [ ] `_mm_rsqrt_ps`
+- [ ] `_mm_rsqrt_ss`
+- [ ] `_mm_sad_pu8`
+- [ ] `_mm_set_ps`
+- [ ] `_mm_set_ss`
+- [ ] `_mm_set1_ps`
+- [ ] `_mm_setcsr`
+- [x] `_mm_setr_ps`
+- [x] `_mm_setzero_ps`
+- [ ] `_mm_sfence`
+- [ ] `_mm_shuffle_pi16`
+- [ ] `_mm_shuffle_ps`
+- [ ] `_mm_sqrt_ps`
+- [ ] `_mm_sqrt_ss`
+- [x] `_mm_store_ps`
+- [ ] `_mm_store_ss`
+- [ ] `_mm_store1_ps`
+- [ ] `_mm_storeh_pi`
+- [ ] `_mm_storel_pi`
+- [ ] `_mm_storer_ps`
+- [ ] `_mm_storeu_ps`
+- [ ] `_mm_stream_pi`
+- [ ] `_mm_stream_ps`
+- [x] `_mm_sub_ps`
+- [x] `_mm_sub_ss`
+- [ ] `_mm_undefined_ps`
+- [ ] `_mm_unpackhi_ps`
+- [ ] `_mm_unpacklo_ps`
+- [x] `_mm_xor_ps`
+
+## emmintrin.d
+
+- [ ] `_mm_add_epi16`
+- [ ] `_mm_add_epi32`
+- [ ] `_mm_add_epi64`
+- [ ] `_mm_add_epi8`
+- [ ] `_mm_add_sd`
+- [ ] `_mm_add_pd`
+- [ ] `_mm_add_si64`
+- [ ] `_mm_adds_epi16`
+- [ ] `_mm_adds_epi8`
+- [ ] `_mm_adds_epu8`
+- [ ] `_mm_adds_epu16`
+- [ ] `_mm_and_pd`
+- [ ] `_mm_and_si128`
+- [ ] `_mm_andnot_pd`
+- [ ] `_mm_andnot_si128`
+- [ ] `_mm_avg_epu16`
+- [ ] `_mm_avg_epu8`
+- [ ] `_mm_castpd_ps`
+- [ ] `_mm_castpd_si128`
+- [ ] `_mm_castps_pd`
+- [ ] `_mm_castps_si128`
+- [ ] `_mm_castsi128_pd`
+- [ ] `_mm_castsi128_ps`
+- [ ] `_mm_clflush`
+- [ ] `_mm_cmpeq_epi16`
+- [ ] `_mm_cmpeq_epi32`
+- [ ] `_mm_cmpeq_epi8`
+- [ ] `_mm_cmpeq_pd`
+- [ ] `_mm_cmpeq_sd`
+- [ ] `_mm_cmpge_epi16`
+- [ ] `_mm_cmpge_pd`
+- [ ] `_mm_cmpge_sd`
+- [ ] `_mm_cmpgt_epi16`
+- [ ] `_mm_cmpgt_epi32`
+- [ ] `_mm_cmpgt_epi8`
+- [ ] `_mm_cmpgt_pd`
+- [ ] `_mm_cmpgt_sd`
+- [ ] `_mm_cmple_epi16`
+- [ ] `_mm_cmple_pd`
+- [ ] `_mm_cmple_sd`
+- [ ] `_mm_cmplt_epi16`
+- [ ] `_mm_cmplt_epi32`
+- [ ] `_mm_cmplt_epi8`
+- [ ] `_mm_cmplt_pd`
+- [ ] `_mm_cmplt_sd`
+- [ ] `_mm_cmpneq_pd`
+- [ ] `_mm_cmpneq_sd`
+- [ ] `_mm_cmpnge_pd`
+- [ ] `_mm_cmpnge_sd`
+- [ ] `_mm_cmpngt_pd`
+- [ ] `_mm_cmpngt_sd`
+- [ ] `_mm_cmpnle_pd`
+- [ ] `_mm_cmpnle_sd`
+- [ ] `_mm_cmpnlt_pd`
+- [ ] `_mm_cmpnlt_sd`
+- [ ] `_mm_cmpord_pd`
+- [ ] `_mm_cmpord_sd`
+- [ ] `_mm_cmpunord_pd`
+- [ ] `_mm_cmpunord_sd`
+- [ ] `_mm_comieq_sd`
+- [ ] `_mm_comige_sd`
+- [ ] `_mm_comigt_sd`
+- [ ] `_mm_comile_sd`
+- [ ] `_mm_comilt_sd`
+- [ ] `_mm_comineq_sd`
+- [ ] `_mm_cvtepi32_pd`
+- [x] `_mm_cvtepi32_ps`
+- [ ] `_mm_cvtpd_epi32`
+- [ ] `_mm_cvtpd_pi32`
+- [ ] `_mm_cvtpd_ps`
+- [ ] `_mm_cvtpi32_pd`
+- [ ] `_mm_cvtps_epi32`
+- [ ] `_mm_cvtps_pd`
+- [ ] `_mm_cvtsd_f64`
+- [ ] `_mm_cvtsd_si32`
+- [ ] `_mm_cvtsd_si64`
+- [ ] `_mm_cvtsd_ss`
+- [ ] `_mm_cvtsi128_si32`
+- [ ] `_mm_cvtsi128_si64`
+- [ ] `_mm_cvtsi32_sd`
+- [ ] `_mm_cvtsi32_si128`
+- [ ] `_mm_cvtsi64_sd`
+- [ ] `_mm_cvtsi64_si128`
+- [ ] `_mm_cvtss_sd`
+- [ ] `_mm_cvttss_si64`
+- [ ] `_mm_cvttpd_epi32`
+- [ ] `_mm_cvttpd_pi32`
+- [ ] `_mm_cvttps_epi32`
+- [ ] `_mm_cvttsd_si32`
+- [ ] `_mm_cvttsd_si64`
+- [ ] `_mm_div_pd`
+- [ ] `_mm_div_sd`
+- [ ] `_mm_extract_epi16`
+- [ ] `_mm_insert_epi16`
+- [ ] `_mm_lfence`
+- [ ] `_mm_load_pd`
+- [ ] `_mm_load_pd1`
+- [ ] `_mm_load_sd`
+- [ ] `_mm_load_si128`
+- [ ] `_mm_loadh_pd`
+- [ ] `_mm_loadl_epi64`
+- [ ] `_mm_loadl_pd`
+- [ ] `_mm_loadr_pd`
+- [ ] `_mm_loadu_pd`
+- [ ] `_mm_loadu_si128`
+- [ ] `_mm_loadu_si16`
+- [ ] `_mm_loadu_si32`
+- [ ] `_mm_loadu_si64`
+- [ ] `_mm_madd_epi16`
+- [ ] `_mm_maskmoveu_si128`
+- [ ] `_mm_max_epi16`
+- [ ] `_mm_max_epu8`
+- [ ] `_mm_max_pd`
+- [ ] `_mm_max_sd`
+- [ ] `_mm_mfence`
+- [ ] `_mm_min_epi16`
+- [ ] `_mm_min_epu8`
+- [ ] `_mm_min_pd`
+- [ ] `_mm_min_sd`
+- [ ] `_mm_move_epi64`
+- [ ] `_mm_move_sd`
+- [ ] `_mm_movemask_epi8`
+- [ ] `_mm_movemask_epi16`
+- [ ] `_mm_movemask_pd`
+- [ ] `_mm_movepi64_pi64`
+- [ ] `_mm_movpi64_epi64`
+- [ ] `_mm_mul_epu32`
+- [ ] `_mm_mul_pd`
+- [ ] `_mm_mul_sd`
+- [ ] `_mm_mul_su32`
+- [ ] `_mm_mulhi_epi16`
+- [ ] `_mm_mulhi_epu16`
+- [ ] `_mm_mullo_epi16`
+- [ ] `_mm_not_si128`
+- [ ] `_mm_or_pd`
+- [ ] `_mm_or_si128`
+- [ ] `_mm_packs_epi32`
+- [ ] `_mm_packs_epi16`
+- [ ] `_mm_packus_epi16`
+- [ ] `_mm_pause`
+- [ ] `_mm_sad_epu8`
+- [ ] `_mm_set_epi16`
+- [ ] `_mm_set_epi32`
+- [ ] `_mm_set_epi64`
+- [ ] `_mm_set_epi64x`
+- [ ] `_mm_set_epi8`
+- [ ] `_mm_set_pd`
+- [ ] `_mm_set_pd1`
+- [ ] `_mm_set_sd`
+- [ ] `_mm_set1_epi16`
+- [ ] `_mm_set1_epi32`
+- [ ] `_mm_set1_epi64`
+- [ ] `_mm_set1_epi64x`
+- [ ] `_mm_set1_epi8`
+- [ ] `_mm_setr_epi16`
+- [ ] `_mm_setr_epi32`
+- [ ] `_mm_setr_epi64`
+- [ ] `_mm_setr_epi8`
+- [ ] `_mm_setr_pd`
+- [ ] `_mm_setzero_pd`
+- [ ] `_mm_setzero_si128`
+- [ ] `_mm_shuffle_epi32`
+- [ ] `_mm_shuffle_pd`
+- [ ] `_mm_shufflehi_epi16`
+- [ ] `_mm_shufflelo_epi16`
+- [ ] `_mm_sll_epi32`
+- [ ] `_mm_sll_epi64`
+- [ ] `_mm_sll_epi16`
+- [ ] `_mm_slli_epi32`
+- [ ] `_mm_slli_epi64`
+- [ ] `_mm_slli_epi16`
+- [ ] `_mm_slli_si128`
+- [ ] `_mm_sqrt_pd`
+- [ ] `_mm_sqrt_sd`
+- [ ] `_mm_sra_epi16`
+- [ ] `_mm_sra_epi32`
+- [ ] `_mm_srai_epi16`
+- [ ] `_mm_srai_epi32`
+- [ ] `_mm_srl_epi16`
+- [ ] `_mm_srl_epi32`
+- [ ] `_mm_srl_epi64`
+- [ ] `_mm_srli_epi16`
+- [ ] `_mm_srli_epi32`
+- [ ] `_mm_srli_epi64`
+- [ ] `_mm_srli_si128`
+- [ ] `_mm_srli_ps`
+- [ ] `_mm_srli_pd`
+- [ ] `_mm_store_pd`
+- [ ] `_mm_store_pd1`
+- [ ] `_mm_store_sd`
+- [ ] `_mm_store_si128`
+- [ ] `_mm_storeh_pd`
+- [ ] `_mm_storel_epi64`
+- [ ] `_mm_storel_pd`
+- [ ] `_mm_storer_pd`
+- [ ] `_mm_storeu_pd`
+- [ ] `_mm_storeu_si128`
+- [ ] `_mm_storeu_si16`
+- [ ] `_mm_storeu_si32`
+- [ ] `_mm_storeu_si64`
+- [ ] `_mm_stream_pd`
+- [ ] `_mm_stream_si128`
+- [ ] `_mm_stream_si32`
+- [ ] `_mm_stream_si64`
+- [ ] `_mm_sub_epi16`
+- [ ] `_mm_sub_epi32`
+- [ ] `_mm_sub_epi64`
+- [ ] `_mm_sub_epi8`
+- [ ] `_mm_sub_pd`
+- [ ] `_mm_sub_sd`
+- [ ] `_mm_sub_si64`
+- [ ] `_mm_subs_epi16`
+- [ ] `_mm_subs_epi8`
+- [ ] `_mm_subs_epu16`
+- [ ] `_mm_subs_epu8`
+- [ ] `_mm_undefined_pd`
+- [ ] `_mm_undefined_si128`
+- [ ] `_mm_unpackhi_epi16`
+- [ ] `_mm_unpackhi_epi32`
+- [ ] `_mm_unpackhi_epi64`
+- [ ] `_mm_unpackhi_epi8`
+- [ ] `_mm_unpackhi_pd`
+- [ ] `_mm_unpacklo_epi16`
+- [ ] `_mm_unpacklo_epi32`
+- [ ] `_mm_unpacklo_epi64`
+- [ ] `_mm_unpacklo_epi8`
+- [ ] `_mm_unpacklo_pd`
+- [ ] `_mm_xor_pd`
+- [ ] `_mm_xor_si128`
+
+## pmmintrin.d
+
+- [ ] `_mm_addsub_pd`
+- [ ] `_mm_addsub_ps`
+- [ ] `_mm_hadd_pd`
+- [ ] `_mm_hadd_ps`
+- [ ] `_mm_hsub_pd`
+- [ ] `_mm_hsub_ps`
+- [ ] `_mm_loaddup_pd`
+- [ ] `_mm_movedup_pd`
+- [ ] `_mm_movehdup_ps`
+- [ ] `_mm_moveldup_ps`
+
+## tmmintrin.d
+
+- [ ] `_mm_abs_epi16`
+- [ ] `_mm_abs_epi32`
+- [ ] `_mm_abs_epi8`
+- [ ] `_mm_abs_pd`
+- [ ] `_mm_abs_pi16`
+- [ ] `_mm_abs_pi32`
+- [ ] `_mm_abs_pi8`
+- [ ] `_mm_abs_ps`
+- [ ] `_mm_alignr_epi8`
+- [ ] `_mm_alignr_pi8`
+- [ ] `_mm_bswap_epi16`
+- [ ] `_mm_bswap_epi32`
+- [ ] `_mm_bswap_epi64`
+- [ ] `_mm_bswap_si128`
+- [ ] `_mm_hadd_epi16`
+- [ ] `_mm_hadd_epi32`
+- [ ] `_mm_hadd_pi16`
+- [ ] `_mm_hadd_pi32`
+- [ ] `_mm_hadds_epi16`
+- [ ] `_mm_hadds_pi16`
+- [ ] `_mm_hsub_epi16`
+- [ ] `_mm_hsub_epi32`
+- [ ] `_mm_hsub_pi16`
+- [ ] `_mm_hsub_pi32`
+- [ ] `_mm_hsubs_epi16`
+- [ ] `_mm_hsubs_pi16`
+- [ ] `_mm_maddubs_epi16`
+- [ ] `_mm_maddubs_pi16`
+- [ ] `_mm_mulhrs_epi16`
+- [ ] `_mm_mulhrs_pi16`
+- [ ] `_mm_shuffle_epi8`
+- [ ] `_mm_shuffle_pi8`
+- [ ] `_mm_sign_epi16`
+- [ ] `_mm_sign_epi32`
+- [ ] `_mm_sign_epi8`
+- [ ] `_mm_sign_pi16`
+- [ ] `_mm_sign_pi32`
+- [ ] `_mm_sign_pi8`
+
+## smmintrin.d
+
+- [ ] `_mm_adds_epi32`
+- [ ] `_mm_blend_epi16`
+- [ ] `_mm_blend_pd`
+- [ ] `_mm_blend_ps`
+- [ ] `_mm_blendv_epi8`
+- [ ] `_mm_blendv_pd`
+- [ ] `_mm_blendv_ps`
+- [ ] `_mm_ceil_pd`
+- [ ] `_mm_ceil_ps`
+- [ ] `_mm_ceil_sd`
+- [ ] `_mm_ceil_ss`
+- [ ] `_mm_cmpeq_epi64`
+- [ ] `_mm_cvtepi16_epi32`
+- [ ] `_mm_cvtepi16_epi64`
+- [ ] `_mm_cvtepi32_epi64`
+- [ ] `_mm_cvtepi8_epi16`
+- [ ] `_mm_cvtepi8_epi32`
+- [ ] `_mm_cvtepi8_epi64`
+- [ ] `_mm_cvtepu16_epi32`
+- [ ] `_mm_cvtepu16_epi64`
+- [ ] `_mm_cvtepu32_epi64`
+- [ ] `_mm_cvtepu8_epi16`
+- [ ] `_mm_cvtepu8_epi32`
+- [ ] `_mm_cvtepu8_epi64`
+- [ ] `_mm_dp_pd`
+- [ ] `_mm_dp_ps`
+- [ ] `_mm_extract_epi32`
+- [ ] `_mm_extract_epi64`
+- [ ] `_mm_extract_epi8`
+- [ ] `_mm_extract_ps`
+- [ ] `_mm_floor_pd`
+- [ ] `_mm_floor_ps`
+- [ ] `_mm_floor_sd`
+- [ ] `_mm_floor_ss`
+- [ ] `_mm_insert_epi32`
+- [ ] `_mm_insert_epi64`
+- [ ] `_mm_insert_epi8`
+- [ ] `_mm_insert_ps`
+- [ ] `_mm_max_epi32`
+- [ ] `_mm_max_epi8`
+- [ ] `_mm_max_epu16`
+- [ ] `_mm_max_epu32`
+- [ ] `_mm_min_epi32`
+- [ ] `_mm_min_epi8`
+- [ ] `_mm_min_epu16`
+- [ ] `_mm_min_epu32`
+- [ ] `_mm_minpos_epu16`
+- [ ] `_mm_mpsadbw_epu8`
+- [ ] `_mm_mul_epi32`
+- [ ] `_mm_mullo_epi32`
+- [ ] `_mm_packus_epi32`
+- [ ] `_mm_round_pd`
+- [ ] `_mm_round_ps`
+- [ ] `_mm_round_sd`
+- [ ] `_mm_round_ss`
+- [ ] `_mm_stream_load_si128`
+- [ ] `_mm_test_all_ones`
+- [ ] `_mm_test_all_zeros`
+- [ ] `_mm_test_all_zeros` (overload with mask)
+- [ ] `_mm_test_mix_ones_zeros`
+- [ ] `_mm_testc_si128`
+- [ ] `_mm_testnzc_si128`
+- [ ] `_mm_testz_si128`
+
+## nmmintrin.d
+
+- [ ] `_mm_cmpestra`
+- [ ] `_mm_cmpestrc`
+- [ ] `_mm_cmpestri`
+- [ ] `_mm_cmpestrm`
+- [ ] `_mm_cmpestro`
+- [ ] `_mm_cmpestrs`
+- [ ] `_mm_cmpestrz`
+- [ ] `_mm_cmpgt_epi64`
+- [ ] `_mm_cmpistra`
+- [ ] `_mm_cmpistrc`
+- [ ] `_mm_cmpistri`
+- [ ] `_mm_cmpistrm`
+- [ ] `_mm_cmpistro`
+- [ ] `_mm_cmpistrs`
+- [ ] `_mm_cmpistrz`
+- [ ] `_mm_crc32_u16`
+- [ ] `_mm_crc32_u32`
+- [ ] `_mm_crc32_u64`
+- [ ] `_mm_crc32_u8`
+
+## mmx.d
+
+- [ ] `_mm_add_pi16`
+- [ ] `_mm_add_pi32`
+- [ ] `_mm_add_pi8`
+- [ ] `_mm_adds_pi16`
+- [ ] `_mm_adds_pi8`
+- [ ] `_mm_adds_pu16`
+- [ ] `_mm_adds_pu8`
+- [ ] `_mm_and_si64`
+- [ ] `_mm_andnot_si64`
+- [ ] `_mm_cmpeq_pi16`
+- [ ] `_mm_cmpeq_pi32`
+- [ ] `_mm_cmpeq_pi8`
+- [ ] `_mm_cmpgt_pi16`
+- [ ] `_mm_cmpgt_pi32`
+- [ ] `_mm_cmpgt_pi8`
+- [ ] `_mm_cvtm64_si64`
+- [ ] `_mm_cvtsi32_si64`
+- [ ] `_mm_cvtsi64_m64`
+- [ ] `_mm_cvtsi64_si32`
+- [ ] `_mm_empty`
+- [ ] `_mm_madd_pi16`
+- [ ] `_mm_mulhi_pi16`
+- [ ] `_mm_mullo_pi16`
+- [ ] `_mm_or_si64`
+- [ ] `_mm_packs_pi16`
+- [ ] `_mm_packs_pi32`
+- [ ] `_mm_packs_pu16`
+- [ ] `_mm_set_pi16`
+- [ ] `_mm_set_pi32`
+- [ ] `_mm_set_pi8`
+- [ ] `_mm_set1_pi16`
+- [ ] `_mm_set1_pi32`
+- [ ] `_mm_set1_pi8`
+- [ ] `_mm_setr_pi16`
+- [ ] `_mm_setr_pi32`
+- [ ] `_mm_setr_pi8`
+- [ ] `_mm_setzero_si64`
+- [ ] `_mm_sll_pi16` (deprecated — use `_mm_slli_pi16`)
+- [ ] `_mm_sll_pi32` (deprecated — use `_mm_slli_pi32`)
+- [ ] `_mm_sll_si64` (deprecated — use `_mm_slli_si64`)
+- [ ] `_mm_slli_pi16`
+- [ ] `_mm_slli_pi32`
+- [ ] `_mm_slli_si64`
+- [ ] `_mm_sra_pi16` (deprecated — use `_mm_srai_pi16`)
+- [ ] `_mm_sra_pi32` (deprecated — use `_mm_srai_pi32`)
+- [ ] `_mm_srai_pi16`
+- [ ] `_mm_srai_pi32`
+- [ ] `_mm_srl_pi16` (deprecated — use `_mm_srli_pi16`)
+- [ ] `_mm_srl_pi32` (deprecated — use `_mm_srli_pi32`)
+- [ ] `_mm_srl_si64` (deprecated — use `_mm_srli_si64`)
+- [ ] `_mm_srli_pi16`
+- [ ] `_mm_srli_pi32`
+- [ ] `_mm_srli_si64`
+- [ ] `_mm_sub_pi16`
+- [ ] `_mm_sub_pi32`
+- [ ] `_mm_sub_pi8`
+- [ ] `_mm_subs_pi16`
+- [ ] `_mm_subs_pi8`
+- [ ] `_mm_subs_pu16`
+- [ ] `_mm_subs_pu8`
+- [ ] `_mm_unpackhi_pi16`
+- [ ] `_mm_unpackhi_pi32`
+- [ ] `_mm_unpackhi_pi8`
+- [ ] `_mm_unpacklo_pi16`
+- [ ] `_mm_unpacklo_pi32`
+- [ ] `_mm_unpacklo_pi8`
+- [ ] `_mm_xor_si64`
+
+## shaintrin.d
+
+- [ ] `_mm_sha1nexte_epu32`
+- [ ] `_mm_sha1msg1_epu32`
+- [ ] `_mm_sha1msg2_epu32`
+- [ ] `_mm_sha1rnds4_epu32`
+- [ ] `_mm_sha256msg1_epu32`
+- [ ] `_mm_sha256msg2_epu32`
+- [ ] `_mm_sha256rnds2_epu32`
+
+## avxintrin.d
+
+- [ ] `_mm_broadcast_ss`
+- [ ] `_mm_cmp_pd`
+- [ ] `_mm_cmp_ps`
+- [ ] `_mm_cmp_sd`
+- [ ] `_mm_cmp_ss`
+- [ ] `_mm_maskload_pd`
+- [ ] `_mm_maskload_ps`
+- [ ] `_mm_maskstore_pd`
+- [ ] `_mm_maskstore_ps`
+- [ ] `_mm_permute_pd`
+- [ ] `_mm_permute_ps`
+- [ ] `_mm_permutevar_pd`
+- [ ] `_mm_permutevar_ps`
+- [ ] `_mm_testc_pd`
+- [ ] `_mm_testc_ps`
+- [ ] `_mm_testnzc_pd`
+- [ ] `_mm_testnzc_ps`
+- [ ] `_mm_testz_pd`
+- [ ] `_mm_testz_ps`
+- [ ] `_mm_cvtph_ps`
+- [ ] `_mm_cvtps_ph`
+
+## avx2intrin.d
+
+- [ ] `_mm_blend_epi32`
+- [ ] `_mm_broadcastb_epi8`
+- [ ] `_mm_broadcastd_epi32`
+- [ ] `_mm_broadcastq_epi64`
+- [ ] `_mm_broadcastsd_pd`
+- [ ] `_mm_broadcastsi128_si256`
+- [ ] `_mm_broadcastss_ps`
+- [ ] `_mm_broadcastw_epi16`
+- [ ] `_mm_i32gather_epi32`
+- [ ] `_mm_mask_i32gather_epi32`
+- [ ] `_mm_i32gather_epi64`
+- [ ] `_mm_mask_i32gather_epi64`
+- [ ] `_mm_i32gather_pd`
+- [ ] `_mm_mask_i32gather_pd`
+- [ ] `_mm_i32gather_ps`
+- [ ] `_mm_mask_i32gather_ps`
+- [ ] `_mm_i64gather_epi32`
+- [ ] `_mm_mask_i64gather_epi32`
+- [ ] `_mm_i64gather_epi64`
+- [ ] `_mm_mask_i64gather_epi64`
+- [ ] `_mm_i64gather_pd`
+- [ ] `_mm_mask_i64gather_pd`
+- [ ] `_mm_i64gather_ps`
+- [ ] `_mm_mask_i64gather_ps`
+- [ ] `_mm_maskload_epi32`
+- [ ] `_mm_maskload_epi64`
+- [ ] `_mm_maskstore_epi32`
+- [ ] `_mm_maskstore_epi64`
+- [ ] `_mm_sllv_epi32`
+- [ ] `_mm_sllv_epi64`
+- [ ] `_mm_srav_epi32`
+- [ ] `_mm_srlv_epi32`
+- [ ] `_mm_srlv_epi64`
