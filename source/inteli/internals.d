@@ -548,15 +548,6 @@ enum uint _MM_ROUND_TOWARD_ZERO_ARM = 0x00C00000;
 enum uint _MM_ROUND_MASK_ARM        = 0x00C00000;
 enum uint _MM_FLUSH_ZERO_MASK_ARM   = 0x01000000;
 
-private
-{
-    enum int _MM_ROUND_NEAREST     = 0x0000;
-    enum int _MM_ROUND_DOWN        = 0x2000;
-    enum int _MM_ROUND_UP          = 0x4000;
-    enum int _MM_ROUND_TOWARD_ZERO = 0x6000;
-    enum int _MM_ROUND_MASK        = 0x6000;
-}
-
 //
 //  <ROUNDING>
 //
@@ -2077,6 +2068,12 @@ static if (LDC_with_ARM64)
 
     pragma(LDC_intrinsic, "llvm.aarch64.neon.tbl1.v8i8")
         byte8 vtbl1_s8(byte16 t, byte8 idx) pure @safe;
+}
+
+static if (LDC_with_WASM_SIMD)
+{
+    pragma(LDC_intrinsic, "llvm.fptosi.sat.v4i32.v4f32")
+        int4 trunc_sat_f32x4_s(float4 a) pure @safe; // lowers to i32x4.trunc_sat_f32x4_s
 }
 
 version(unittest)

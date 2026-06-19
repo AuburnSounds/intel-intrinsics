@@ -25,31 +25,7 @@ else version(D_InlineAsm_X86_64)
 nothrow @nogc:
 
 
-enum int _MM_EXCEPT_INVALID    = 0x0001; /// MXCSR Exception states.
-enum int _MM_EXCEPT_DENORM     = 0x0002; ///ditto
-enum int _MM_EXCEPT_DIV_ZERO   = 0x0004; ///ditto
-enum int _MM_EXCEPT_OVERFLOW   = 0x0008; ///ditto
-enum int _MM_EXCEPT_UNDERFLOW  = 0x0010; ///ditto
-enum int _MM_EXCEPT_INEXACT    = 0x0020; ///ditto
-enum int _MM_EXCEPT_MASK       = 0x003f; /// MXCSR Exception states mask.
 
-enum int _MM_MASK_INVALID      = 0x0080; /// MXCSR Exception masks.
-enum int _MM_MASK_DENORM       = 0x0100; ///ditto
-enum int _MM_MASK_DIV_ZERO     = 0x0200; ///ditto
-enum int _MM_MASK_OVERFLOW     = 0x0400; ///ditto
-enum int _MM_MASK_UNDERFLOW    = 0x0800; ///ditto
-enum int _MM_MASK_INEXACT      = 0x1000; ///ditto
-enum int _MM_MASK_MASK         = 0x1f80; /// MXCSR Exception masks mask.
-
-enum int _MM_ROUND_NEAREST     = 0x0000; /// MXCSR Rounding mode.
-enum int _MM_ROUND_DOWN        = 0x2000; ///ditto
-enum int _MM_ROUND_UP          = 0x4000; ///ditto
-enum int _MM_ROUND_TOWARD_ZERO = 0x6000; ///ditto
-enum int _MM_ROUND_MASK        = 0x6000; /// MXCSR Rounding mode mask.
-
-enum int _MM_FLUSH_ZERO_MASK   = 0x8000; /// MXCSR Denormal flush to zero mask.
-enum int _MM_FLUSH_ZERO_ON     = 0x8000; /// MXCSR Denormal flush to zero modes.
-enum int _MM_FLUSH_ZERO_OFF    = 0x0000; ///ditto
 
 /// Add packed single-precision (32-bit) floating-point elements in `a` and `b`.
 __m128 _mm_add_ps(__m128 a, __m128 b) pure @safe

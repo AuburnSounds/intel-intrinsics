@@ -1401,7 +1401,7 @@ __m128 _mm_cvtepi32_ps(__m128i a) pure @trusted
     }
     else
     {
-        __m128 res; // PERF =void;
+        __m128 res;
         res.ptr[0] = cast(float)a.array[0];
         res.ptr[1] = cast(float)a.array[1];
         res.ptr[2] = cast(float)a.array[2];
@@ -1535,6 +1535,20 @@ __m128i _mm_cvtps_epi32 (__m128 a) @trusted
             case _MM_ROUND_DOWN_ARM:        return vcvtmq_s32_f32(a);
             case _MM_ROUND_UP_ARM:          return vcvtpq_s32_f32(a);
             case _MM_ROUND_TOWARD_ZERO_ARM: return vcvtzq_s32_f32(a);
+        }
+    }
+    else static if (LDC_with_WASM_SIMD)
+    {
+        // PERF: not sure about having two builtins instead of one
+        // Get current rounding mode.
+        uint fpscr = wasm_get_fpcr();
+        switch(fpscr & _MM_ROUND_MASK)
+        {
+            default:
+            case _MM_ROUND_NEAREST:     return trunc_sat_f32x4_s(llvm_roundeven(a));
+            case _MM_ROUND_DOWN:        return trunc_sat_f32x4_s(llvm_floor(a));
+            case _MM_ROUND_UP:          return trunc_sat_f32x4_s(llvm_ceil(a));
+            case _MM_ROUND_TOWARD_ZERO: return trunc_sat_f32x4_s(a);
         }
     }
     else
@@ -2003,7 +2017,7 @@ unittest
 __m128d _mm_load_pd1 (const(double)* mem_addr) pure
 {
     double m = *mem_addr;
-    __m128d r; // PERF =void;
+    __m128d r;
     r.ptr[0] = m;
     r.ptr[1] = m;
     return r;
