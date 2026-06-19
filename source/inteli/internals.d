@@ -228,6 +228,7 @@ version(LDC)
         enum LDC_with_BMI2 = false;
         enum LDC_with_WASM32 = (void*).sizeof == 4;
         enum LDC_with_WASM64 = (void*).sizeof == 8;
+        enum LDC_with_WASM_SIMD = (LDC_with_WASM32 || LDC_with_WASM64) && __traits(targetHasFeature, "simd128");
     }
     else version(ARM)
     {
@@ -250,6 +251,7 @@ version(LDC)
         enum LDC_with_BMI2 = false;
         enum LDC_with_WASM32 = false;
         enum LDC_with_WASM64 = false;
+        enum LDC_with_WASM_SIMD = false;
     }
     else version(AArch64)
     {
@@ -271,6 +273,7 @@ version(LDC)
         enum LDC_with_BMI2 = false;
         enum LDC_with_WASM32 = false;
         enum LDC_with_WASM64 = false;
+        enum LDC_with_WASM_SIMD = false;
     }
     else static if (some_x86)
     {
@@ -314,6 +317,7 @@ version(LDC)
         enum LDC_with_BMI2 = __traits(targetHasFeature, "bmi2") && LDC_with_ia32_builtins;
         enum LDC_with_WASM32 = false;
         enum LDC_with_WASM64 = false;
+        enum LDC_with_WASM_SIMD = false;
     }
     else
     {
@@ -334,6 +338,7 @@ version(LDC)
         enum LDC_with_BMI2 = false;
         enum LDC_with_WASM32 = false;
         enum LDC_with_WASM64 = false;
+        enum LDC_with_WASM_SIMD = false;
     }
 
     // Should we use inline x86 assembly with DMD syntax, in LDC?
@@ -372,6 +377,7 @@ else
     enum LDC_with_BMI2 = false;
     enum LDC_with_WASM32 = false;
     enum LDC_with_WASM64 = false;
+    enum LDC_with_WASM_SIMD = false;
 
     enum LDC_with_InlineIREx = false;
     enum bool LDC_with_optimizations = false;
@@ -542,6 +548,14 @@ enum uint _MM_ROUND_TOWARD_ZERO_ARM = 0x00C00000;
 enum uint _MM_ROUND_MASK_ARM        = 0x00C00000;
 enum uint _MM_FLUSH_ZERO_MASK_ARM   = 0x01000000;
 
+private
+{
+    enum int _MM_ROUND_NEAREST     = 0x0000;
+    enum int _MM_ROUND_DOWN        = 0x2000;
+    enum int _MM_ROUND_UP          = 0x4000;
+    enum int _MM_ROUND_TOWARD_ZERO = 0x6000;
+    enum int _MM_ROUND_MASK        = 0x6000;
+}
 
 //
 //  <ROUNDING>
@@ -603,8 +617,17 @@ int convertFloatToInt32UsingMXCSR(float value) @trusted
     }
     else static if (LDC_with_WASM)
     {
-        // BUG: this is truncation instead of MXCSR
-        result = cast(int)value;
+        // Get current rounding mode.
+        // FUTURE: this one solution is rather generic, could work in any arch it seems.
+        uint fpscr = wasm_get_fpcr();
+        switch(fpscr & _MM_ROUND_MASK)
+        {
+            default:
+            case _MM_ROUND_NEAREST:     result = cast(int) llvm_roundeven!float(value); break;
+            case _MM_ROUND_DOWN:        result = cast(int) llvm_floor!float(value); break;
+            case _MM_ROUND_UP:          result = cast(int) llvm_ceil!float(value); break;
+            case _MM_ROUND_TOWARD_ZERO: result = cast(int) value;  break;
+        }
     }
     else
     {
@@ -664,8 +687,16 @@ int convertDoubleToInt32UsingMXCSR(double value) @trusted
     }
     else static if (LDC_with_WASM)
     {
-        // BUG: this is truncation instead of MXCSR
-        result = cast(int)value;
+        // Get current rounding mode.
+        uint fpscr = wasm_get_fpcr();
+        switch(fpscr & _MM_ROUND_MASK)
+        {
+            default:
+            case _MM_ROUND_NEAREST:     result = cast(int) llvm_roundeven!double(value); break;
+            case _MM_ROUND_DOWN:        result = cast(int) llvm_floor!double(value); break;
+            case _MM_ROUND_UP:          result = cast(int) llvm_ceil!double(value); break;
+            case _MM_ROUND_TOWARD_ZERO: result = cast(int) value;  break;
+        }
     }
     else
     {
@@ -710,6 +741,20 @@ long convertFloatToInt64UsingMXCSR(float value) @trusted
             case _MM_ROUND_DOWN_ARM:        return vcvtms_s64_f32(value);
             case _MM_ROUND_UP_ARM:          return vcvtps_s64_f32(value);
             case _MM_ROUND_TOWARD_ZERO_ARM: return vcvts_s64_f32(value);
+        }
+    }
+    else static if (LDC_with_WASM)
+    {
+        // Not sure if we NEED the precision extension.
+        // Get current rounding mode.
+        uint fpscr = wasm_get_fpcr();
+        switch(fpscr & _MM_ROUND_MASK)
+        {
+            default:
+            case _MM_ROUND_NEAREST:     return cast(long) llvm_roundeven!double(value); break;
+            case _MM_ROUND_DOWN:        return cast(long) llvm_floor!double(value); break;
+            case _MM_ROUND_UP:          return cast(long) llvm_ceil!double(value); break;
+            case _MM_ROUND_TOWARD_ZERO: return cast(long) value;  break;
         }
     }
     // 64-bit can use an SSE instruction
@@ -847,6 +892,20 @@ long convertDoubleToInt64UsingMXCSR(double value) @trusted
             case _MM_ROUND_DOWN_ARM:        return vcvtms_s64_f64(value);
             case _MM_ROUND_UP_ARM:          return vcvtps_s64_f64(value);
             case _MM_ROUND_TOWARD_ZERO_ARM: return vcvts_s64_f64(value);
+        }
+    }
+    else static if (LDC_with_WASM)
+    {
+        // Not sure if we NEED the precision extension.
+        // Get current rounding mode.
+        uint fpscr = wasm_get_fpcr();
+        switch(fpscr & _MM_ROUND_MASK)
+        {
+            default:
+            case _MM_ROUND_NEAREST:     return cast(long) llvm_roundeven!double(value); break;
+            case _MM_ROUND_DOWN:        return cast(long) llvm_floor!double(value); break;
+            case _MM_ROUND_UP:          return cast(long) llvm_ceil!double(value); break;
+            case _MM_ROUND_TOWARD_ZERO: return cast(long) value;  break;
         }
     }
     // 64-bit can use an SSE instruction

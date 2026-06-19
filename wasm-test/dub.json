@@ -7,6 +7,8 @@
         "nurt": ">=0.2.1"        
     },
 
+    "dflags-ldc": ["-mattr=+simd128"],
+
     "buildTypes" : {
         
         "testing": {
