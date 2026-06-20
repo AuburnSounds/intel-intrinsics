@@ -1444,6 +1444,21 @@ __m128i _mm_cvtpd_epi32 (__m128d a) @trusted
         int4 zero = 0;
         return cast(__m128i) shufflevectorLDC!(int4, 0, 2, 4, 6)(cast(int4)i, zero); // PERF: this slow down build for nothing, test without shufflevector
     }
+    else static if (LDC_with_WASM_SIMD)
+    {
+        // PERF: not sure about having two builtins instead of one
+        // PERF: moreover, trunc_sat_f64x2_zero is not a builtin
+        // Get current rounding mode.
+        uint fpscr = wasm_get_fpcr();
+        switch(fpscr & _MM_ROUND_MASK)
+        {
+            default:
+            case _MM_ROUND_NEAREST:     return trunc_sat_f64x2_zero(llvm_roundeven(a));
+            case _MM_ROUND_DOWN:        return trunc_sat_f64x2_zero(llvm_floor(a));
+            case _MM_ROUND_UP:          return trunc_sat_f64x2_zero(llvm_ceil(a));
+            case _MM_ROUND_TOWARD_ZERO: return trunc_sat_f64x2_zero(a);
+        }
+    }
     else
     {
         // PERF ARM32
@@ -1475,9 +1490,20 @@ unittest
 /// in `a` to packed single-precision (32-bit) floating-point elements.
 __m128 _mm_cvtpd_ps (__m128d a) pure @trusted
 {
+    // PERF WASM
     static if (LDC_with_SSE2)
     {
         return __builtin_ia32_cvtpd2ps(a); // can't be done with IR unfortunately
+    }
+    else static if (LDC_with_optimizations)
+    {
+        // Generate f32x4.demote_f64x2_zero in wasm -O1
+        // MAYDO generate that with a builtin rather than IR... not super satisfing
+        enum ir = `
+            %r = fptrunc <2 x double> %0 to <2 x float>
+            %v = shufflevector <2 x float> %r,<2 x float> <float 0.0, float 0.0>, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
+            ret <4 x float> %v`;
+        return LDCInlineIR!(ir, __m128, __m128d)(a);
     }
     else static if (GDC_with_SSE2)
     {

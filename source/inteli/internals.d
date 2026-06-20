@@ -2074,6 +2074,18 @@ static if (LDC_with_WASM_SIMD)
 {
     pragma(LDC_intrinsic, "llvm.fptosi.sat.v4i32.v4f32")
         int4 trunc_sat_f32x4_s(float4 a) pure @safe; // lowers to i32x4.trunc_sat_f32x4_s
+
+
+    // PERF: better be a builtin, since the codegen aint' short
+    int4 trunc_sat_f64x2_zero(double2 low)
+    {
+        int4 r;
+        r[0] = cast(int) low[0];
+        r[1] = cast(int) low[1];
+        r[2] = 0;
+        r[3] = 0;
+        return r;
+    }
 }
 
 version(unittest)
