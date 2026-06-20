@@ -8,8 +8,8 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [x] `_mm_add_ss`
 - [x] `_mm_and_ps`
 - [x] `_mm_andnot_ps`
-- [ ] `_mm_avg_pu16` // need builtin
-- [ ] `_mm_avg_pu8`  // need builtin
+- [x] `_mm_avg_pu16`
+- [x] `_mm_avg_pu8`
 - [x] `_mm_cmpeq_ps`
 - [x] `_mm_cmpeq_ss`
 - [x] `_mm_cmpge_ps`
@@ -144,15 +144,15 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [x] `_mm_and_si128`
 - [x] `_mm_andnot_pd`
 - [x] `_mm_andnot_si128`
-- [ ] `_mm_avg_epu16` // builtin
-- [ ] `_mm_avg_epu8`  // builtin
+- [x] `_mm_avg_epu16`
+- [x] `_mm_avg_epu8`
 - [x] `_mm_castpd_ps`
 - [x] `_mm_castpd_si128`
 - [x] `_mm_castps_pd`
 - [x] `_mm_castps_si128`
 - [x] `_mm_castsi128_pd`
 - [x] `_mm_castsi128_ps`
-- [ ] `_mm_clflush`
+- [x] `_mm_clflush`
 - [x] `_mm_cmpeq_epi16`
 - [x] `_mm_cmpeq_epi32`
 - [x] `_mm_cmpeq_epi8`
@@ -202,18 +202,18 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [x] `_mm_cvtpi32_pd`
 - [x] `_mm_cvtps_epi32`
 - [x] `_mm_cvtps_pd`
-- [ ] `_mm_cvtsd_f64`
-- [ ] `_mm_cvtsd_si32`
-- [ ] `_mm_cvtsd_si64`
-- [ ] `_mm_cvtsd_ss`
-- [ ] `_mm_cvtsi128_si32`
-- [ ] `_mm_cvtsi128_si64`
-- [ ] `_mm_cvtsi32_sd`
-- [ ] `_mm_cvtsi32_si128`
-- [ ] `_mm_cvtsi64_sd`
-- [ ] `_mm_cvtsi64_si128`
-- [ ] `_mm_cvtss_sd`
-- [ ] `_mm_cvttss_si64`
+- [x] `_mm_cvtsd_f64`
+- [x] `_mm_cvtsd_si32`
+- [x] `_mm_cvtsd_si64`
+- [x] `_mm_cvtsd_ss`
+- [x] `_mm_cvtsi128_si32`
+- [x] `_mm_cvtsi128_si64`
+- [x] `_mm_cvtsi32_sd`
+- [x] `_mm_cvtsi32_si128`
+- [x] `_mm_cvtsi64_sd`
+- [x] `_mm_cvtsi64_si128`
+- [x] `_mm_cvtss_sd`
+- [x] `_mm_cvttss_si64`
 - [ ] `_mm_cvttpd_epi32`
 - [ ] `_mm_cvttpd_pi32`
 - [ ] `_mm_cvttps_epi32`

@@ -2079,6 +2079,14 @@ static if (LDC_with_WASM_SIMD)
     pragma(LDC_intrinsic, "llvm.fptosi.sat.v4i32.v4f32")
         int4 trunc_sat_f32x4_s(float4 a) pure @safe; // lowers to i32x4.trunc_sat_f32x4_s
 
+    pragma(LDC_intrinsic, "llvm.wasm.avgr.unsigned.v16i8")
+        byte16 __builtin_wasm_avgr_u_i8x16(byte16 a, byte16 b) pure @safe;
+
+    pragma(LDC_intrinsic, "llvm.wasm.avgr.unsigned.v8i16")
+        short8 __builtin_wasm_avgr_u_i16x8(short8 a, short8 b) pure @safe; // lowers to i32x4.trunc_sat_f32x4_s
+
+    //pragma(LDC_intrinsic, "llvm.wasm.swizzle")
+    //    byte16 __builtin_wasm_swizzle_i8x16(byte16 a, byte16 b) pure @safe;
 
     // PERF: better be a builtin, since the codegen aint' short
     int4 trunc_sat_f64x2_zero(double2 low)

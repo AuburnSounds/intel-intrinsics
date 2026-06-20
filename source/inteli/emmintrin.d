@@ -367,6 +367,10 @@ __m128i _mm_avg_epu16 (__m128i a, __m128i b) pure @trusted
         // Exists since LDC 1.18
         return cast(__m128i) __builtin_ia32_pavgw128(cast(short8)a, cast(short8)b);
     }
+    else static if (LDC_with_WASM_SIMD)
+    {
+        return cast(__m128i) __builtin_wasm_avgr_u_i16x8(cast(short8)a, cast(short8)b);
+    }
     else static if (LDC_with_optimizations)
     {
         // Generates pavgw even in LDC 1.0, even in -O0
@@ -395,6 +399,7 @@ __m128i _mm_avg_epu16 (__m128i a, __m128i b) pure @trusted
 }
 unittest
 {
+    // this test sucks
     __m128i A = _mm_set1_epi16(31);
     __m128i B = _mm_set1_epi16(64);
     short8 avg = cast(short8)(_mm_avg_epu16(A, B));
@@ -421,6 +426,10 @@ __m128i _mm_avg_epu8 (__m128i a, __m128i b) pure @trusted
     else static if (LDC_with_ARM64)
     {
         return cast(__m128i) vrhadd_u8(cast(byte16)a, cast(byte16)b);
+    }
+    else static if (LDC_with_WASM_SIMD)
+    {
+        return cast(__m128i) __builtin_wasm_avgr_u_i8x16(cast(byte16)a, cast(byte16)b);
     }
     else static if (LDC_with_optimizations)
     {
@@ -546,6 +555,10 @@ void _mm_clflush (const(void)* p) @trusted
             mov RAX, p;
             clflush [RAX];
         }
+    }
+    else static if (LDC_with_WASM)
+    {
+        // WASM doesn't have non-temporal SIMD as of 2026.
     }
     else 
     {
