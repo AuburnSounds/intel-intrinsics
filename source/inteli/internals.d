@@ -2070,6 +2070,10 @@ static if (LDC_with_ARM64)
         byte8 vtbl1_s8(byte16 t, byte8 idx) pure @safe;
 }
 
+
+// Useful links: 
+// - https://github.com/llvm/llvm-project/blob/main/clang/lib/Headers/wasm_simd128.h
+// - https://github.com/WebAssembly/simd/blob/main/proposals/simd/ImplementationStatus.md
 static if (LDC_with_WASM_SIMD)
 {
     pragma(LDC_intrinsic, "llvm.fptosi.sat.v4i32.v4f32")
