@@ -42,13 +42,13 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [x] `_mm_comineq_ss`
 - [x] `_mm_cvt_ps2pi`
 - [x] `_mm_cvt_si2ss`
-- [ ] `_mm_cvtpi16_ps` NEED more intrin
-- [ ] `_mm_cvtpi32_ps`
-- [ ] `_mm_cvtpi32x2_ps`
-- [ ] `_mm_cvtpi8_ps`
-- [ ] `_mm_cvtps_pi16`
-- [ ] `_mm_cvtps_pi32`
-- [ ] `_mm_cvtps_pi8`
+- [x] `_mm_cvtpi16_ps` NEED more intrin
+- [x] `_mm_cvtpi32_ps`
+- [x] `_mm_cvtpi32x2_ps`
+- [x] `_mm_cvtpi8_ps`
+- [x] `_mm_cvtps_pi16`
+- [x] `_mm_cvtps_pi32`
+- [x] `_mm_cvtps_pi8`
 - [ ] `_mm_cvtpu16_ps`
 - [ ] `_mm_cvtpu8_ps`
 - [ ] `_mm_cvtsi32_ss`
@@ -61,10 +61,10 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [x] `_mm_cvttss_si64`
 - [x] `_mm_div_ps`
 - [x] `_mm_div_ss`
-- [ ] `_mm_extract_pi16`
+- [x] `_mm_extract_pi16`
 - [x] `_mm_free`
 - [x] `_mm_getcsr`
-- [ ] `_mm_insert_pi16`
+- [x] `_mm_insert_pi16`
 - [x] `_mm_load_ps`
 - [ ] `_mm_load_ps1`
 - [ ] `_mm_load_ss`
@@ -122,7 +122,7 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [ ] `_mm_stream_ps`
 - [x] `_mm_sub_ps`
 - [x] `_mm_sub_ss`
-- [ ] `_mm_undefined_ps`
+- [x] `_mm_undefined_ps`
 - [ ] `_mm_unpackhi_ps`
 - [ ] `_mm_unpacklo_ps`
 - [x] `_mm_xor_ps`
@@ -221,7 +221,7 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [ ] `_mm_cvttsd_si64`
 - [ ] `_mm_div_pd`
 - [ ] `_mm_div_sd`
-- [ ] `_mm_extract_epi16`
+- [x] `_mm_extract_epi16`
 - [ ] `_mm_insert_epi16`
 - [ ] `_mm_lfence`
 - [x] `_mm_load_pd`
@@ -344,20 +344,20 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [ ] `_mm_subs_epi8`
 - [ ] `_mm_subs_epu16`
 - [ ] `_mm_subs_epu8`
-- [ ] `_mm_undefined_pd`
-- [ ] `_mm_undefined_si128`
+- [x] `_mm_undefined_pd`
+- [x] `_mm_undefined_si128`
 - [ ] `_mm_unpackhi_epi16`
 - [ ] `_mm_unpackhi_epi32`
 - [ ] `_mm_unpackhi_epi64`
 - [ ] `_mm_unpackhi_epi8`
 - [ ] `_mm_unpackhi_pd`
-- [ ] `_mm_unpacklo_epi16`
-- [ ] `_mm_unpacklo_epi32`
-- [ ] `_mm_unpacklo_epi64`
-- [ ] `_mm_unpacklo_epi8`
-- [ ] `_mm_unpacklo_pd`
-- [ ] `_mm_xor_pd`
-- [ ] `_mm_xor_si128`
+- [x] `_mm_unpacklo_epi16`
+- [x] `_mm_unpacklo_epi32`
+- [x] `_mm_unpacklo_epi64`
+- [x] `_mm_unpacklo_epi8`
+- [x] `_mm_unpacklo_pd`
+- [x] `_mm_xor_pd`
+- [x] `_mm_xor_si128`
 
 ## pmmintrin.d
 
@@ -441,18 +441,18 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [ ] `_mm_cvtepu8_epi64`
 - [ ] `_mm_dp_pd`
 - [ ] `_mm_dp_ps`
-- [ ] `_mm_extract_epi32`
-- [ ] `_mm_extract_epi64`
-- [ ] `_mm_extract_epi8`
-- [ ] `_mm_extract_ps`
+- [x] `_mm_extract_epi32`
+- [x] `_mm_extract_epi64`
+- [x] `_mm_extract_epi8`
+- [x] `_mm_extract_ps`
 - [ ] `_mm_floor_pd`
 - [ ] `_mm_floor_ps`
 - [ ] `_mm_floor_sd`
 - [ ] `_mm_floor_ss`
-- [ ] `_mm_insert_epi32`
-- [ ] `_mm_insert_epi64`
-- [ ] `_mm_insert_epi8`
-- [ ] `_mm_insert_ps`
+- [x] `_mm_insert_epi32`
+- [x] `_mm_insert_epi64`
+- [x] `_mm_insert_epi8`
+- [x] `_mm_insert_ps`
 - [ ] `_mm_max_epi32`
 - [ ] `_mm_max_epi8`
 - [ ] `_mm_max_epu16`
@@ -652,24 +652,24 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [ ] `_mm256_div_pd`
 - [ ] `_mm256_div_ps`
 - [ ] `_mm256_dp_ps`
-- [ ] `_mm256_extract_epi32`
-- [ ] `_mm256_extract_epi64`
-- [ ] `_mm256_extractf128_pd`
-- [ ] `_mm256_extractf128_ps`
-- [ ] `_mm256_extractf128_si256`
+- [x] `_mm256_extract_epi32`
+- [x] `_mm256_extract_epi64`
+- [x] `_mm256_extractf128_pd`
+- [x] `_mm256_extractf128_ps`
+- [x] `_mm256_extractf128_si256`
 - [ ] `_mm256_floor_pd`
 - [ ] `_mm256_floor_ps`
 - [ ] `_mm256_hadd_pd`
 - [ ] `_mm256_hadd_ps`
 - [ ] `_mm256_hsub_pd`
 - [ ] `_mm256_hsub_ps`
-- [ ] `_mm256_insert_epi16`
-- [ ] `_mm256_insert_epi32`
-- [ ] `_mm256_insert_epi64`
-- [ ] `_mm256_insert_epi8`
-- [ ] `_mm256_insertf128_pd`
-- [ ] `_mm256_insertf128_ps`
-- [ ] `_mm256_insertf128_si256`
+- [x] `_mm256_insert_epi16`
+- [x] `_mm256_insert_epi32`
+- [x] `_mm256_insert_epi64`
+- [x] `_mm256_insert_epi8`
+- [x] `_mm256_insertf128_pd`
+- [x] `_mm256_insertf128_ps`
+- [x] `_mm256_insertf128_si256`
 - [ ] `_mm256_lddqu_si256`
 - [ ] `_mm256_load_pd`
 - [ ] `_mm256_load_ps`
@@ -761,9 +761,9 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [ ] `_mm256_testz_pd`
 - [ ] `_mm256_testz_ps`
 - [ ] `_mm256_testz_si256`
-- [ ] `_mm256_undefined_pd`
-- [ ] `_mm256_undefined_ps`
-- [ ] `_mm256_undefined_si256`
+- [x] `_mm256_undefined_pd`
+- [x] `_mm256_undefined_ps`
+- [x] `_mm256_undefined_si256`
 - [ ] `_mm256_unpackhi_pd`
 - [ ] `_mm256_unpackhi_ps`
 - [ ] `_mm256_unpacklo_pd`
@@ -859,9 +859,9 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [ ] `_mm256_cvtepu8_epi16`
 - [ ] `_mm256_cvtepu8_epi32`
 - [ ] `_mm256_cvtepu8_epi64`
-- [ ] `_mm256_extract_epi16`
-- [ ] `_mm256_extract_epi8`
-- [ ] `_mm256_extracti128_si256`
+- [x] `_mm256_extract_epi16`
+- [x] `_mm256_extract_epi8`
+- [x] `_mm256_extracti128_si256`
 - [ ] `_mm256_hadd_epi16`
 - [ ] `_mm256_hadd_epi32`
 - [ ] `_mm256_hadds_epi16`
