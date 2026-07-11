@@ -1,85 +1,173 @@
 // Note: this is a godbolt template that can help to new intrinsics
 import core.simd;
 
-public import core.math: sqrt; // since it's an intrinsic
+//public import core.math: sqrt; // since it's an intrinsic
 version(GNU) import gcc.builtins;
 version(LDC) import ldc.simd;
 version(LDC) import ldc.intrinsics;
 version(LDC) import ldc.gccbuiltins_x86;
 
-/// Unpack and interleave 32-bit integers from the high half of each 128-bit lane in `a` and `b`.
-__m256i _mm256_unpackhi_epi32 (__m256i a, __m256i b) pure @trusted
+/// Extract a 16-bit unsigned integer from `a`, selected with `imm8`. Zero-extended.
+int _mm_extract_lane (int4 a, int lane)
 {
-    static if (GDC_with_AVX2)
-        enum bool split = false;
-    else version(GNU)
-        enum bool split = true;
-    else
-        enum bool split = false;
-
-    
-    static if (GDC_with_AVX2)
-    {
-        return cast(long4) __builtin_ia32_punpckhdq256(cast(int8)a, cast(int8)b);
-    }
-    else static if (LDC_with_optimizations)
-    {
-        // LDC AVX2: Suprisingly, this start using vunpckhps in LDC 1.31 -O2
-        enum ir = `%r = shufflevector <8 x i32> %0, <8 x i32> %1, <8 x i32> <i32 2, i32 10, i32 3, i32 11, i32 6, i32 14, i32 7, i32 15>
-            ret <8 x i32> %r`;
-        return cast(__m256i)LDCInlineIR!(ir, int8, int8, int8)(cast(int8)a, cast(int8)b);
-    }
-    else static if (split)
-    {
-        __m128i a_lo = _mm256_extractf128_si256!0(a);
-        __m128i a_hi = _mm256_extractf128_si256!1(a);
-        __m128i b_lo = _mm256_extractf128_si256!0(b);
-        __m128i b_hi = _mm256_extractf128_si256!1(b);
-        __m128i r_lo = _mm_unpackhi_epi32(a_lo, b_lo);
-        __m128i r_hi = _mm_unpackhi_epi32(a_hi, b_hi);
-        return _mm256_set_m128i(r_hi, r_lo);
-    }
-    else
-    {
-        int8 R;
-        int8 ai = cast(int8)a;
-        int8 bi = cast(int8)b;
-        R.ptr[0] = ai.array[2];
-        R.ptr[1] = bi.array[2];
-        R.ptr[2] = ai.array[3];
-        R.ptr[3] = bi.array[3];
-        R.ptr[4] = ai.array[6];
-        R.ptr[5] = bi.array[6];
-        R.ptr[6] = ai.array[7];
-        R.ptr[7] = bi.array[7];
-        return cast(__m256i) R;
-    }
+    return a[lane];
 }
 
-__m128i _mm_unpackhi_epi32 (__m128i a, __m128i b) pure @trusted
+/// Extract a 16-bit unsigned integer from `a`, selected with `imm8`. Zero-extended.
+int _mm_extract_pi16 (__m64 a, int imm8)
 {
-    static if (GDC_with_SSE2)
+    short4 sa = cast(short4)a;
+    return cast(ushort)(sa[imm8 & 3]);
+}
+
+static if (LDC_with_optimizations) // this save time for bigger projects, since LDCInlineIR gets more expensive there.
+{
+    /// Provides packed float comparisons
+    package int4 cmpps(FPComparison comparison)(float4 a, float4 b) pure @safe
     {
-        return __builtin_ia32_punpckhdq128(a, b);
+        enum ir = `
+            %cmp = fcmp `~ FPComparisonToString[comparison] ~` <4 x float> %0, %1
+            %r = sext <4 x i1> %cmp to <4 x i32>
+            ret <4 x i32> %r`;
+
+        return LDCInlineIR!(ir, int4, float4, float4)(a, b);
     }
-    else static if (LDC_with_optimizations)
+
+    ///ditto
+    package int8 cmpps256(FPComparison comparison)(float8 a, float8 b) pure @safe
     {
-        enum ir = `%r = shufflevector <4 x i32> %0, <4 x i32> %1, <4 x i32> <i32 2, i32 6, i32 3, i32 7>
-                   ret <4 x i32> %r`;
-        return LDCInlineIR!(ir, int4, int4, int4)(cast(int4)a, cast(int4)b);
+        enum ir = `
+            %cmp = fcmp `~ FPComparisonToString[comparison] ~` <8 x float> %0, %1
+            %r = sext <8 x i1> %cmp to <8 x i32>
+            ret <8 x i32> %r`;
+        return LDCInlineIR!(ir, int8, float8, float8)(a, b);
     }
-    else
+
+    /// Provides packed double comparisons
+    package long2 cmppd(FPComparison comparison)(double2 a, double2 b) pure @safe
     {
-        __m128i r = void;
-        r.ptr[0] = a.array[2];
-        r.ptr[1] = b.array[2];
-        r.ptr[2] = a.array[3];
-        r.ptr[3] = b.array[3];
+        enum ir = `
+            %cmp = fcmp `~ FPComparisonToString[comparison] ~` <2 x double> %0, %1
+            %r = sext <2 x i1> %cmp to <2 x i64>
+            ret <2 x i64> %r`;
+
+        return LDCInlineIR!(ir, long2, double2, double2)(a, b);
+    }
+
+    ///ditto 
+    package long4 cmppd256(FPComparison comparison)(double4 a, double4 b) pure @safe
+    {
+        enum ir = `
+            %cmp = fcmp `~ FPComparisonToString[comparison] ~` <4 x double> %0, %1
+            %r = sext <4 x i1> %cmp to <4 x i64>
+            ret <4 x i64> %r`;
+        return LDCInlineIR!(ir, long4, double4, double4)(a, b);
+    }
+
+    /// CMPSS-style comparisons
+    /// clang implement it through x86 intrinsics, it is possible with IR alone
+    /// but leads to less optimal code.
+    /// PERF: try to implement it with __builtin_ia32_cmpss and immediate 0 to 7. 
+    /// Not that simple.
+    package float4 cmpss(FPComparison comparison)(float4 a, float4 b) pure @safe
+    {
+        /*
+        enum ubyte predicateNumber = FPComparisonToX86Predicate[comparison];
+        enum bool invertOp = (predicateNumber & 0x80) != 0;
+        static if(invertOp)
+            return __builtin_ia32_cmpsd(b, a, predicateNumber & 0x7f);
+        else
+            return __builtin_ia32_cmpsd(a, b, predicateNumber & 0x7f);
+        */
+        enum ir = `
+            %cmp = fcmp `~ FPComparisonToString[comparison] ~` float %0, %1
+            %r = sext i1 %cmp to i32
+            %r2 = bitcast i32 %r to float
+            ret float %r2`;
+
+        float4 r = a;
+        r[0] = LDCInlineIR!(ir, float, float, float)(a[0], b[0]);
+        return r;
+    }
+
+    /// CMPSD-style comparisons
+    /// clang implement it through x86 intrinsics, it is possible with IR alone
+    /// but leads to less optimal code.
+    /// PERF: try to implement it with __builtin_ia32_cmpsd and immediate 0 to 7. 
+    /// Not that simple.    
+    package double2 cmpsd(FPComparison comparison)(double2 a, double2 b) pure @safe
+    {
+        enum ir = `
+            %cmp = fcmp `~ FPComparisonToString[comparison] ~` double %0, %1
+            %r = sext i1 %cmp to i64
+            %r2 = bitcast i64 %r to double
+            ret double %r2`;
+
+        double2 r = a;
+        r[0] = LDCInlineIR!(ir, double, double, double)(a[0], b[0]);
         return r;
     }
 }
+else
+{
+    /// Provides packed float comparisons
+    package int4 cmpps(FPComparison comparison)(float4 a, float4 b) pure @trusted
+    {
+        int4 result;
+        foreach(i; 0..4)
+        {
+            result.ptr[i] = compareFloat!float(comparison, a.array[i], b.array[i]) ? -1 : 0;
+        }
+        return result;
+    }
+    ///ditto
+    package int8 cmpps256(FPComparison comparison)(float8 a, float8 b) pure @trusted
+    {
+        int8 result;
+        foreach(i; 0..8)
+        {
+            result.ptr[i] = compareFloat!float(comparison, a.array[i], b.array[i]) ? -1 : 0;
+        }
+        return result;
+    }
 
+    /// Provides packed double comparisons
+    package long2 cmppd(FPComparison comparison)(double2 a, double2 b) pure @trusted
+    {
+        long2 result;
+        foreach(i; 0..2)
+        {
+            result.ptr[i] = compareFloat!double(comparison, a.array[i], b.array[i]) ? -1 : 0;
+        }
+        return result;
+    }
+    ///ditto
+    package long4 cmppd256(FPComparison comparison)(double4 a, double4 b) pure @trusted
+    {
+        long4 result;
+        foreach(i; 0..4)
+        {
+            result.ptr[i] = compareFloat!double(comparison, a.array[i], b.array[i]) ? -1 : 0;
+        }
+        return result;
+    }
 
+    /// Provides CMPSS-style comparison
+    package float4 cmpss(FPComparison comparison)(float4 a, float4 b) pure @trusted
+    {
+        int4 result = cast(int4)a;
+        result.ptr[0] = compareFloat!float(comparison, a.array[0], b.array[0]) ? -1 : 0;
+        return cast(float4)result;
+    }
+
+    /// Provides CMPSD-style comparison
+    package double2 cmpsd(FPComparison comparison)(double2 a, double2 b) pure @trusted
+    {
+        long2 result = cast(long2)a;
+        result.ptr[0] = compareFloat!double(comparison, a.array[0], b.array[0]) ? -1 : 0;
+        return cast(double2)result;
+    }
+}
 
 version(GNU)
 {
@@ -295,6 +383,19 @@ version(LDC)
     enum LDC_with_AVX512VP2INTERSECT = __traits(targetHasFeature, "avx512vp2intersect") && LDC_with_ia32_builtins;
     enum LDC_with_AVX512VPOPCNTDQ = __traits(targetHasFeature, "avx512vpopcntdq") && LDC_with_ia32_builtins;
 
+
+    version(WebAssembly)
+    {
+        enum LDC_with_WASM32 = (void*).sizeof == 4;
+        enum LDC_with_WASM64 = (void*).sizeof == 8;
+        enum LDC_with_WASM_SIMD = (LDC_with_WASM32 || LDC_with_WASM64) && __traits(targetHasFeature, "simd128");
+    }
+    else
+    {
+        enum LDC_with_WASM32 = false;
+        enum LDC_with_WASM64 = false;
+        enum LDC_with_WASM_SIMD = false;
+    }
     alias shufflevectorLDC = shufflevector;
 }
 else
@@ -330,9 +431,14 @@ else
 
     enum LDC_with_AVX512VP2INTERSECT = false;
     enum LDC_with_AVX512VPOPCNTDQ = false;
+    enum LDC_with_WASM32 = false;
+    enum LDC_with_WASM64 = false;
+    enum LDC_with_WASM_SIMD = false;
+
 }
 
 enum LDC_with_ARM = LDC_with_ARM32 | LDC_with_ARM64;
+enum LDC_with_WASM = LDC_with_WASM32 | LDC_with_WASM64;
 
 version(GNU)
 {
@@ -482,4 +588,124 @@ __m256i _mm256_set_m128i (__m128i hi, __m128i lo) pure @trusted
         r.ptr[7] = hi.array[3];
         return cast(long4)r;
     }
+}
+
+// Individual float comparison: returns -1 for true or 0 for false.
+// Useful for DMD and testing
+private bool compareFloat(T)(FPComparison comparison, T a, T b) pure @safe
+{
+    bool unordered = isnan(a) || isnan(b);
+    final switch(comparison) with(FPComparison)
+    {
+        case false_: return false;
+        case oeq: return a == b;
+        case ogt: return a > b;
+        case oge: return a >= b;
+        case olt: return a < b;
+        case ole: return a <= b;
+        case one: return !unordered && (a != b); // NaN with != always yields true
+        case ord: return !unordered; 
+        case ueq: return unordered || (a == b);
+        case ugt: return unordered || (a > b);
+        case uge: return unordered || (a >= b);
+        case ult: return unordered || (a < b);
+        case ule: return unordered || (a <= b);
+        case une: return (a != b); // NaN with != always yields true
+        case uno: return unordered;
+        case true_: return true;
+    }
+}
+
+bool isnan(float x) pure @trusted
+{
+    uint u = *cast(uint*)(&x);
+    bool result = ((u & 0x7F800000) == 0x7F800000) && (u & 0x007FFFFF);
+    return result;
+}
+
+
+private static immutable string[FPComparison.max+1] FPComparisonToString =
+[
+    "false",
+    "oeq",
+    "ogt",
+    "oge",
+    "olt",
+    "ole",
+    "one",
+    "ord",
+    "ueq",
+    "ugt",
+    "uge",
+    "ult",
+    "ule",
+    "une",
+    "uno",
+    "true"
+];
+
+enum FPComparison
+{
+    false_,// always false
+    oeq,   // ordered and equal
+    ogt,   // ordered and greater than
+    oge,   // ordered and greater than or equal
+    olt,   // ordered and less than
+    ole,   // ordered and less than or equal
+    one,   // ordered and not equal
+    ord,   // ordered (no nans)
+    ueq,   // unordered or equal
+    ugt,   // unordered or greater than ("nle")
+    uge,   // unordered or greater than or equal ("nlt")
+    ult,   // unordered or less than ("nge")
+    ule,   // unordered or less than or equal ("ngt")
+    une,   // unordered or not equal ("neq")
+    uno,   // unordered (either nans)
+    true_, // always true
+}
+
+__m64 to_m64(__m128i a) pure @trusted
+{
+    long2 la = cast(long2)a;
+    long1 r = la.array[0];
+    return r;
+}
+
+__m128i to_m128i(__m64 a) pure @trusted
+{
+    {
+        long2 r = [0, 0];
+        r.ptr[0] = a.array[0];
+        return cast(__m128i)r;
+    }
+}
+
+enum LDC_with_x86_asm = false;
+
+static if (LDC_with_WASM)
+{
+    // Note: this fake control word follow the x86 format.
+    // This is a #TLS variable!
+    // Only the 2 rounding mode bits will be used.
+    // This defaults to: _MM_ROUND_NEAREST.
+    static uint _mm_WASM_CW = 0x9fff;
+
+    package uint wasm_get_fpcr() nothrow @nogc @trusted
+    {
+        return _mm_WASM_CW;
+    }
+
+    package void wasm_set_fpcr(uint cw) nothrow @nogc @trusted
+    {
+        _mm_WASM_CW = cw;
+    }
+}
+
+package
+{
+    enum int _MM_ROUND_NEAREST     = 0x0000;
+    enum int _MM_ROUND_DOWN        = 0x2000;
+    enum int _MM_ROUND_UP          = 0x4000;
+    enum int _MM_ROUND_TOWARD_ZERO = 0x6000;
+    enum int _MM_ROUND_MASK        = 0x6000;
 }
