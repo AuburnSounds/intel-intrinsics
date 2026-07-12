@@ -2386,6 +2386,11 @@ unittest
 /// boundary.
 void _mm_maskmoveu_si128 (__m128i a, __m128i mask, void* mem_addr) @trusted
 {
+    version(LDC)
+        enum bool LDC_maskmove_workaround = ! LDC_with_ARM32;
+    else
+        enum bool LDC_maskmove_workaround = false;
+
     static if (GDC_with_SSE2)
     {    
         return __builtin_ia32_maskmovdqu(cast(ubyte16)a, cast(ubyte16)mask, cast(char*)mem_addr);
@@ -2394,9 +2399,10 @@ void _mm_maskmoveu_si128 (__m128i a, __m128i mask, void* mem_addr) @trusted
     {
         return __builtin_ia32_maskmovdqu(cast(byte16)a, cast(byte16)mask, cast(char*)mem_addr);
     }
-    else static if (LDC_with_ARM64)
+    else static if (LDC_maskmove_workaround)
     {
-        // PERF: catastrophic on ARM32
+        // PERF: catastrophic on ARM32, disabled there
+        // Allright in WASM and ARM64
         byte16 bmask  = cast(byte16)mask;
         byte16 shift = 7;
         bmask = bmask >> shift; // sign-extend to have a 0xff or 0x00 mask
