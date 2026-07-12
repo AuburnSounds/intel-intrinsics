@@ -49,15 +49,15 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [x] `_mm_cvtps_pi16`
 - [x] `_mm_cvtps_pi32`
 - [x] `_mm_cvtps_pi8`
-- [ ] `_mm_cvtpu16_ps`
-- [ ] `_mm_cvtpu8_ps`
-- [ ] `_mm_cvtsi32_ss`
-- [ ] `_mm_cvtsi64_ss`
-- [ ] `_mm_cvtss_f32`
-- [ ] `_mm_cvtss_si32`
-- [ ] `_mm_cvtss_si64`
-- [ ] `_mm_cvtt_ss2si`
-- [ ] `_mm_cvtt_ps2pi`
+- [x] `_mm_cvtpu16_ps`
+- [x] `_mm_cvtpu8_ps`
+- [x] `_mm_cvtsi32_ss`
+- [x] `_mm_cvtsi64_ss`
+- [x] `_mm_cvtss_f32`
+- [x] `_mm_cvtss_si32`
+- [x] `_mm_cvtss_si64`
+- [x] `_mm_cvtt_ss2si`
+- [x] `_mm_cvtt_ps2pi`
 - [x] `_mm_cvttss_si64`
 - [x] `_mm_div_ps`
 - [x] `_mm_div_ss`
@@ -66,14 +66,14 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [x] `_mm_getcsr`
 - [x] `_mm_insert_pi16`
 - [x] `_mm_load_ps`
-- [ ] `_mm_load_ps1`
-- [ ] `_mm_load_ss`
-- [ ] `_mm_loadh_pi`
-- [ ] `_mm_loadl_pi`
-- [ ] `_mm_loadr_ps`
+- [x] `_mm_load_ps1`
+- [x] `_mm_load_ss`
+- [x] `_mm_loadh_pi`
+- [x] `_mm_loadl_pi`
+- [x] `_mm_loadr_ps`
 - [x] `_mm_loadu_ps`
 - [x] `_mm_malloc`
-- [ ] `_mm_maskmove_si64`
+- [x] `_mm_maskmove_si64`
 - [ ] `_mm_max_pi16`
 - [ ] `_mm_max_ps`
 - [ ] `_mm_max_pu8`
@@ -238,7 +238,7 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [ ] `_mm_loadu_si32`
 - [ ] `_mm_loadu_si64`
 - [ ] `_mm_madd_epi16`
-- [ ] `_mm_maskmoveu_si128`
+- [x] `_mm_maskmoveu_si128`
 - [ ] `_mm_max_epi16`
 - [ ] `_mm_max_epu8`
 - [ ] `_mm_max_pd`
