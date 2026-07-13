@@ -74,31 +74,31 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [x] `_mm_loadu_ps`
 - [x] `_mm_malloc`
 - [x] `_mm_maskmove_si64`
-- [ ] `_mm_max_pi16`
-- [ ] `_mm_max_ps`
-- [ ] `_mm_max_pu8`
-- [ ] `_mm_min_pi16`
-- [ ] `_mm_min_ps`
-- [ ] `_mm_min_pu8`
-- [ ] `_mm_min_ss`
-- [ ] `_mm_move_ss`
-- [ ] `_mm_movehl_ps`
-- [ ] `_mm_movehl_epi32`
-- [ ] `_mm_movelh_ps`
-- [ ] `_mm_movelh_epi32`
-- [ ] `_mm_movemask_pi8`
-- [ ] `_mm_movemask_ps`
-- [ ] `_mm_mul_ps`
-- [ ] `_mm_mul_ss`
-- [ ] `_mm_mulhi_pu16`
-- [ ] `_mm_or_ps`
-- [ ] `_mm_prefetch`
-- [ ] `_mm_rcp_ps`
-- [ ] `_mm_rcp_ss`
+- [x] `_mm_max_pi16`
+- [x] `_mm_max_ps`
+- [x] `_mm_max_pu8`
+- [x] `_mm_min_pi16`
+- [x] `_mm_min_ps`
+- [x] `_mm_min_pu8`
+- [x] `_mm_min_ss`
+- [x] `_mm_move_ss`
+- [x] `_mm_movehl_ps`
+- [x] `_mm_movehl_epi32`
+- [x] `_mm_movelh_ps`
+- [x] `_mm_movelh_epi32`
+- [ ] `_mm_movemask_pi8` // Need special bitmask instruction
+- [ ] `_mm_movemask_ps`  // Need special bitmask instruction
+- [x] `_mm_mul_ps`
+- [x] `_mm_mul_ss`
+- [x] `_mm_mulhi_pu16`
+- [x] `_mm_or_ps`
+- [x] `_mm_prefetch`
+- [x] `_mm_rcp_ps`
+- [x] `_mm_rcp_ss`
 - [x] `_mm_realloc`
 - [x] `_mm_realloc_discard`
-- [ ] `_mm_rsqrt_ps`
-- [ ] `_mm_rsqrt_ss`
+- [x] `_mm_rsqrt_ps`
+- [x] `_mm_rsqrt_ss`
 - [ ] `_mm_sad_pu8`
 - [ ] `_mm_set_ps`
 - [ ] `_mm_set_ss`
@@ -109,8 +109,8 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [ ] `_mm_sfence`
 - [ ] `_mm_shuffle_pi16`
 - [ ] `_mm_shuffle_ps`
-- [ ] `_mm_sqrt_ps`
-- [ ] `_mm_sqrt_ss`
+- [x] `_mm_sqrt_ps`
+- [x] `_mm_sqrt_ss`
 - [x] `_mm_store_ps`
 - [ ] `_mm_store_ss`
 - [ ] `_mm_store1_ps`
@@ -239,15 +239,15 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [ ] `_mm_loadu_si64`
 - [ ] `_mm_madd_epi16`
 - [x] `_mm_maskmoveu_si128`
-- [ ] `_mm_max_epi16`
-- [ ] `_mm_max_epu8`
-- [ ] `_mm_max_pd`
-- [ ] `_mm_max_sd`
-- [ ] `_mm_mfence`
-- [ ] `_mm_min_epi16`
-- [ ] `_mm_min_epu8`
-- [ ] `_mm_min_pd`
-- [ ] `_mm_min_sd`
+- [x] `_mm_max_epi16`
+- [x] `_mm_max_epu8`
+- [x] `_mm_max_pd`
+- [x] `_mm_max_sd`
+- [x] `_mm_mfence`
+- [x] `_mm_min_epi16`
+- [x] `_mm_min_epu8`
+- [x] `_mm_min_pd`
+- [x] `_mm_min_sd`
 - [ ] `_mm_move_epi64`
 - [ ] `_mm_move_sd`
 - [ ] `_mm_movemask_epi8`
@@ -259,9 +259,9 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [ ] `_mm_mul_pd`
 - [ ] `_mm_mul_sd`
 - [ ] `_mm_mul_su32`
-- [ ] `_mm_mulhi_epi16`
-- [ ] `_mm_mulhi_epu16`
-- [ ] `_mm_mullo_epi16`
+- [x] `_mm_mulhi_epi16`
+- [x] `_mm_mulhi_epu16`
+- [x] `_mm_mullo_epi16`
 - [ ] `_mm_not_si128`
 - [ ] `_mm_or_pd`
 - [ ] `_mm_or_si128`
@@ -453,14 +453,14 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [x] `_mm_insert_epi64`
 - [x] `_mm_insert_epi8`
 - [x] `_mm_insert_ps`
-- [ ] `_mm_max_epi32`
-- [ ] `_mm_max_epi8`
-- [ ] `_mm_max_epu16`
-- [ ] `_mm_max_epu32`
-- [ ] `_mm_min_epi32`
-- [ ] `_mm_min_epi8`
-- [ ] `_mm_min_epu16`
-- [ ] `_mm_min_epu32`
+- [x] `_mm_max_epi32`
+- [x] `_mm_max_epi8`
+- [x] `_mm_max_epu16`
+- [x] `_mm_max_epu32`
+- [x] `_mm_min_epi32`
+- [x] `_mm_min_epi8`
+- [x] `_mm_min_epu16`
+- [x] `_mm_min_epu32`
 - [ ] `_mm_minpos_epu16`
 - [ ] `_mm_mpsadbw_epu8`
 - [ ] `_mm_mul_epi32`
@@ -524,8 +524,8 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [ ] `_mm_cvtsi64_si32`
 - [ ] `_mm_empty`
 - [ ] `_mm_madd_pi16`
-- [ ] `_mm_mulhi_pi16`
-- [ ] `_mm_mullo_pi16`
+- [x] `_mm_mulhi_pi16`
+- [x] `_mm_mullo_pi16`
 - [ ] `_mm_or_si64`
 - [ ] `_mm_packs_pi16`
 - [ ] `_mm_packs_pi32`

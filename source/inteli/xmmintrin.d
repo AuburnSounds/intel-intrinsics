@@ -2064,6 +2064,8 @@ deprecated("Use _mm_shuffle_pi16 instead") alias _m_pshufw = _mm_shuffle_pi16;//
 /// and return the results. The maximum relative error for this approximation is less than 1.5*2^-12.
 __m128 _mm_rcp_ps (__m128 a) pure @trusted
 {
+    // PERF: as of 2026, WASM relaxed SIMD has only 75-79% of browser
+    // prevalance, so we are leaving out those approximate intrinsics.
     static if (DMD_with_DSIMD)
     {
         return cast(__m128) __simd(XMM.RCPPS, a);
@@ -2187,6 +2189,8 @@ void* _mm_realloc_discard(void* aligned, size_t size, size_t alignment) nothrow 
 /// The maximum relative error for this approximation is less than 1.5*2^-12.
 __m128 _mm_rsqrt_ps (__m128 a) pure @trusted
 {
+    // PERF: as of 2026, WASM relaxed SIMD has only 75-79% of browser
+    // prevalance, so we are leaving out those approximate intrinsics.
     static if (DMD_with_DSIMD)
     {
         return cast(__m128) __simd(XMM.RSQRTPS, a);
@@ -2674,11 +2678,7 @@ __m128 _mm_sqrt_ps(__m128 a) @trusted
             return __builtin_ia32_sqrtps(a);
         else
         {
-            // PERF: use llvm_sqrt on the vector, works better
-            a[0] = llvm_sqrt(a[0]);
-            a[1] = llvm_sqrt(a[1]);
-            a[2] = llvm_sqrt(a[2]);
-            a[3] = llvm_sqrt(a[3]);
+            a = llvm_sqrt(a);
             return a;
         }
     }
