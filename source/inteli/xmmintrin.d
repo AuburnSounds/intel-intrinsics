@@ -2595,6 +2595,7 @@ unittest
 
 __m64 _mm_shuffle_pi16(int imm8)(__m64 a) pure @trusted
 {
+    // WASM: bad codegen, looks like way more verbose than needed
     // PERF DMD + D_SIMD
     version(LDC)
     {
@@ -2770,7 +2771,7 @@ void _mm_store1_ps(float* mem_addr, __m128 a) pure @trusted // FUTURE: shouldn't
     }
     else
     {
-        __m128 r; // PERF =void;
+        __m128 r;
         r.ptr[0] = a.array[0];
         r.ptr[1] = a.array[0];
         r.ptr[2] = a.array[0];

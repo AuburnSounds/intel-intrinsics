@@ -100,22 +100,22 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [x] `_mm_rsqrt_ps`
 - [x] `_mm_rsqrt_ss`
 - [ ] `_mm_sad_pu8`
-- [ ] `_mm_set_ps`
-- [ ] `_mm_set_ss`
-- [ ] `_mm_set1_ps`
+- [x] `_mm_set_ps`
+- [x] `_mm_set_ss`
+- [x] `_mm_set1_ps`
 - [x] `_mm_setcsr` // Limitations: only rounding mode is emulated
 - [x] `_mm_setr_ps`
 - [x] `_mm_setzero_ps`
-- [ ] `_mm_sfence`
-- [ ] `_mm_shuffle_pi16`
-- [ ] `_mm_shuffle_ps`
+- [x] `_mm_sfence`
+- [x] `_mm_shuffle_pi16`
+- [x] `_mm_shuffle_ps`
 - [x] `_mm_sqrt_ps`
 - [x] `_mm_sqrt_ss`
 - [x] `_mm_store_ps`
-- [ ] `_mm_store_ss`
-- [ ] `_mm_store1_ps`
-- [ ] `_mm_storeh_pi`
-- [ ] `_mm_storel_pi`
+- [x] `_mm_store_ss`
+- [x] `_mm_store1_ps`
+- [x] `_mm_storeh_pi`
+- [x] `_mm_storel_pi`
 - [ ] `_mm_storer_ps`
 - [ ] `_mm_storeu_ps`
 - [ ] `_mm_stream_pi`
