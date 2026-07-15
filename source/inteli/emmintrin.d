@@ -1460,16 +1460,15 @@ __m128i _mm_cvtpd_epi32 (__m128d a) @trusted
     else static if (LDC_with_WASM_SIMD)
     {
         // PERF: not sure about having two builtins instead of one
-        // PERF: moreover, trunc_sat_f64x2_zero is not a builtin
         // Get current rounding mode.
         uint fpscr = wasm_get_fpcr();
         switch(fpscr & _MM_ROUND_MASK)
         {
             default:
-            case _MM_ROUND_NEAREST:     return trunc_sat_f64x2_zero(llvm_roundeven(a));
-            case _MM_ROUND_DOWN:        return trunc_sat_f64x2_zero(llvm_floor(a));
-            case _MM_ROUND_UP:          return trunc_sat_f64x2_zero(llvm_ceil(a));
-            case _MM_ROUND_TOWARD_ZERO: return trunc_sat_f64x2_zero(a);
+            case _MM_ROUND_NEAREST:     return wasm_trunc_sat_f64x2_s_zero(llvm_roundeven(a));
+            case _MM_ROUND_DOWN:        return wasm_trunc_sat_f64x2_s_zero(llvm_floor(a));
+            case _MM_ROUND_UP:          return wasm_trunc_sat_f64x2_s_zero(llvm_ceil(a));
+            case _MM_ROUND_TOWARD_ZERO: return wasm_trunc_sat_f64x2_s_zero(a);
         }
     }
     else
@@ -5384,7 +5383,7 @@ alias _mm_ucomineq_sd = _mm_comineq_sd; ///
 __m128d _mm_undefined_pd() pure @safe
 {
     pragma(inline, true);
-    __m128d result = void;
+    __m128d result = __m128d(0.0); // See Issue #159, return zeroes like clang
     return result;
 }
 
@@ -5392,7 +5391,7 @@ __m128d _mm_undefined_pd() pure @safe
 __m128i _mm_undefined_si128() pure @safe
 {
     pragma(inline, true);
-    __m128i result = void;
+    __m128i result = __m128i(0); // See Issue #159, return zeroes like clang
     return result;
 }
 

@@ -229,6 +229,9 @@ version(LDC)
         enum LDC_with_WASM32 = (void*).sizeof == 4;
         enum LDC_with_WASM64 = (void*).sizeof == 8;
         enum LDC_with_WASM_SIMD = (LDC_with_WASM32 || LDC_with_WASM64) && __traits(targetHasFeature, "simd128");
+        enum LDC_with_WASM_RELAXED_SIMD = LDC_with_WASM_SIMD
+            && (__VERSION__ >= 2103) // LDC 1.33+, relaxed SIMD builtins came at about this time
+            && __traits(targetHasFeature, "relaxed-simd");
     }
     else version(ARM)
     {
@@ -252,6 +255,7 @@ version(LDC)
         enum LDC_with_WASM32 = false;
         enum LDC_with_WASM64 = false;
         enum LDC_with_WASM_SIMD = false;
+        enum LDC_with_WASM_RELAXED_SIMD = false;
     }
     else version(AArch64)
     {
@@ -274,6 +278,7 @@ version(LDC)
         enum LDC_with_WASM32 = false;
         enum LDC_with_WASM64 = false;
         enum LDC_with_WASM_SIMD = false;
+        enum LDC_with_WASM_RELAXED_SIMD = false;
     }
     else static if (some_x86)
     {
@@ -318,6 +323,7 @@ version(LDC)
         enum LDC_with_WASM32 = false;
         enum LDC_with_WASM64 = false;
         enum LDC_with_WASM_SIMD = false;
+        enum LDC_with_WASM_RELAXED_SIMD = false;
     }
     else
     {
@@ -339,6 +345,7 @@ version(LDC)
         enum LDC_with_WASM32 = false;
         enum LDC_with_WASM64 = false;
         enum LDC_with_WASM_SIMD = false;
+        enum LDC_with_WASM_RELAXED_SIMD = false;
     }
 
     // Should we use inline x86 assembly with DMD syntax, in LDC?
@@ -378,6 +385,7 @@ else
     enum LDC_with_WASM32 = false;
     enum LDC_with_WASM64 = false;
     enum LDC_with_WASM_SIMD = false;
+    enum LDC_with_WASM_RELAXED_SIMD = false;
 
     enum LDC_with_InlineIREx = false;
     enum bool LDC_with_optimizations = false;
@@ -2084,12 +2092,18 @@ static if (LDC_with_WASM_SIMD)
 
     pragma(LDC_intrinsic, "llvm.wasm.avgr.unsigned.v8i16")
         short8 __builtin_wasm_avgr_u_i16x8(short8 a, short8 b) pure @safe; // lowers to i32x4.trunc_sat_f32x4_s
+}
 
-    //pragma(LDC_intrinsic, "llvm.wasm.swizzle")
-    //    byte16 __builtin_wasm_swizzle_i8x16(byte16 a, byte16 b) pure @safe;
-
-    // PERF: better be a builtin, since the codegen aint' short
-    int4 trunc_sat_f64x2_zero(double2 low)
+static if (LDC_with_WASM_RELAXED_SIMD)
+{
+    // Note: the non-relaxed version can only be generated with LLVM IR, which is
+    // why we prefer the relaxed version, which is also probably faster.
+    pragma(LDC_intrinsic, "llvm.wasm.relaxed.trunc.signed.zero")
+        int4 wasm_trunc_sat_f64x2_s_zero(double2 a) pure @safe;
+}
+else
+{
+    int4 wasm_trunc_sat_f64x2_s_zero(double2 low)
     {
         int4 r;
         r[0] = cast(int) low[0];

@@ -4678,21 +4678,21 @@ unittest
 /// Return vector of type __m256d with undefined elements.
 __m256d _mm256_undefined_pd () pure @safe
 {
-    __m256d r = void;
+    __m256d r = __m256d(0.0); // See Issue #159, return zeroes like clang
     return r;
 }
 
 /// Return vector of type __m256 with undefined elements.
 __m256 _mm256_undefined_ps () pure @safe
 {
-    __m256 r = void;
+    __m256 r = __m256(0.0f); // See Issue #159, return zeroes like clang
     return r;
 }
 
 /// Return vector of type __m256i with undefined elements.
 __m256i _mm256_undefined_si256 () pure @safe
 {
-    __m256i r = void;
+    __m256i r = __m256i(0); // See Issue #159, return zeroes like clang
     return r;
 }
 

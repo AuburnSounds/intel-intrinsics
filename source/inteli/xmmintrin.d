@@ -2828,7 +2828,7 @@ void _mm_storer_ps(float* mem_addr, __m128 a) pure @trusted // FUTURE should not
     }
     else
     {
-        __m128 r; // PERF =void;
+        __m128 r;
         r.ptr[0] = a.array[3];
         r.ptr[1] = a.array[2];
         r.ptr[2] = a.array[1];
@@ -3034,7 +3034,7 @@ alias _mm_ucomineq_ss = _mm_comineq_ss;
 __m128 _mm_undefined_ps() pure @safe
 {
     pragma(inline, true);
-    __m128 undef = void;
+    __m128 undef = __m128(0.0f); // See Issue #159, return zeroes like clang
     return undef;
 }
 
@@ -3054,7 +3054,7 @@ __m128 _mm_unpackhi_ps (__m128 a, __m128 b) pure @trusted
     }
     else
     {
-        __m128 r; // PERF =void;
+        __m128 r;
         r.ptr[0] = a.array[2];
         r.ptr[1] = b.array[2];
         r.ptr[2] = a.array[3];
@@ -3087,7 +3087,7 @@ __m128 _mm_unpacklo_ps (__m128 a, __m128 b) pure @trusted
     }
     else
     {
-        __m128 r; // PERF =void;
+        __m128 r;
         r.ptr[0] = a.array[0];
         r.ptr[1] = b.array[0];
         r.ptr[2] = a.array[1];
