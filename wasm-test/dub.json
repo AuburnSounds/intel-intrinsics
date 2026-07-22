@@ -7,7 +7,7 @@
         "nurt": ">=0.2.1"        
     },
 
-    "dflags-ldc": ["-mattr=+simd128"],
+    "dflags-ldc": ["-mattr=+simd128", "-mattr=+relaxed-simd"],
 
     "buildTypes" : {
         

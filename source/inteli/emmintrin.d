@@ -1465,10 +1465,10 @@ __m128i _mm_cvtpd_epi32 (__m128d a) @trusted
         switch(fpscr & _MM_ROUND_MASK)
         {
             default:
-            case _MM_ROUND_NEAREST:     return wasm_trunc_sat_f64x2_s_zero(llvm_roundeven(a));
-            case _MM_ROUND_DOWN:        return wasm_trunc_sat_f64x2_s_zero(llvm_floor(a));
-            case _MM_ROUND_UP:          return wasm_trunc_sat_f64x2_s_zero(llvm_ceil(a));
-            case _MM_ROUND_TOWARD_ZERO: return wasm_trunc_sat_f64x2_s_zero(a);
+            case _MM_ROUND_NEAREST:     return wasm_relaxed_trunc_f64x2_s_zero(llvm_roundeven(a));
+            case _MM_ROUND_DOWN:        return wasm_relaxed_trunc_f64x2_s_zero(llvm_floor(a));
+            case _MM_ROUND_UP:          return wasm_relaxed_trunc_f64x2_s_zero(llvm_ceil(a));
+            case _MM_ROUND_TOWARD_ZERO: return wasm_relaxed_trunc_f64x2_s_zero(a);
         }
     }
     else
@@ -1857,6 +1857,10 @@ __m128i _mm_cvttpd_epi32 (__m128d a) pure @trusted
     {
         return __builtin_ia32_cvttpd2dq(a);
     }
+    else static if (LDC_with_WASM_RELAXED_SIMD)
+    {
+        return cast(__m128i) wasm_relaxed_trunc_f64x2_s_zero(a);
+    }
     else
     {
         // Note: doesn't generate cvttpd2dq as of LDC 1.13
@@ -1890,14 +1894,21 @@ unittest
 /// Convert packed single-precision (32-bit) floating-point elements in `a` to packed 32-bit integers with truncation.
 __m128i _mm_cvttps_epi32 (__m128 a) pure @trusted
 {
-    // x86: Generates cvttps2dq since LDC 1.3 -O2
-    // ARM64: generates fcvtze since LDC 1.8 -O2
-    __m128i r; // PERF = void;
-    r.ptr[0] = cast(int)a.array[0];
-    r.ptr[1] = cast(int)a.array[1];
-    r.ptr[2] = cast(int)a.array[2];
-    r.ptr[3] = cast(int)a.array[3];
-    return r;
+    static if (LDC_with_WASM_RELAXED_SIMD)
+    {
+        return cast(__m128i) wasm_relaxed_trunc_f32x4_s(a);
+    }
+    else
+    {
+        // x86: Generates cvttps2dq since LDC 1.3 -O2
+        // ARM64: generates fcvtze since LDC 1.8 -O2
+        __m128i r; // PERF = void;
+        r.ptr[0] = cast(int)a.array[0];
+        r.ptr[1] = cast(int)a.array[1];
+        r.ptr[2] = cast(int)a.array[2];
+        r.ptr[3] = cast(int)a.array[3];
+        return r;
+    }
 }
 unittest
 {

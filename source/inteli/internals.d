@@ -2096,14 +2096,27 @@ static if (LDC_with_WASM_SIMD)
 
 static if (LDC_with_WASM_RELAXED_SIMD)
 {
+    pragma(LDC_intrinsic, "llvm.wasm.relaxed.trunc.signed")
+        int4 wasm_relaxed_trunc_f32x4_s(float4 a) pure @safe;
+
     // Note: the non-relaxed version can only be generated with LLVM IR, which is
     // why we prefer the relaxed version, which is also probably faster.
     pragma(LDC_intrinsic, "llvm.wasm.relaxed.trunc.signed.zero")
-        int4 wasm_trunc_sat_f64x2_s_zero(double2 a) pure @safe;
+        int4 wasm_relaxed_trunc_f64x2_s_zero(double2 a) pure @safe;
 }
 else
 {
-    int4 wasm_trunc_sat_f64x2_s_zero(double2 low)
+    int4 wasm_relaxed_trunc_f32x4_s(float4 a)
+    {
+        int4 r;
+        r[0] = cast(int) a[0];
+        r[1] = cast(int) a[1];
+        r[2] = cast(int) a[2];
+        r[3] = cast(int) a[3];
+        return r;
+    }
+
+    int4 wasm_relaxed_trunc_f64x2_s_zero(double2 low)
     {
         int4 r;
         r[0] = cast(int) low[0];

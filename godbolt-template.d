@@ -1,24 +1,17 @@
 // Note: this is a godbolt template that can help to new intrinsics
 import core.simd;
 
-//public import core.math: sqrt; // since it's an intrinsic
 version(GNU) import gcc.builtins;
 version(LDC) import ldc.simd;
 version(LDC) import ldc.intrinsics;
 version(LDC) import ldc.gccbuiltins_x86;
 
-/// Extract a 16-bit unsigned integer from `a`, selected with `imm8`. Zero-extended.
-int _mm_extract_lane (int4 a, int lane)
-{
-    return a[lane];
-}
+// <YOUR CODE HERE>
 
-/// Extract a 16-bit unsigned integer from `a`, selected with `imm8`. Zero-extended.
-int _mm_extract_pi16 (__m64 a, int imm8)
-{
-    short4 sa = cast(short4)a;
-    return cast(ushort)(sa[imm8 & 3]);
-}
+
+
+
+// </YOUR CODE HERE>
 
 static if (LDC_with_optimizations) // this save time for bigger projects, since LDCInlineIR gets more expensive there.
 {
@@ -397,6 +390,10 @@ version(LDC)
         enum LDC_with_WASM_SIMD = false;
     }
     alias shufflevectorLDC = shufflevector;
+
+     enum LDC_with_WASM_RELAXED_SIMD = LDC_with_WASM_SIMD
+            && (__VERSION__ >= 2103) // LDC 1.33+, relaxed SIMD builtins came at about this time
+            && __traits(targetHasFeature, "relaxed-simd");
 }
 else
 {
@@ -434,6 +431,7 @@ else
     enum LDC_with_WASM32 = false;
     enum LDC_with_WASM64 = false;
     enum LDC_with_WASM_SIMD = false;
+    enum LDC_with_WASM_RELAXED_SIMD = false;
 
 }
 

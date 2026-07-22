@@ -2,6 +2,10 @@
 
 This lists every `_mm_` intrinsic (functions and aliases), grouped per source file, in the order they appear in each file.
 
+
+In godbolt, use `-O3 -mtriple wasm32-wasi -mattr=+simd128 -mattr=+relaxed-simd` to check WASM output.
+Things MUST work without -mattr=+simd128 and -mattr=+relaxed-simd.
+
 ## xmmintrin.d
 
 - [x] `_mm_add_ps`
@@ -116,15 +120,15 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [x] `_mm_store1_ps`
 - [x] `_mm_storeh_pi`
 - [x] `_mm_storel_pi`
-- [ ] `_mm_storer_ps`
-- [ ] `_mm_storeu_ps`
-- [ ] `_mm_stream_pi`
-- [ ] `_mm_stream_ps`
+- [x] `_mm_storer_ps`
+- [x] `_mm_storeu_ps`
+- [x] `_mm_stream_pi`
+- [x] `_mm_stream_ps`
 - [x] `_mm_sub_ps`
 - [x] `_mm_sub_ss`
 - [x] `_mm_undefined_ps`
-- [ ] `_mm_unpackhi_ps`
-- [ ] `_mm_unpacklo_ps`
+- [x] `_mm_unpackhi_ps`
+- [x] `_mm_unpacklo_ps`
 - [x] `_mm_xor_ps`
 
 ## emmintrin.d
@@ -214,9 +218,9 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 - [x] `_mm_cvtsi64_si128`
 - [x] `_mm_cvtss_sd`
 - [x] `_mm_cvttss_si64`
-- [ ] `_mm_cvttpd_epi32`
-- [ ] `_mm_cvttpd_pi32`
-- [ ] `_mm_cvttps_epi32`
+- [x] `_mm_cvttpd_epi32`
+- [x] `_mm_cvttpd_pi32`
+- [x] `_mm_cvttps_epi32`
 - [ ] `_mm_cvttsd_si32`
 - [ ] `_mm_cvttsd_si64`
 - [ ] `_mm_div_pd`
