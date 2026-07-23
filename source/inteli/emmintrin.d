@@ -3391,6 +3391,19 @@ __m128i _mm_sad_epu8 (__m128i a, __m128i b) pure @trusted
         r[4] = r4;
         return cast(__m128i) r;
     }
+    else static if (LDC_with_WASM_SIMD && __VERSION__ >= 2097)
+    {
+        byte16 absdiff = inteli_llvm_absdiff(cast(byte16) a, cast(byte16) b);
+        ushort8 t = cast(ushort8) wasm_extadd_pairwise_i16v8_u(absdiff);
+
+        // PERF: also this last shuffling is awful is codegen
+        ushort r0 = cast(ushort)(t[0] + t[1] + t[2] + t[3]);
+        ushort r4 = cast(ushort)(t[4] + t[5] + t[6] + t[7]);
+        ushort8 r = 0;
+        r[0] = r0;
+        r[4] = r4;
+        return cast(__m128i) r;
+    }
     else
     {
         // PERF: ARM32 is lacking
@@ -3414,10 +3427,7 @@ unittest
     __m128i A = _mm_setr_epi8(3, 4, 6, 8, 12, 14, 18, 20, 24, 30, 32, 38, 42, 44, 48, 54); // primes + 1
     __m128i B = _mm_set1_epi8(1);
     __m128i R = _mm_sad_epu8(A, B);
-    int[4] correct = [2 + 3 + 5 + 7 + 11 + 13 + 17 + 19,
-                      0,
-                      23 + 29 + 31 + 37 + 41 + 43 + 47 + 53,
-                      0];
+    int[4] correct = [77, 0, 304, 0];
     assert(R.array == correct);
 }
 

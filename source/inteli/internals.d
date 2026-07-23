@@ -1637,6 +1637,11 @@ version(LDC)
         pragma(LDC_intrinsic, "llvm.usub.sat.i#")
             T inteli_llvm_subus(T)(T a, T b) pure @safe;
 
+        byte16 inteli_llvm_absdiff(byte16 a, byte16 b) pure @safe
+        {
+            return inteli_llvm_subus!byte16(a, b) | inteli_llvm_subus!byte16(b, a);
+        }
+
         enum LDC_with_saturated_intrinsics = true;
     }
     else
@@ -2104,6 +2109,9 @@ static if (LDC_with_WASM_SIMD)
 
     pragma(LDC_intrinsic, "llvm.wasm.bitmask.v2i64") // introduced LDC 1.27
         int wasm_bitmask_i64x2(long2 a) pure @safe;
+
+    pragma(LDC_intrinsic, "llvm.wasm.extadd.pairwise.unsigned.v8i16") // introduced LDC 1.27
+        short8 wasm_extadd_pairwise_i16v8_u(byte16 a) pure @safe;
 
     pragma(LDC_intrinsic, "llvm.wasm.narrow.signed.v8i16.v4i32") // introduced LDC 1.22
         short8 wasm_narrow_i32x4_s(int4 a, int4 b) pure @safe;
