@@ -3239,6 +3239,10 @@ __m128i _mm_packs_epi16 (__m128i a, __m128i b) pure @trusted
         byte8 rb = vqmovn_s16(cast(short8)b);
         return cast(__m128i)vcombine_s8(ra, rb);
     }
+    else static if (LDC_with_WASM_SIMD)
+    {
+        return cast(__m128i) wasm_narrow_i16x8_s(cast(short8)a, cast(short8)b);
+    }
     else
     {
         // PERF: ARM32 is missing

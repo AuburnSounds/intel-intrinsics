@@ -2107,6 +2107,9 @@ static if (LDC_with_WASM_SIMD)
 
     pragma(LDC_intrinsic, "llvm.wasm.narrow.signed.v8i16.v4i32") // introduced LDC 1.22
         short8 wasm_narrow_i32x4_s(int4 a, int4 b) pure @safe;
+
+    pragma(LDC_intrinsic, "llvm.wasm.narrow.signed.v16i8.v8i16") // introduced LDC 1.22
+        byte16 wasm_narrow_i16x8_s(short8 a, short8 b) pure @safe;
 }
 
 static if (LDC_with_WASM_RELAXED_SIMD)
