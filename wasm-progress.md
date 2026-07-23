@@ -6,36 +6,20 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 In godbolt, use `-O3 -mtriple wasm32-wasi -mattr=+simd128 -mattr=+relaxed-simd` to check WASM output.
 Things MUST work without -mattr=+simd128 and -mattr=+relaxed-simd.
 
-- [x] 119+88+31
+- [x] 253
 
 
 ## xmmintrin.d
 
-
-- [ ] `_mm_movemask_pi8` // Need special bitmask instruction
-- [ ] `_mm_movemask_ps`  // Need special bitmask instruction
 - [ ] `_mm_sad_pu8`
 
 ## emmintrin.d
 
-- [x] `_mm_move_epi64`
-- [x] `_mm_move_sd`
-- [x] `_mm_movemask_epi8`
-- [ ] `_mm_movemask_epi16`
-- [ ] `_mm_movemask_pd`
-- [ ] `_mm_movepi64_pi64`
-- [ ] `_mm_movpi64_epi64`
-- [ ] `_mm_mul_epu32`
-- [ ] `_mm_mul_pd`
-- [ ] `_mm_mul_sd`
-- [ ] `_mm_mul_su32`
-- [x] `_mm_mulhi_epi16`
-- [x] `_mm_mulhi_epu16`
-- [x] `_mm_mullo_epi16`
-- [ ] `_mm_not_si128`
-- [ ] `_mm_or_pd`
-- [ ] `_mm_or_si128`
-- [ ] `_mm_packs_epi32`
+- [ ] `_mm_mul_epu32` // need builtin extmul_low_i32x4_u 
+- [x] `_mm_not_si128`
+- [x] `_mm_or_pd`
+- [x] `_mm_or_si128`
+- [x] `_mm_packs_epi32`
 - [ ] `_mm_packs_epi16`
 - [ ] `_mm_packus_epi16`
 - [ ] `_mm_pause`

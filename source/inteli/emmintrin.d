@@ -2851,9 +2851,15 @@ unittest
 /// Create mask from the most significant bit of each 16-bit element in `v`. #BONUS
 int _mm_movemask_epi16 (__m128i a) pure @trusted
 {
-    // PERF ARM
-    // PERF WASM: use the builtin
-    return _mm_movemask_epi8(_mm_packs_epi16(a, _mm_setzero_si128()));
+    static if (LDC_with_WASM_SIMD)
+    {
+        return wasm_bitmask_i16x8(cast(short8)a);
+    }
+    else
+    {
+        // PERF ARM
+        return _mm_movemask_epi8(_mm_packs_epi16(a, _mm_setzero_si128()));
+    }
 }
 unittest
 {
@@ -2868,6 +2874,10 @@ int _mm_movemask_pd(__m128d v) pure @safe
     static if (GDC_or_LDC_with_SSE2)
     {
         return __builtin_ia32_movmskpd(v);
+    }
+    else static if (LDC_with_WASM_SIMD && (__VERSION__ >= 2097))
+    {
+        return wasm_bitmask_i64x2(cast(long2)v);
     }
     else
     {
@@ -2909,8 +2919,9 @@ __m128i _mm_movpi64_epi64 (__m64 a) pure @trusted
 /// Multiply the low unsigned 32-bit integers from each packed 64-bit element in `a` and `b`, 
 /// and store the unsigned 64-bit results.
 __m128i _mm_mul_epu32 (__m128i a, __m128i b) pure @trusted
-{    
+{
     // PERF DMD D_SIMD
+    // PERF WASM use extmul_low_i32x4_u
     static if (GDC_with_SSE2)
     {
         return cast(__m128i) __builtin_ia32_pmuludq128 (a, b);
@@ -3157,7 +3168,8 @@ __m128i _mm_or_si128 (__m128i a, __m128i b) pure @safe
     return a | b;
 }
 
-/// Convert packed signed 32-bit integers from `a` and `b` to packed 16-bit integers using signed saturation.
+/// Convert packed signed 32-bit integers from `a` and `b` to packed 
+/// 16-bit integers using signed saturation.
 __m128i _mm_packs_epi32 (__m128i a, __m128i b) pure @trusted
 {
     static if (DMD_with_DSIMD)
@@ -3177,6 +3189,10 @@ __m128i _mm_packs_epi32 (__m128i a, __m128i b) pure @trusted
         short4 ra = vqmovn_s32(cast(int4)a);
         short4 rb = vqmovn_s32(cast(int4)b);
         return cast(__m128i)vcombine_s16(ra, rb);
+    }
+    else static if (LDC_with_WASM_SIMD)
+    {
+        return cast(__m128i) wasm_narrow_i32x4_s(a, b);
     }
     else
     {

@@ -1810,6 +1810,10 @@ int _mm_movemask_ps (__m128 a) pure @trusted
     {
         return __builtin_ia32_movmskps(a);
     }
+    else static if (LDC_with_WASM_SIMD)
+    {
+        return wasm_bitmask_i32x4(cast(int4)a);
+    }
     else static if (LDC_with_ARM)
     {
         int4 ai = cast(int4)a;
