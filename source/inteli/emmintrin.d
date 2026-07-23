@@ -4699,7 +4699,7 @@ __m128i _mm_srli_epi32 (__m128i a, int imm8) pure @trusted
         int4 ia = cast(int4)a;
         int4 r = cast(int4) _mm_setzero_si128();
         ubyte count = cast(ubyte)imm8;
-        if (count >= 16)
+        if (count >= 32)
             return cast(__m128i)r;
         r = ia >>> int4(count);
         return cast(__m128i)r;
