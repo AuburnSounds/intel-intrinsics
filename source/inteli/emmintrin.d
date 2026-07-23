@@ -3997,7 +3997,7 @@ __m128i _mm_sll_epi64 (__m128i a, __m128i count) pure @trusted
             r = long2(0);
         else
             foreach(i; 0..2)
-                r.array[i] = cast(ulong)(sa.array[i]) << bits;
+                r.ptr[i] = cast(ulong)(sa.array[i]) << bits;
 
         return cast(__m128i)r;
     }
@@ -4084,7 +4084,7 @@ __m128i _mm_slli_epi32 (__m128i a, int imm8) pure @trusted
             return r;
         
         foreach(i; 0..4)
-            r.array[i] = cast(uint)(a.array[i]) << count;
+            r.ptr[i] = cast(uint)(a.array[i]) << count;
         return r;
     }
 }
@@ -4672,7 +4672,7 @@ __m128i _mm_srli_epi16 (__m128i a, int imm8) pure @trusted
             return cast(__m128i)r;
 
         foreach(i; 0..8)
-            r.array[i] = cast(short)(cast(ushort)(sa.array[i]) >> count);
+            r.ptr[i] = cast(short)(cast(ushort)(sa.array[i]) >> count);
         return cast(__m128i)r;
     }
 }

@@ -6,44 +6,15 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 In godbolt, use `-O3 -mtriple wasm32-wasi -mattr=+simd128 -mattr=+relaxed-simd` to check WASM output.
 Things MUST work without -mattr=+simd128 and -mattr=+relaxed-simd.
 
-- [x] 260
-
-
-## xmmintrin.d
-
-- [ ] `_mm_sad_pu8`
+- [x] 297
 
 ## emmintrin.d
 
 - [ ] `_mm_mul_epu32` // need builtin extmul_low_i32x4_u 
-- [ ] `_mm_sad_epu8`
-- [ ] `_mm_set_epi16`
-- [ ] `_mm_set_epi32`
-- [ ] `_mm_set_epi64`
-- [ ] `_mm_set_epi64x`
-- [ ] `_mm_set_epi8`
-- [ ] `_mm_set_pd`
-- [ ] `_mm_set_pd1`
-- [ ] `_mm_set_sd`
-- [ ] `_mm_set1_epi16`
-- [ ] `_mm_set1_epi32`
-- [ ] `_mm_set1_epi64`
-- [ ] `_mm_set1_epi64x`
-- [ ] `_mm_set1_epi8`
-- [ ] `_mm_setr_epi16`
-- [ ] `_mm_setr_epi32`
-- [ ] `_mm_setr_epi64`
-- [ ] `_mm_setr_epi8`
-- [ ] `_mm_setr_pd`
-- [ ] `_mm_setzero_pd`
-- [x] `_mm_setzero_si128`
-- [ ] `_mm_shuffle_epi32`
-- [ ] `_mm_shuffle_pd`
-- [ ] `_mm_shufflehi_epi16`
-- [ ] `_mm_shufflelo_epi16`
-- [ ] `_mm_sll_epi32`
-- [ ] `_mm_sll_epi64`
-- [ ] `_mm_sll_epi16`
+
+- [x] `_mm_sll_epi32`
+- [x] `_mm_sll_epi64`
+- [x] `_mm_sll_epi16`
 - [ ] `_mm_slli_epi32`
 - [ ] `_mm_slli_epi64`
 - [ ] `_mm_slli_epi16`
@@ -80,12 +51,6 @@ Things MUST work without -mattr=+simd128 and -mattr=+relaxed-simd.
 - [ ] `_mm_stream_si128`
 - [ ] `_mm_stream_si32`
 - [ ] `_mm_stream_si64`
-- [ ] `_mm_sub_epi16`
-- [ ] `_mm_sub_epi32`
-- [ ] `_mm_sub_epi64`
-- [ ] `_mm_sub_epi8`
-- [ ] `_mm_sub_pd`
-- [ ] `_mm_sub_sd`
 - [ ] `_mm_sub_si64`
 - [ ] `_mm_subs_epi16`
 - [ ] `_mm_subs_epi8`
@@ -98,13 +63,7 @@ Things MUST work without -mattr=+simd128 and -mattr=+relaxed-simd.
 - [ ] `_mm_unpackhi_epi64`
 - [ ] `_mm_unpackhi_epi8`
 - [ ] `_mm_unpackhi_pd`
-- [x] `_mm_unpacklo_epi16`
-- [x] `_mm_unpacklo_epi32`
-- [x] `_mm_unpacklo_epi64`
-- [x] `_mm_unpacklo_epi8`
-- [x] `_mm_unpacklo_pd`
-- [x] `_mm_xor_pd`
-- [x] `_mm_xor_si128`
+
 
 ## pmmintrin.d
 
