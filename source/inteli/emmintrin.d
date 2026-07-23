@@ -2174,7 +2174,7 @@ unittest
 __m128d _mm_loadr_pd (const(double)* mem_addr) pure @trusted
 {
     __m128d a = *cast(__m128d*)(mem_addr);
-    __m128d r; // PERF =void;
+    __m128d r;
     r.ptr[0] = a.array[1];
     r.ptr[1] = a.array[0];
     return r;
@@ -2320,6 +2320,8 @@ unittest
 
 /// Load unaligned 64-bit integer from memory into the first element of result.
 /// Upper 64-bit is zeroed.
+/// Note: It is exactly equivalent to `_mm_loadl_epi64` with a fixed 
+/// signature, and you should use it instead.
 __m128i _mm_loadu_si64 (const(void)* mem_addr) pure @system
 {
     pragma(inline, true);
@@ -2423,6 +2425,7 @@ void _mm_maskmoveu_si128 (__m128i a, __m128i mask, void* mem_addr) @trusted
     }
     else
     {
+        // WASM: v128.bitselect correctly generated since LDC 1.23 -O1
         byte16 b = cast(byte16)a;
         byte16 m = cast(byte16)mask;
         byte* dest = cast(byte*)(mem_addr);
@@ -2456,6 +2459,7 @@ __m128i _mm_max_epi16 (__m128i a, __m128i b) pure @safe
     {
         // x86: pmaxsw since LDC 1.0 -O1
         // ARM: smax.8h since LDC 1.5 -01
+        // WASM: i16x8.max_s since LDC 1.24 -O1
         short8 sa = cast(short8)a;
         short8 sb = cast(short8)b;
         static if (SIMD_COMPARISON_MASKS_16B)
@@ -2795,6 +2799,10 @@ int _mm_movemask_epi8 (__m128i a) pure @trusted
     {
         return __builtin_ia32_pmovmskb128(cast(byte16)a);
     }
+    else static if (LDC_with_WASM_SIMD)
+    {
+        return wasm_bitmask_i8x16(cast(byte16)a);
+    }
     else static if (LDC_with_ARM64)
     {
         // Solution from https://stackoverflow.com/questions/11870910/sse-mm-movemask-epi8-equivalent-method-for-arm-neon
@@ -2843,6 +2851,8 @@ unittest
 /// Create mask from the most significant bit of each 16-bit element in `v`. #BONUS
 int _mm_movemask_epi16 (__m128i a) pure @trusted
 {
+    // PERF ARM
+    // PERF WASM: use the builtin
     return _mm_movemask_epi8(_mm_packs_epi16(a, _mm_setzero_si128()));
 }
 unittest

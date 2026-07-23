@@ -2092,6 +2092,10 @@ static if (LDC_with_WASM_SIMD)
 
     pragma(LDC_intrinsic, "llvm.wasm.avgr.unsigned.v8i16")
         short8 __builtin_wasm_avgr_u_i16x8(short8 a, short8 b) pure @safe; // lowers to i32x4.trunc_sat_f32x4_s
+
+    // introduced in LDC 1.24
+    pragma(LDC_intrinsic, "llvm.wasm.bitmask.v16i8")
+        int wasm_bitmask_i8x16(byte16 a) pure @safe;
 }
 
 static if (LDC_with_WASM_RELAXED_SIMD)
