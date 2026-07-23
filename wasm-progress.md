@@ -6,26 +6,24 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 In godbolt, use `-O3 -mtriple wasm32-wasi -mattr=+simd128 -mattr=+relaxed-simd` to check WASM output.
 Things MUST work without -mattr=+simd128 and -mattr=+relaxed-simd.
 
-- [x] 300
+Total = 934 intrinsics.
+
+
+## Bucket of done intrinsics:
+- [x] 305
 
 ## emmintrin.d
 
-- [ ] `_mm_mul_epu32` // need builtin extmul_low_i32x4_u 
-
-- [x] `_mm_slli_epi32`
-- [x] `_mm_slli_epi64`
-- [ ] `_mm_slli_epi16`
-- [ ] `_mm_slli_si128`
-- [ ] `_mm_sqrt_pd`
+- [ ] `_mm_mul_epu32` // need builtin extmul_low_i32x4_u
+- [x] `_mm_slli_si128`
+- [x] `_mm_sqrt_pd`
 - [ ] `_mm_sqrt_sd`
 - [ ] `_mm_sra_epi16`
 - [ ] `_mm_sra_epi32`
-- [x] `_mm_srai_epi16`
 - [ ] `_mm_srai_epi32`
 - [ ] `_mm_srl_epi16`
 - [ ] `_mm_srl_epi32`
 - [ ] `_mm_srl_epi64`
-- [x] `_mm_srli_epi16`
 - [ ] `_mm_srli_epi32`
 - [ ] `_mm_srli_epi64`
 - [ ] `_mm_srli_si128`

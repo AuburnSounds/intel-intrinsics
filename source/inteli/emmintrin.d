@@ -4263,16 +4263,7 @@ __m128d _mm_sqrt_pd(__m128d vec) pure @trusted
 {
     version(LDC)
     {
-        // Disappeared with LDC 1.11
-        static if (__VERSION__ < 2081)
-            return __builtin_ia32_sqrtpd(vec);
-        else
-        {
-            // PERF: use llvm_sqrt on the vector
-            vec.array[0] = llvm_sqrt(vec.array[0]); 
-            vec.array[1] = llvm_sqrt(vec.array[1]);
-            return vec;
-        }
+        return llvm_sqrt(vec);
     }
     else static if (GDC_with_SSE2)    
     {

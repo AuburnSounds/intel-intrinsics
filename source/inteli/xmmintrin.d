@@ -2678,14 +2678,7 @@ __m128 _mm_sqrt_ps(__m128 a) @trusted
     }
     else version(LDC)
     {
-        // Disappeared with LDC 1.11
-        static if (__VERSION__ < 2081)
-            return __builtin_ia32_sqrtps(a);
-        else
-        {
-            a = llvm_sqrt(a);
-            return a;
-        }
+        return llvm_sqrt(a);
     }
     else
     {
