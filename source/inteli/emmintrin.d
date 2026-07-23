@@ -3688,8 +3688,6 @@ __m128i _mm_setr_epi32 (int e3, int e2, int e1, int e0) pure @trusted
     }
     else
     {
-        // Performs better than = void; with GDC
-        pragma(inline, true);
         align(16) int[4] result = [e3, e2, e1, e0];
         return *cast(__m128i*)(result.ptr);
     }
