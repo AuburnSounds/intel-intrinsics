@@ -4164,7 +4164,7 @@ __m128i _mm_slli_epi16(__m128i a, int imm8) pure @trusted
     {
         return cast(__m128i) __builtin_ia32_psllwi128(cast(short8)a, cast(ubyte)imm8);
     }
-    else static if (LDC_with_ARM64 || LDC_with_WASM) // FUTURE should be version(LDC || GDC)
+    else static if (COMPILER_CAN_VECTOR_SHIFT)
     {
         short8 sa = cast(short8)a;
         short8 r = cast(short8)_mm_setzero_si128();
@@ -4281,23 +4281,10 @@ __m128d _mm_sqrt_pd(__m128d vec) pure @trusted
 /// the lower element of result, and copy the upper element from `a` to the upper element of result.
 __m128d _mm_sqrt_sd(__m128d a, __m128d b) pure @trusted
 {
-    // Note: the builtin has one argument, since the legacy `sqrtsd` SSE2 instruction operates on the same register only.
-    //       "128-bit Legacy SSE version: The first source operand and the destination operand are the same. 
-    //        The quadword at bits 127:64 of the destination operand remains unchanged."
     version(LDC)
     {
-        // Disappeared with LDC 1.11
-        static if (__VERSION__ < 2081)
-        {
-            __m128d c = __builtin_ia32_sqrtsd(b);
-            a[0] = c[0];
-            return a;
-        }
-        else
-        {
-            a.array[0] = llvm_sqrt(b.array[0]);
-            return a;
-        }
+        a.array[0] = llvm_sqrt(b.array[0]);
+        return a;
     }
     else static if (GDC_with_SSE2)
     {
@@ -4332,6 +4319,7 @@ __m128i _mm_sra_epi16 (__m128i a, __m128i count) pure @trusted
     }
     else
     {
+        // PERF: can improve -O0/-O1 for LDC and GDC using vector shifts
         short8 sa = cast(short8)a;
         long2 lc = cast(long2)count;
         ulong bits = cast(ulong)(lc.array[0]);
@@ -4412,7 +4400,7 @@ __m128i _mm_srai_epi16 (__m128i a, int imm8) pure @trusted
     {
         return cast(__m128i) __builtin_ia32_psrawi128(cast(short8)a, cast(ubyte)imm8);
     }
-    else static if (LDC_with_ARM64 || LDC_with_WASM) // FUTURE should be version(LDC || GDC)
+    else static if (COMPILER_CAN_VECTOR_SHIFT)
     {
         short8 sa = cast(short8)a;
         ubyte count = cast(ubyte)imm8;
@@ -4641,7 +4629,7 @@ __m128i _mm_srli_epi16 (__m128i a, int imm8) pure @trusted
     {
         return cast(__m128i) __builtin_ia32_psrlwi128(cast(short8)a, cast(ubyte)imm8);
     }
-    else static if (LDC_with_ARM64 || LDC_with_WASM) // FUTURE: should be version(GDC_or_LDC)
+    else static if (COMPILER_CAN_VECTOR_SHIFT)
     {
         short8 sa = cast(short8)a;
         short8 r = cast(short8) _mm_setzero_si128();

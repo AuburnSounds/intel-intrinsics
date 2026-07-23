@@ -492,6 +492,23 @@ else
     enum SIMD_COMPARISON_MASKS_32B = false;
 }
 
+
+// Does compiler provide vector >> vector? (and other shifts)
+// Helps with -O0 and -O1 optimization levels.
+version(GNU)
+{
+    enum COMPILER_CAN_VECTOR_SHIFT = true;
+}
+else version(LDC)
+{
+    enum COMPILER_CAN_VECTOR_SHIFT = true;
+}
+else
+{
+    enum COMPILER_CAN_VECTOR_SHIFT = false;
+}
+
+
 static if (LDC_with_WASM)
 {
     // Note: this fake control word follow the x86 format.
