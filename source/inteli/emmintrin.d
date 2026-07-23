@@ -760,12 +760,12 @@ __m128d _mm_cmpge_pd (__m128d a, __m128d b) pure @safe
 /// Compare the lower double-precision (64-bit) floating-point elements 
 /// in `a` and `b` for greater-than-or-equal, store the result in the 
 /// lower element, and copy the upper element from `a`.
-__m128d _mm_cmpge_sd (__m128d a, __m128d b) pure @safe
+__m128d _mm_cmpge_sd (__m128d a, __m128d b) pure @trusted
 {
     static if (GDC_with_SSE2)
     {
         __m128d r = __builtin_ia32_cmplesd(b, a);
-        r.ptr[1] = a.ptr[1];
+        r.ptr[1] = a.array[1];
         return r;
     }
     else
@@ -887,12 +887,12 @@ __m128d _mm_cmpgt_pd (__m128d a, __m128d b) pure @safe
 /// Compare the lower double-precision (64-bit) floating-point elements 
 /// in `a` and `b` for greater-than, store the result in the lower element,
 /// and copy the upper element from `a`.
-__m128d _mm_cmpgt_sd (__m128d a, __m128d b) pure @safe
+__m128d _mm_cmpgt_sd (__m128d a, __m128d b) pure @trusted
 {
     static if (GDC_with_SSE2)
     {
         __m128d r = __builtin_ia32_cmpltsd(b, a);
-        r.ptr[1] = a.ptr[1];
+        r.ptr[1] = a.array[1];
         return r;
     }
     else
