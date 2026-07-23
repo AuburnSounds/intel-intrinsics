@@ -4127,6 +4127,16 @@ __m128i _mm_slli_epi64 (__m128i a, int imm8) pure @trusted
     {
         return cast(__m128i) __builtin_ia32_psllqi128(cast(long2)a, cast(ubyte)imm8);
     }
+    else static if (COMPILER_CAN_VECTOR_SHIFT)
+    {
+        long2 la = cast(long2)a;
+        long2 r = 0;
+        ubyte count = cast(ubyte) imm8;
+        if (count > 63)
+            return cast(__m128i)r;
+        r = la << long2(count);
+        return cast(__m128i)r;
+    }
     else
     {
         long2 sa = cast(long2)a;
@@ -4888,7 +4898,7 @@ unittest
 void _mm_store_pd1 (double* mem_addr, __m128d a) pure @trusted
 {
     __m128d* aligned = cast(__m128d*)mem_addr;
-    __m128d r; // PERF =void;
+    __m128d r;
     r.ptr[0] = a.array[0];
     r.ptr[1] = a.array[0];
     *aligned = r;
@@ -4921,6 +4931,8 @@ void _mm_storeh_pd (double* mem_addr, __m128d a) pure @safe
 
 // Note: `mem_addr` doesn't have to actually be aligned, which breaks
 // expectations from the user point of view. This problem also exist in C++.
+// IMPORTANT: better use `_mm_storeu_si64` with its fixed signature. It has
+// identical semantics.
 void _mm_storel_epi64 (__m128i* mem_addr, __m128i a) pure @safe
 {
     pragma(inline, true);
