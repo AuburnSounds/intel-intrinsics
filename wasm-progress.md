@@ -6,7 +6,7 @@ This lists every `_mm_` intrinsic (functions and aliases), grouped per source fi
 In godbolt, use `-O3 -mtriple wasm32-wasi -mattr=+simd128 -mattr=+relaxed-simd` to check WASM output.
 Things MUST work without -mattr=+simd128 and -mattr=+relaxed-simd.
 
-- [x] 253
+- [x] 260
 
 
 ## xmmintrin.d
@@ -16,13 +16,6 @@ Things MUST work without -mattr=+simd128 and -mattr=+relaxed-simd.
 ## emmintrin.d
 
 - [ ] `_mm_mul_epu32` // need builtin extmul_low_i32x4_u 
-- [x] `_mm_not_si128`
-- [x] `_mm_or_pd`
-- [x] `_mm_or_si128`
-- [x] `_mm_packs_epi32`
-- [ ] `_mm_packs_epi16`
-- [ ] `_mm_packus_epi16`
-- [ ] `_mm_pause`
 - [ ] `_mm_sad_epu8`
 - [ ] `_mm_set_epi16`
 - [ ] `_mm_set_epi32`

@@ -3237,7 +3237,7 @@ __m128i _mm_packs_epi16 (__m128i a, __m128i b) pure @trusted
         // generate a nice pair of sqxtn.8b + sqxtn2 since LDC 1.5 -02
         byte8 ra = vqmovn_s16(cast(short8)a);
         byte8 rb = vqmovn_s16(cast(short8)b);
-        return cast(__m128i)vcombine_s8(ra, rb);
+        return cast(__m128i) vcombine_s8(ra, rb);
     }
     else static if (LDC_with_WASM_SIMD)
     {
@@ -3287,6 +3287,10 @@ __m128i _mm_packus_epi16 (__m128i a, __m128i b) pure @trusted
         byte8 ra = vqmovun_s16(cast(short8)a);
         byte8 rb = vqmovun_s16(cast(short8)b);
         return cast(__m128i)vcombine_s8(ra, rb);
+    }
+    else static if (LDC_with_WASM_SIMD)
+    {
+        return cast(__m128i) wasm_narrow_i16x8_u(cast(short8)a, cast(short8)b);
     }
     else
     {
@@ -3350,6 +3354,8 @@ void _mm_pause() @trusted
     }
     else version (LDC)
     {
+        // PERF: WASM, it is possible that WASM busy wait on the same shared memory
+        //       so maybe use i32.atomic.wait
         // PERF: Do nothing currently , could be the "yield" intruction on ARM.
     }
     else
