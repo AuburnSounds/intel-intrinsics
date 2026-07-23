@@ -4071,6 +4071,16 @@ __m128i _mm_slli_epi32 (__m128i a, int imm8) pure @trusted
     {
         return __builtin_ia32_pslldi128(a, cast(ubyte)imm8);
     }
+    else static if (COMPILER_CAN_VECTOR_SHIFT)
+    {
+        int4 ia = cast(int4)a;
+        int4 r = cast(int4)_mm_setzero_si128();
+        ubyte count = cast(ubyte) imm8;
+        if (count > 31)
+            return cast(__m128i)r;
+        r = ia << int4(count);
+        return cast(__m128i)r;
+    }
     else
     {
         // Note: the intrinsics guarantee imm8[0..7] is taken, however
@@ -4743,6 +4753,17 @@ __m128i _mm_srli_epi64 (__m128i a, int imm8) pure @trusted
     static if (GDC_or_LDC_with_SSE2)
     {
         return cast(__m128i) __builtin_ia32_psrlqi128(cast(long2)a, cast(ubyte)imm8);
+    }
+    else static if (COMPILER_CAN_VECTOR_SHIFT)
+    {
+        // WASM needs that to make a SIMD shift
+        long2 la = cast(long2)a;
+        long2 r = cast(long2)_mm_setzero_si128();
+        ubyte count = cast(ubyte) imm8;
+        if (count >= 64)
+            return cast(__m128i)r;
+        r = la >>> long2(count);
+        return cast(__m128i)r;
     }
     else
     {

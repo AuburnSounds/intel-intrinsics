@@ -10,18 +10,15 @@ Total = 934 intrinsics.
 
 
 ## Bucket of done intrinsics:
-- [x] 316
+- [x] 320
 
 ## emmintrin.d
 
 - [ ] `_mm_mul_epu32` // need builtin extmul_low_i32x4_u
 - [ ] `_mm_srli_epi64`
-- [ ] `_mm_srli_si128`
-- [ ] `_mm_srli_ps`
-- [ ] `_mm_srli_pd`
-- [ ] `_mm_slli_epi32`
 - [ ] `_mm_slli_epi64`
 - [ ] `_mm_srai_epi64`
+
 
 - [ ] `_mm_store_pd`
 - [ ] `_mm_store_pd1`
