@@ -4451,6 +4451,15 @@ __m128i _mm_srai_epi32 (__m128i a, int imm8) pure @trusted
     {
         return __builtin_ia32_psradi128(a, cast(ubyte)imm8);
     }
+    else static if (COMPILER_CAN_VECTOR_SHIFT)
+    {
+        int4 ia = cast(int4)a;
+        ubyte count = cast(ubyte)imm8;
+        if (count > 31) 
+            count = 31;
+        int4 r = ia >> int4(count);
+        return cast(__m128i)r;
+    }
     else
     {
         int4 r = void;
@@ -4684,6 +4693,16 @@ __m128i _mm_srli_epi32 (__m128i a, int imm8) pure @trusted
     else static if (LDC_with_SSE2)
     {
         return __builtin_ia32_psrldi128(a, cast(ubyte)imm8);
+    }
+    else static if (COMPILER_CAN_VECTOR_SHIFT)
+    {
+        int4 ia = cast(int4)a;
+        int4 r = cast(int4) _mm_setzero_si128();
+        ubyte count = cast(ubyte)imm8;
+        if (count >= 16)
+            return cast(__m128i)r;
+        r = ia >>> int4(count);
+        return cast(__m128i)r;
     }
     else
     {
