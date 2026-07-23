@@ -4164,7 +4164,7 @@ __m128i _mm_slli_epi16(__m128i a, int imm8) pure @trusted
     {
         return cast(__m128i) __builtin_ia32_psllwi128(cast(short8)a, cast(ubyte)imm8);
     }
-    else static if (LDC_with_ARM64)
+    else static if (LDC_with_ARM64 || LDC_with_WASM) // FUTURE should be version(LDC || GDC)
     {
         short8 sa = cast(short8)a;
         short8 r = cast(short8)_mm_setzero_si128();
@@ -4421,7 +4421,7 @@ __m128i _mm_srai_epi16 (__m128i a, int imm8) pure @trusted
     {
         return cast(__m128i) __builtin_ia32_psrawi128(cast(short8)a, cast(ubyte)imm8);
     }
-    else static if (LDC_with_ARM64)
+    else static if (LDC_with_ARM64 || LDC_with_WASM) // FUTURE should be version(LDC || GDC)
     {
         short8 sa = cast(short8)a;
         ubyte count = cast(ubyte)imm8;
@@ -4650,7 +4650,7 @@ __m128i _mm_srli_epi16 (__m128i a, int imm8) pure @trusted
     {
         return cast(__m128i) __builtin_ia32_psrlwi128(cast(short8)a, cast(ubyte)imm8);
     }
-    else static if (LDC_with_ARM64)
+    else static if (LDC_with_ARM64 || LDC_with_WASM) // FUTURE: should be version(GDC_or_LDC)
     {
         short8 sa = cast(short8)a;
         short8 r = cast(short8) _mm_setzero_si128();
@@ -4659,7 +4659,7 @@ __m128i _mm_srli_epi16 (__m128i a, int imm8) pure @trusted
         if (count >= 16)
             return cast(__m128i)r;
 
-        r = sa >>> short8(count); // This facility offered with LDC, but not DMD.
+        r = sa >>> short8(count); // This facility offered with LDC and GDC, but not DMD.
         return cast(__m128i)r;
     }
     else
