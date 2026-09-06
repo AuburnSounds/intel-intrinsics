@@ -2631,7 +2631,7 @@ unittest
 
 /// Shuffle single-precision (32-bit) floating-point elements in `a` and `b` using the control in `imm8`, 
 /// Warning: the immediate shuffle value `imm` is given at compile-time instead of runtime.
-__m128 _mm_shuffle_ps(ubyte imm8)(__m128 a, __m128 b) pure @trusted
+__m128 _mm_shuffle_ps(int imm8)(__m128 a, __m128 b) pure @trusted
 {
     static if (GDC_with_SSE)
     {
