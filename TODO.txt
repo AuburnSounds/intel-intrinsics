@@ -1,4 +1,43 @@
 
+1. _mm_round_ss / _mm_floor_ss / _mm_ceil_ss are wrong on LDC x86 without SSE4.1 at -O1 and above
+- source/inteli/smmintrin.d:2007-2022 (non-GNU fallback).
+- _mm_floor_ss(53.6) returns 54, _mm_round_ss!3(53.6) returns 54, _mm_floor_ss(-3.7) returns -3. -O0 is correct.
+- The optimizer merges or reorders _mm_cvtss_si32 across the _MM_SET_ROUNDING_MODE calls. _mm_round_ps already has version(LDC) pragma(inline, false) for this (line 1880); _mm_round_ss does not.
+- _mm_round_sd and _mm_round_pd have the same shape with no LDC guard. They passed my test, but I'd treat them as equally fragile.
+- Repro: t1.d.
+
+2. cmpstrMask EQUAL_ORDERED misses a needle prefix at the end of a full 16-byte haystack
+- source/inteli/nmmintrin.d:1353-1375 (byte); the word variant at 1327-1349 has the same logic.
+- Needle "abc", haystack "xxxxxxxxxxxxxxab": hardware returns 14, the fallback returns 16 (no match), for both _mm_cmpistri and _mm_cmpestri.
+- Hardware does not compare past element 15, so a partial match at the tail counts. The fallback shifts zeros into bValidShift and forces those positions to false.
+- Reproduced on DMD and on LDC 32-bit without SSE4.2; the fuzzer shows the same on ARM64 and WASM. It breaks the usual strstr loop when the needle straddles a block.
+- Repro: mini/t7.d.
+
+3. DMD 32-bit: integer data passed through float-typed fallbacks gets corrupted
+- Any 32-bit integer whose bit pattern is a signaling NaN gets its quiet bit set, because DMD 32-bit copies scalar floats through x87.
+- _mm_adds_epi32(0x7f800000, 1) returns 0x7fc00001 instead of 0x7f800001 (smmintrin.d:57, via _mm_blendv_ps).
+- _mm_blend_epi32!5 and _mm256_blend_epi32 (avx2intrin.d:550, via _mm_blend_ps) corrupt the same way.
+- _mm_shuffle_ps on _mm_castsi128_ps data is also affected, which is a common user idiom.
+- DMD 64-bit and LDC 32-bit are fine.
+- Repro: mini/t7.d.
+
+4. DMD x86_64 -O -inline: _mm_set_ss leaves garbage in element 1
+- source/inteli/xmmintrin.d:2392: __simd(XMM.LODSS, a).
+- _mm_set_ss(-31) returns [-31, -2.98438, 0, 0]. When a is already in an XMM register, the upper bits are not cleared; the garbage is the high half of the double it was converted from.
+- Without -inline, or in 32-bit, it is correct.
+- Repro: mini/t4.d (20 lines).
+
+5. DMD x86_64 -O -inline: _mm_cmpistri fallback returns wrong results
+- _mm_cmpistri!1(a, b) returns 8 where the unoptimized build returns 0, even though _mm_cmpestri!1(a, la, b, lb) with the same lengths is correct in the same program.
+- In the fuzzer, _mm_cmpistra/c/m/o differ too; _mm_cmpestr* do not.
+- I found no undefined behaviour in the library code (nmmintrin.d:663-673), so this looks like a DMD inliner or backend miscompile. I did not isolate the cause.
+- Repro: mini/t6.d.
+
+6. _mm_dp_ps / _mm256_dp_ps fallback sums in the wrong order (minor)
+- source/inteli/smmintrin.d:955 computes ((t0+t1)+t2)+t3; DPPS computes (t0+t1)+(t2+t3).
+- Results are 1–4 ULP off hardware on ordinary inputs, on DMD, ARM64 and WASM.
+
+
 
 ================================================================================
  smmintrin.d (SSE4.1)
