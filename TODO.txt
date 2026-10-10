@@ -12,12 +12,6 @@
 - I found no undefined behaviour in the library code (nmmintrin.d:663-673), so this looks like a DMD inliner or backend miscompile. I did not isolate the cause.
 - Repro: mini/t6.d.
 
-6. _mm_dp_ps / _mm256_dp_ps fallback sums in the wrong order (minor)
-- source/inteli/smmintrin.d:955 computes ((t0+t1)+t2)+t3; DPPS computes (t0+t1)+(t2+t3).
-- Results are 1–4 ULP off hardware on ordinary inputs, on DMD, ARM64 and WASM.
-
-
-
 ================================================================================
  smmintrin.d (SSE4.1)
 ================================================================================

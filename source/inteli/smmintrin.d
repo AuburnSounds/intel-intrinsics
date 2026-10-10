@@ -960,9 +960,10 @@ __m128 _mm_dp_ps(int imm8)(__m128 a, __m128 b) @trusted
     {
         __m128 zero = _mm_setzero_ps();
         __m128 temp = _mm_blend_ps!( (imm8 >>> 4) & 15)(zero, a * b);
-        float sum = temp.array[0] + temp.array[1] + temp.array[2] + temp.array[3];
-        return _mm_blend_ps!(imm8 & 15)(zero, _mm_set1_ps(sum));
-    }        
+        float sum01 = temp.array[0] + temp.array[1];
+        float sum23 = temp.array[2] + temp.array[3];
+        return _mm_blend_ps!(imm8 & 15)(zero, _mm_set1_ps(sum01 + sum23));
+    }
 }
 unittest
 {
