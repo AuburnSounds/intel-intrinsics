@@ -92,7 +92,9 @@ __m128i _mm_sha1rnds4_epu32(__m128i a, __m128i b, const int func) @trusted
 }
 +/
 
-/// Perform the final calculation for the next four SHA256 message values (unsigned 32-bit integers) using previous message values from `a` and `b`, and return the result.
+/// Perform an intermediate calculation for the next four SHA256 message 
+/// values (unsigned 32-bit integers) using previous message values from
+/// `a` and `b`, and return the result.
 __m128i _mm_sha256msg1_epu32(__m128i a, __m128i b) @trusted
 {
     static if (GDC_or_LDC_with_SHA)
@@ -129,7 +131,9 @@ unittest
     assert(result.array == [671416337, 69238821, 2114864873, 503574586]);
 }
 
-/// Perform 2 rounds of SHA256 operation using an initial SHA256 state (C,D,G,H) from `a`, an initial SHA256 state (A,B,E,F) from `b`, and a pre-computed sum of the next 2 round message values (unsigned 32-bit integers) and the corresponding round constants from k, and return the updated SHA256 state (A,B,E,F).
+/// Perform the final calculation for the next four SHA256 message 
+/// values (unsigned 32-bit integers) using previous message values from 
+/// `a` and `b`, and return the result.
 __m128i _mm_sha256msg2_epu32(__m128i a, __m128i b) @trusted
 {
     static if (GDC_or_LDC_with_SHA)
@@ -167,7 +171,11 @@ unittest
     assert(result.array == [5324815, 505126944, -2012842764, -1542210977]);
 }
 
-/// Perform an intermediate calculation for the next four SHA256 message values (unsigned 32-bit integers) using previous message values from `a` and `b`, and return the result.
+/// Perform 2 rounds of SHA256 operation using an initial SHA256 state
+/// (C,D,G,H) from `a`, an initial SHA256 state (A,B,E,F) from `b`,
+/// and a pre-computed sum of the next 2 round message values
+/// (unsigned 32-bit integers) and the corresponding round constants
+/// from k, and return the updated SHA256 state (A,B,E,F).
 __m128i _mm_sha256rnds2_epu32(__m128i a, __m128i b, __m128i k) @trusted
 {
     // TODO: the pragma(inline) false prevent a DMD 1.100

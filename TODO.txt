@@ -179,13 +179,3 @@
      ~2.35e38. (exp(-inf) == 0 works only by accident of the same clamp.) The doc
      comment excludes NaN but not infinity (unlike log_ps/pow_ps).
    - Confidence: low (likely accepted cephes-style clamping).
-
-
-================================================================================
- shaintrin.d  (non-code / doc)
-================================================================================
-
-- The doc (ddoc) comments on the three SHA256 intrinsics are rotated: msg1 (line 95)
-  carries msg2's text, msg2 (line 132) carries rnds2's text, rnds2 (line 170)
-  carries msg1's text. Implementations are correct; only the doc strings are wrong.
-
