@@ -102,18 +102,6 @@
  avx2intrin.d (AVX2)
 ================================================================================
 
-2. _mm256_extract_epi8 — sign-extends instead of zero-extending
-   - avx2intrin.d:1642-1646 (single implementation, all paths).
-   - Intel: ZeroExtend32, returns 0..255. Code returns sa.ptr[index & 31] from a
-     byte32 -> -128..127. (_mm_extract_epi8 at smmintrin.d:1009 correctly uses
-     cast(ubyte).)
-   - Confidence: high.
-
-3. _mm256_extract_epi16 — sign-extends instead of zero-extending
-   - avx2intrin.d:1629-1633. Intel: zero-extend to 32 bits (0..65535); code
-     sign-extends. (_mm_extract_epi16 at emmintrin.d:1911 correctly uses cast(ushort).)
-   - Confidence: high.
-
 4. _mm_sllv_epi64 (and via split, _mm256_sllv_epi64) — count truncated to 32 bits
    - avx2intrin.d:4741-4742, non-AVX2 fallback.
    - `cast(uint)(lb.array[0]) < 64` truncates before the range check: a count of

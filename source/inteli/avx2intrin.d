@@ -1629,7 +1629,7 @@ unittest
 int _mm256_extract_epi16 (__m256i a, int index) pure @trusted
 {
     short16 sa = cast(short16)a;
-    return sa.ptr[index & 15];
+    return cast(ushort) sa.ptr[index & 15];
 }
 unittest
 {
@@ -1639,17 +1639,18 @@ unittest
 }
 
 /// Extract a 8-bit integer from `a`, selected with index.
+/// Warning: the returned value is zero-extended to 32-bits.
 int _mm256_extract_epi8 (__m256i a, int index) pure @trusted
 {
     byte32 sa = cast(byte32)a;
-    return sa.ptr[index & 31];
+    return cast(ubyte) sa.ptr[index & 31];
 }
 unittest
 {
     byte32 b;
     b = -44;
-    assert(_mm256_extract_epi8(cast(__m256i)b, 5) == -44);
-    assert(_mm256_extract_epi8(cast(__m256i)b, 5 + 32) == -44);
+    assert(_mm256_extract_epi8(cast(__m256i)b, 5) == 212);
+    assert(_mm256_extract_epi8(cast(__m256i)b, 5 + 32) == 212);
 }
 
 /// Extract 128 bits (composed of integer data) from `a`, selected with `imm8`.
