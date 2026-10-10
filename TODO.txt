@@ -6,6 +6,9 @@
 - _mm_round_sd and _mm_round_pd have the same shape with no LDC guard. They passed my test, but I'd treat them as equally fragile.
 - Repro: t1.d.
 
+Answer: I'll let that unimplemented, I tried to report that issue to both LLVM and GCC and their IR doesn't model rounding mode. It's a bit hopeless.
+
+
 2. cmpstrMask EQUAL_ORDERED misses a needle prefix at the end of a full 16-byte haystack
 - source/inteli/nmmintrin.d:1353-1375 (byte); the word variant at 1327-1349 has the same logic.
 - Needle "abc", haystack "xxxxxxxxxxxxxxab": hardware returns 14, the fallback returns 16 (no match), for both _mm_cmpistri and _mm_cmpestri.
@@ -15,7 +18,7 @@
 
 3. DMD 32-bit: integer data passed through float-typed fallbacks gets corrupted
 - Any 32-bit integer whose bit pattern is a signaling NaN gets its quiet bit set, because DMD 32-bit copies scalar floats through x87.
-- _mm_adds_epi32(0x7f800000, 1) returns 0x7fc00001 instead of 0x7f800001 (smmintrin.d:57, via _mm_blendv_ps).
+- [x] _mm_adds_epi32(0x7f800000, 1) returns 0x7fc00001 instead of 0x7f800001 (smmintrin.d:57, via _mm_blendv_ps).
 - _mm_blend_epi32!5 and _mm256_blend_epi32 (avx2intrin.d:550, via _mm_blend_ps) corrupt the same way.
 - _mm_shuffle_ps on _mm_castsi128_ps data is also affected, which is a common user idiom.
 - DMD 64-bit and LDC 32-bit are fine.

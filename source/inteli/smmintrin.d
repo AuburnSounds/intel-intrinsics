@@ -293,13 +293,15 @@ __m128 _mm_blendv_ps (__m128 a, __m128 b, __m128 mask) pure @trusted
         //        _mm_and_si128(overflow_mask, saturated),
         //        _mm_andnot_si128(overflow_mask, res)
         // LLVM makes almost the same sequence when optimized.
-        __m128 r;
+        __m128i r;
         int4 lmask = cast(int4)mask;
+        int4 ai = cast(int4)a;
+        int4 bi = cast(int4)b;
         for (int n = 0; n < 4; ++n)
         {
-            r.ptr[n] = (lmask.array[n] < 0) ? b.array[n] : a.array[n];
+            r.ptr[n] = (lmask.array[n] < 0) ? bi[n] : ai[n];
         }
-        return r;
+        return cast(__m128)r;
     }
 }
 unittest
