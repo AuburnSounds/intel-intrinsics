@@ -153,12 +153,16 @@ __m128 _mm_blend_ps(int imm8)(__m128 a, __m128 b) pure @trusted
     else
     {
         // PERF GDC without SSE4.1 is quite bad
-        __m128 r;
+        // DMD x86: using FPU instructions would change sNaN to qNaN,
+        // so blend in integer.
+        __m128i r;
+        int4 ai = cast(int4)a;
+        int4 bi = cast(int4)b;
         for (int n = 0; n < 4; ++n)
         {
-            r.ptr[n] = (imm8 & (1 << n)) ? b.array[n] : a.array[n];
+            r.ptr[n] = (imm8 & (1 << n)) ? bi[n] : ai[n];
         }
-        return r;
+        return cast(__m128)r;
     }
 }
 unittest
