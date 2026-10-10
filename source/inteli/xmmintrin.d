@@ -2387,11 +2387,13 @@ void _MM_SET_ROUNDING_MODE(int _MM_ROUND_xxxx) @safe
 /// Copy single-precision (32-bit) floating-point element `a` to the lower element of result, and zero the upper 3 elements.
 __m128 _mm_set_ss (float a) pure @trusted
 {
-    static if (DMD_with_DSIMD)
+    // Buggy in DMD v2.111 I swear this type of SIMD bug
+    // always come back in DMD.
+    /*static if (DMD_with_DSIMD)
     {
         return cast(__m128) __simd(XMM.LODSS, a);
     }
-    else
+    else */
     {
         __m128 r = _mm_setzero_ps();
         r.ptr[0] = a;
@@ -2404,6 +2406,8 @@ unittest
     __m128 A = _mm_set_ss(42.0f);
     assert(A.array == correct);
 }
+
+
 
 /// Broadcast single-precision (32-bit) floating-point value `a` to all elements.
 __m128 _mm_set1_ps (float a) pure @trusted
