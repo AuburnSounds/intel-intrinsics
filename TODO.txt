@@ -6,13 +6,6 @@
 - Reproduced on DMD and on LDC 32-bit without SSE4.2; the fuzzer shows the same on ARM64 and WASM. It breaks the usual strstr loop when the needle straddles a block.
 - Repro: mini/t7.d.
 
-
-4. DMD x86_64 -O -inline: _mm_set_ss leaves garbage in element 1
-- source/inteli/xmmintrin.d:2392: __simd(XMM.LODSS, a).
-- _mm_set_ss(-31) returns [-31, -2.98438, 0, 0]. When a is already in an XMM register, the upper bits are not cleared; the garbage is the high half of the double it was converted from.
-- Without -inline, or in 32-bit, it is correct.
-- Repro: mini/t4.d (20 lines).
-
 5. DMD x86_64 -O -inline: _mm_cmpistri fallback returns wrong results
 - _mm_cmpistri!1(a, b) returns 8 where the unoptimized build returns 0, even though _mm_cmpestri!1(a, la, b, lb) with the same lengths is correct in the same program.
 - In the fuzzer, _mm_cmpistra/c/m/o differ too; _mm_cmpestr* do not.
