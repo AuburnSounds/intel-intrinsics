@@ -381,12 +381,15 @@ __m256 _mm256_blend_ps(int imm8)(__m256 a, __m256 b) pure @trusted
     else
     {
         // LDC x86: vblendps generated since LDC 1.27 -O1
-        float8 r;
+        // DMD x86 32-bit: using integers to avoid FPU instructions that would turn sNaN => qNaN
+        int8 r;
+        int8 ai = cast(int8)a;
+        int8 bi = cast(int8)b;
         for (int n = 0; n < 8; ++n)
         {
-            r.ptr[n] = (imm8 & (1 << n)) ? b.array[n] : a.array[n];
+            r.ptr[n] = (imm8 & (1 << n)) ? bi.array[n] : ai.array[n];
         }
-        return r;
+        return cast(__m256)r;
     }
 }
 unittest

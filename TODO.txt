@@ -1,14 +1,4 @@
 
-1. _mm_round_ss / _mm_floor_ss / _mm_ceil_ss are wrong on LDC x86 without SSE4.1 at -O1 and above
-- source/inteli/smmintrin.d:2007-2022 (non-GNU fallback).
-- _mm_floor_ss(53.6) returns 54, _mm_round_ss!3(53.6) returns 54, _mm_floor_ss(-3.7) returns -3. -O0 is correct.
-- The optimizer merges or reorders _mm_cvtss_si32 across the _MM_SET_ROUNDING_MODE calls. _mm_round_ps already has version(LDC) pragma(inline, false) for this (line 1880); _mm_round_ss does not.
-- _mm_round_sd and _mm_round_pd have the same shape with no LDC guard. They passed my test, but I'd treat them as equally fragile.
-- Repro: t1.d.
-
-Answer: I'll let that unimplemented, I tried to report that issue to both LLVM and GCC and their IR doesn't model rounding mode. It's a bit hopeless.
-
-
 2. cmpstrMask EQUAL_ORDERED misses a needle prefix at the end of a full 16-byte haystack
 - source/inteli/nmmintrin.d:1353-1375 (byte); the word variant at 1327-1349 has the same logic.
 - Needle "abc", haystack "xxxxxxxxxxxxxxab": hardware returns 14, the fallback returns 16 (no match), for both _mm_cmpistri and _mm_cmpestri.
@@ -16,13 +6,6 @@ Answer: I'll let that unimplemented, I tried to report that issue to both LLVM a
 - Reproduced on DMD and on LDC 32-bit without SSE4.2; the fuzzer shows the same on ARM64 and WASM. It breaks the usual strstr loop when the needle straddles a block.
 - Repro: mini/t7.d.
 
-3. DMD 32-bit: integer data passed through float-typed fallbacks gets corrupted
-- Any 32-bit integer whose bit pattern is a signaling NaN gets its quiet bit set, because DMD 32-bit copies scalar floats through x87.
-- [x] _mm_adds_epi32(0x7f800000, 1) returns 0x7fc00001 instead of 0x7f800001 (smmintrin.d:57, via _mm_blendv_ps).
-- _mm_blend_epi32!5 and _mm256_blend_epi32 (avx2intrin.d:550, via _mm_blend_ps) corrupt the same way.
-- _mm_shuffle_ps on _mm_castsi128_ps data is also affected, which is a common user idiom.
-- DMD 64-bit and LDC 32-bit are fine.
-- Repro: mini/t7.d.
 
 4. DMD x86_64 -O -inline: _mm_set_ss leaves garbage in element 1
 - source/inteli/xmmintrin.d:2392: __simd(XMM.LODSS, a).
