@@ -742,6 +742,28 @@ unittest
     byte[16] correctM = [0, -1, 0, -1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     assert(M.array == correctM);
 }
+unittest
+{
+    __m128i a = _mm_setr_epi8(-2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    __m128i b = _mm_setr_epi8(-3, -2, -1, 1, 3, 4, 127, -128, 0, 0, 0, 0, 0, 0, 0, 0);
+
+    // Check whether each byte in b is in [-2, 3], compared as signed byte
+    byte16 M = cast(byte16) _mm_cmpistrm!(_SIDD_SBYTE_OPS 
+                                        | _SIDD_CMP_RANGES
+                                        | _SIDD_BIT_MASK)(a, b);
+    byte[16] correct = [0x1e, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    assert(M.array == correct);
+}
+unittest
+{
+    // Search "ab" wchar search in "cababxa"
+    __m128i a = _mm_setr_epi16('a', 'b', 0, 0, 0, 0, 0, 0);
+    __m128i b = _mm_setr_epi16('c', 'a', 'b', 'a', 'b', 'x', 'a', 0);
+
+    enum int F = _SIDD_UWORD_OPS | _SIDD_CMP_EQUAL_ORDERED | _SIDD_BIT_MASK;
+    __m128i M = _mm_cmpistrm!F(a, b);
+    assert(_mm_cvtsi128_si32(M) == 0x0A); // found at positions 1 and 3
+}
 
 /// Compare packed strings in `a` and `b` with lengths `la` and `lb` using 
 /// the control in `imm8`, and returns bit 0 of the resulting bit mask.
@@ -1166,19 +1188,34 @@ __m128i cmpstrMaskExplicit(int imm8)(__m128i a,
                                      __m128i b, 
                                      ref int lb) @safe
 {
+    // Warning: int.min is UB here, since it makes less efficient codegen
+    // for very little realistic usage...
+    assert(la != int.min && lb != int.min);
+
     // saturates lengths (the Intrinsics Guide doesn't tell this)
+    // but doesn't handle int.min
     if (la < 0) la = -la;
     if (lb < 0) lb = -lb;
-    if (la > 16) la = 16;
-    if (lb > 16) lb = 16;
+
+    // Intel says:
+    // "The length of each input is interpreted as being the
+    //  absolute-value of the value in the length register.
+    //  The absolute-value computation saturates to 16 (for bytes)
+    //  and 8 (for words), based on the value of imm8[bit3] when
+    //  the value in the length register is greater than 16 (8)
+    //  or less than -16 (-8)."
 
     static if (imm8 & 1)
     {
+        if (la > 8) la = 8;
+        if (lb > 8) lb = 8;
         __m128i aValid = validMask16e(la);
         __m128i bValid = validMask16e(lb);
     }
     else
     {
+        if (la > 16) la = 16;
+        if (lb > 16) lb = 16;
         __m128i aValid = validMask8e(la);
         __m128i bValid = validMask8e(lb);
     }
@@ -1271,8 +1308,8 @@ __m128i cmpstrMask(int imm8)(__m128i a,
                 byte max = (cast(byte16)a).array[pos+1];
                 static if (signed)
                 {
-                    __m128i ge = _mm_xor_si128(_mm_cmplt_epi8(b, _mm_set1_epi8(min)));
-                    __m128i le = _mm_xor_si128(_mm_cmpgt_epi8(b, _mm_set1_epi8(max)));
+                    __m128i ge = ~_mm_cmplt_epi8(b, _mm_set1_epi8(min));
+                    __m128i le = ~_mm_cmpgt_epi8(b, _mm_set1_epi8(max));
                 }
                 else
                 {
@@ -1341,7 +1378,7 @@ __m128i cmpstrMask(int imm8)(__m128i a,
                 // Where B is invalid, and A is valid, the comparison is forced to false
                 eqMask = _mm_and_si128(eqMask, _mm_or_si128(bValidShift, mmAInvalidHere));
 
-                R = _mm_and_si128(eqMask);
+                R = _mm_and_si128(R, eqMask);
 
                 // drop first char of b
                 b = _mm_srli_si128!2(b);
@@ -1356,7 +1393,7 @@ __m128i cmpstrMask(int imm8)(__m128i a,
                 byte charK = (cast(byte16)a).array[pos];
                 __m128i mmcharK = _mm_set1_epi8(charK);
 
-                byte aValidHere = (cast(byte16)aValid).array[pos];            
+                byte aValidHere = (cast(byte16)aValid).array[pos];
                 __m128i mmAValidHere = _mm_set1_epi8(aValidHere);
                 __m128i mmAInvalidHere = _mm_xor_si128(mmAValidHere, _mm_set1_epi32(-1));
                 __m128i eqMask = _mm_cmpeq_epi8(mmcharK, b);

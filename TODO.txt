@@ -1,5 +1,9 @@
 
-2. cmpstrMask EQUAL_ORDERED misses a needle prefix at the end of a full 16-byte haystack
+================================================================================
+ nmmintrin.d (SSE4.2)
+
+
+4. cmpstrMask EQUAL_ORDERED misses a needle prefix at the end of a full 16-byte haystack
 - source/inteli/nmmintrin.d:1353-1375 (byte); the word variant at 1327-1349 has the same logic.
 - Needle "abc", haystack "xxxxxxxxxxxxxxab": hardware returns 14, the fallback returns 16 (no match), for both _mm_cmpistri and _mm_cmpestri.
 - Hardware does not compare past element 15, so a partial match at the tail counts. The fallback shifts zeros into bValidShift and forces those positions to false.
@@ -33,31 +37,6 @@
    - Confidence: high (divergence certain; partially known).
 
 
-================================================================================
- nmmintrin.d (SSE4.2)
-================================================================================
-
-1. cmpstrMask — signed-byte RANGES path does not compile
-   - nmmintrin.d:1274-1275, fallback path.
-   - `_mm_xor_si128(...)` called with ONE argument (it takes two). The 16-bit twin
-     at 1242-1243 correctly uses `~_mm_cmplt_epi16(...)`. Every cmpistr*/cmpestr*
-     with _SIDD_SBYTE_OPS | _SIDD_CMP_RANGES is broken on the fallback path.
-   - Confidence: high.
-
-2. cmpstrMask — 16-bit EQUAL_ORDERED path does not compile (drops accumulation)
-   - nmmintrin.d:1344: `R = _mm_and_si128(eqMask);` — one argument. The 8-bit twin
-     at 1370 correctly does `R = _mm_and_si128(R, eqMask);`. Any word-mode
-     equal-ordered (substring search) fails to compile on the fallback path.
-   - Confidence: high.
-
-3. Explicit word-mode lengths not clamped to 8 -> out-of-bounds read
-   - nmmintrin.d:1169-1173 (cmpstrMaskExplicit) and 1148-1151 (validMask16e).
-   - Intel clamps |la|/|lb| to 8 for word ops; the code clamps to 16, and
-     validMask16e(len) for len 9..16 reads MASK_DATA[-2..-16] — a 16-byte OOB read
-     before the array (memory-safety violation inside @trusted). Triggered by a
-     legal call like _mm_cmpestri!(_SIDD_UWORD_OPS|...)(a, 16, b, 16). Also
-     la = int.min survives `la = -la` as negative.
-   - Confidence: high.
 
 
 ================================================================================
@@ -161,15 +140,3 @@
      path keeps the low 32 bits of an s64 convert, yielding an arbitrary wrapped value.
    - Confidence: medium (real divergence; possibly an accepted, but undocumented,
      library-wide trade-off).
-
-
-================================================================================
- math.d
-================================================================================
-
-1. _mm_exp_ps(+infinity) returns a finite value
-   - math.d:150: `x = _mm_min_ps(x, _ps_exp_hi)` clamps input to 88.376...
-   - exp(x) for x in (~88.73, +inf] should overflow to +inf; instead returns
-     ~2.35e38. (exp(-inf) == 0 works only by accident of the same clamp.) The doc
-     comment excludes NaN but not infinity (unlike log_ps/pow_ps).
-   - Confidence: low (likely accepted cephes-style clamping).
