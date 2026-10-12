@@ -694,6 +694,15 @@ unittest
                             | _SIDD_MOST_SIGNIFICANT)(mmI, mmA);
     assert(index == 7); // ')' is the last char not to be in [__azAz09]
 }
+unittest
+{
+    // Substring search, past the end of buffer.
+    char[16] needle = "abck";
+    char[16] hay = "xxxxxxxxxxxxxxab";
+    __m128i N = _mm_loadu_si128(cast(__m128i*) needle.ptr);
+    __m128i H = _mm_loadu_si128(cast(__m128i*) hay.ptr);
+    assert(_mm_cmpistri!(_SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ORDERED)(N, H) == 14);
+}
 
 /// Compare packed strings with implicit lengths in `a` and `b` using the control in
 /// `imm8`, and return the generated mask.
@@ -1358,6 +1367,9 @@ __m128i cmpstrMask(int imm8)(__m128i a,
 
         __m128i bValidShift = bValid;
 
+        // Lanes of the shifted b that are still inside the register.
+        __m128i bInside = _mm_set1_epi32(-1);
+        
         __m128i R = _mm_set1_epi32(-1); // all b positions possible for containing a
         static if (chars16Bits)
         {
@@ -1378,11 +1390,15 @@ __m128i cmpstrMask(int imm8)(__m128i a,
                 // Where B is invalid, and A is valid, the comparison is forced to false
                 eqMask = _mm_and_si128(eqMask, _mm_or_si128(bValidShift, mmAInvalidHere));
 
+                // Past the end of B register, nothing is compared: holds "equal"
+                eqMask = _mm_or_si128(eqMask, ~bInside);
+
                 R = _mm_and_si128(R, eqMask);
 
                 // drop first char of b
                 b = _mm_srli_si128!2(b);
                 bValidShift = _mm_srli_si128!2(bValidShift);
+                bInside = _mm_srli_si128!2(bInside);
             }
         }
         else
@@ -1404,11 +1420,15 @@ __m128i cmpstrMask(int imm8)(__m128i a,
                 // Where B is invalid, and A is valid, the comparison is forced to false
                 eqMask = _mm_and_si128(eqMask, _mm_or_si128(bValidShift, mmAInvalidHere));
 
+                // Past the end of B register, nothing is compared: holds "equal"
+                eqMask = _mm_or_si128(eqMask, ~bInside);
+
                 R = _mm_and_si128(R, eqMask);
 
                 // drop first char of b
                 b = _mm_srli_si128!1(b);
                 bValidShift = _mm_srli_si128!1(bValidShift);
+                bInside     = _mm_srli_si128!1(bInside);
             }
         }
     }
