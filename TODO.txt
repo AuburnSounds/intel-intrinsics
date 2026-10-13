@@ -3,13 +3,6 @@
  nmmintrin.d (SSE4.2)
 
 
-4. cmpstrMask EQUAL_ORDERED misses a needle prefix at the end of a full 16-byte haystack
-- source/inteli/nmmintrin.d:1353-1375 (byte); the word variant at 1327-1349 has the same logic.
-- Needle "abc", haystack "xxxxxxxxxxxxxxab": hardware returns 14, the fallback returns 16 (no match), for both _mm_cmpistri and _mm_cmpestri.
-- Hardware does not compare past element 15, so a partial match at the tail counts. The fallback shifts zeros into bValidShift and forces those positions to false.
-- Reproduced on DMD and on LDC 32-bit without SSE4.2; the fuzzer shows the same on ARM64 and WASM. It breaks the usual strstr loop when the needle straddles a block.
-- Repro: mini/t7.d.
-
 5. DMD x86_64 -O -inline: _mm_cmpistri fallback returns wrong results
 - _mm_cmpistri!1(a, b) returns 8 where the unoptimized build returns 0, even though _mm_cmpestri!1(a, la, b, lb) with the same lengths is correct in the same program.
 - In the fuzzer, _mm_cmpistra/c/m/o differ too; _mm_cmpestr* do not.
