@@ -1674,6 +1674,34 @@ static if (LDC_with_SSE41)
 {
     pragma(LDC_intrinsic, "llvm.x86.sse41.pblendvb")
         byte16 __builtin_ia32_pblendvb(byte16, byte16, byte16) pure @safe;
+
+    // Since LDC 1.43 (LLVM 22), the __builtin_ia32_roundXX builtins 
+    // are not in ldc.gccbuiltins_x86 anymore.
+    static if (__VERSION__ >= 2113)
+    {
+        pragma(LDC_intrinsic, "llvm.x86.sse41.round.pd")
+            double2 __builtin_ia32_roundpd(double2, int) pure @safe;
+
+        pragma(LDC_intrinsic, "llvm.x86.sse41.round.ps")
+            float4 __builtin_ia32_roundps(float4, int) pure @safe;
+
+        pragma(LDC_intrinsic, "llvm.x86.sse41.round.sd")
+            double2 __builtin_ia32_roundsd(double2, double2, int) pure @safe;
+
+        pragma(LDC_intrinsic, "llvm.x86.sse41.round.ss")
+            float4 __builtin_ia32_roundss(float4, float4, int) pure @safe;
+    }
+}
+static if (LDC_with_AVX)
+{
+    static if (__VERSION__ >= 2113)
+    {
+        pragma(LDC_intrinsic, "llvm.x86.avx.round.pd.256")
+            double4 __builtin_ia32_roundpd256(double4, int) pure @safe;
+
+        pragma(LDC_intrinsic, "llvm.x86.avx.round.ps.256")
+            float8 __builtin_ia32_roundps256(float8, int) pure @safe;
+    }
 }
 
 // SOME NEON INTRINSICS
