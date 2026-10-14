@@ -1,14 +1,3 @@
-
-================================================================================
- nmmintrin.d (SSE4.2)
-
-
-5. DMD x86_64 -O -inline: _mm_cmpistri fallback returns wrong results
-- _mm_cmpistri!1(a, b) returns 8 where the unoptimized build returns 0, even though _mm_cmpestri!1(a, la, b, lb) with the same lengths is correct in the same program.
-- In the fuzzer, _mm_cmpistra/c/m/o differ too; _mm_cmpestr* do not.
-- I found no undefined behaviour in the library code (nmmintrin.d:663-673), so this looks like a DMD inliner or backend miscompile. I did not isolate the cause.
-- Repro: mini/t6.d.
-
 ================================================================================
  smmintrin.d (SSE4.1)
 ================================================================================
