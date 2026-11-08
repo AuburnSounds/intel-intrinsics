@@ -10,8 +10,8 @@ module inteli;
 // Importing with `import inteli;` simply imports all available intrinsics.
 public import inteli.types;
 public import inteli.mmx;        // MMX
-public import inteli.emmintrin;  // SSE
-public import inteli.xmmintrin;  // SSE2
+public import inteli.xmmintrin;  // SSE
+public import inteli.emmintrin;  // SSE2
 public import inteli.pmmintrin;  // SSE3
 public import inteli.tmmintrin;  // SSSE3
 public import inteli.smmintrin;  // SSE4.1
