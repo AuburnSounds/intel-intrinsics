@@ -3049,11 +3049,12 @@ unittest
 /// high 16 bits of the intermediate integers.
 __m128i _mm_mulhi_epi16 (__m128i a, __m128i b) pure @trusted
 {
+    
     static if (GDC_with_SSE2)
     {
         return cast(__m128i) __builtin_ia32_pmulhw128(cast(short8)a, cast(short8)b);
     }
-    else static if (LDC_with_SSE2)
+    else static if (LDC_with_SSE2 && !LDC_NEED_LLVM_24_FIX)
     {
         return cast(__m128i) __builtin_ia32_pmulhw128(cast(short8)a, cast(short8)b);
     }
@@ -3093,7 +3094,7 @@ __m128i _mm_mulhi_epu16 (__m128i a, __m128i b) pure @trusted
     {
         return cast(__m128i) __builtin_ia32_pmulhuw128(cast(short8)a, cast(short8)b);
     }
-    else static if (LDC_with_SSE2)
+    else static if (LDC_with_SSE2 && !LDC_NEED_LLVM_24_FIX)
     {
         return cast(__m128i) __builtin_ia32_pmulhuw128(cast(short8)a, cast(short8)b);
     }

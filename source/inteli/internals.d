@@ -14,6 +14,9 @@ package:
 nothrow:
 @nogc:
 
+// Temporary fix, to highlight which intrinsics are now less optimized
+enum bool LDC_NEED_LLVM_24_FIX = __VERSION__ >= 2113;
+
 // nurt compatibility
 
 version(USE_NURT) 
