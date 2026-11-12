@@ -6,7 +6,7 @@ jobs:
         name: Dub Tests
         strategy:
             matrix:
-                os: [ubuntu-latest, windows-latest, macOS-latest]
+                os: [ubuntu-24.04, windows-latest, macOS-latest]
                 dc: 
                     - dmd-latest
                     - dmd-2.098.1 
