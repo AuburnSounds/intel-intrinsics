@@ -3745,7 +3745,7 @@ __m256i _mm256_mulhi_epi16 (__m256i a, __m256i b) pure @safe
     {
         return cast(__m256i) __builtin_ia32_pmulhw256(cast(short16)a, cast(short16)b);
     }
-    else static if (LDC_with_AVX2 && !LDC_NEED_LLVM_24_FIX)
+    else static if (LDC_with_AVX2)
     {
         return cast(__m256i) __builtin_ia32_pmulhw256(cast(short16)a, cast(short16)b);
     }
@@ -3779,7 +3779,7 @@ __m256i _mm256_mulhi_epu16 (__m256i a, __m256i b) pure @safe
     {
         return cast(__m256i) __builtin_ia32_pmulhuw256(cast(short16)a, cast(short16)b);
     }
-    else static if (LDC_with_AVX2 && !LDC_NEED_LLVM_24_FIX)
+    else static if (LDC_with_AVX2)
     {
         return cast(__m256i) __builtin_ia32_pmulhuw256(cast(short16)a, cast(short16)b);
     }

@@ -14,8 +14,6 @@ package:
 nothrow:
 @nogc:
 
-// Temporary fix, to highlight which intrinsics are now less optimized
-enum bool LDC_NEED_LLVM_24_FIX = __VERSION__ >= 2113;
 
 // nurt compatibility
 
@@ -169,6 +167,40 @@ version(LDC)
     public import ldc.simd;
     public import ldc.intrinsics;
     public import ldc.llvmasm: __asm;
+
+    // Very important, the LLVM version used `LDC_LLVM_MAJOR`.
+    // WARNING: only use LDC_LLVM_MAJOR with LDC 1.41 onwards.
+    //
+    // Since nmc exists, future workarounds and fixes should refer to
+    // this instead of __VERSION__, however when not LDC or NMC
+    // LDC_LLVM_MAJOR is defined to be -1.
+    // (Most workarounds/fixes are `statif if (LDC_LLVM_MAJOR >= N)`).
+    //
+    // Annoyingly, in LDC 1.43 that number behaviour was changed,
+    // so we have to reproduce the blurb to be compatible 1.24 to 1.43
+    // and in the future just use ldc.intrinsics
+    static if (__VERSION__ >= 2113)
+    {
+        // LLVM_major is a new identifier in LDC 1.43 / DMDFE 2113
+        // and NMC also has it.
+        enum LDC_LLVM_MAJOR = LLVM_major;
+    }
+    else version (LDC_LLVM_20)   enum LDC_LLVM_MAJOR = 20;
+    else version (LDC_LLVM_2000) enum LDC_LLVM_MAJOR = 20;
+    else version (LDC_LLVM_2001) enum LDC_LLVM_MAJOR = 20;
+    else version (LDC_LLVM_21)   enum LDC_LLVM_MAJOR = 21;
+    else version (LDC_LLVM_2100) enum LDC_LLVM_MAJOR = 21;
+    else version (LDC_LLVM_2101) enum LDC_LLVM_MAJOR = 21;
+    else version (LDC_LLVM_22)   enum LDC_LLVM_MAJOR = 22;
+    else version (LDC_LLVM_2200) enum LDC_LLVM_MAJOR = 22;
+    else version (LDC_LLVM_23)   enum LDC_LLVM_MAJOR = 23;
+    else version (LDC_LLVM_24)   enum LDC_LLVM_MAJOR = 24;
+    else
+    {
+        // unknown or irrelevant, since no fix can rely on it before
+        // LLVM 20 (else, match more version identifiers).
+        enum LDC_LLVM_MAJOR = -1;
+    }
 
     version (X86)
         private enum bool some_x86 = true;
@@ -394,6 +426,8 @@ else
     enum bool LDC_with_optimizations = false;
     enum bool LDC_with_32b_x86_asm = false;
     enum bool LDC_with_64b_x86_asm = false;
+
+    enum LDC_LLVM_MAJOR = -1;
 }
 enum LDC_with_x86_asm = LDC_with_32b_x86_asm || LDC_with_64b_x86_asm;
 
@@ -1705,6 +1739,37 @@ static if (LDC_with_AVX)
         pragma(LDC_intrinsic, "llvm.x86.avx.round.ps.256")
             float8 __builtin_ia32_roundps256(float8, int) pure @safe;
     }
+}
+
+// Since LLVM 24, those are not in ldc.gccbuiltins_x86 anymore.
+static if (LDC_with_SSE2 && LDC_LLVM_MAJOR >= 24) // or 23?
+{
+    pragma(LDC_intrinsic, "llvm.x86.sse2.pmulh.w")
+        short8 __builtin_ia32_pmulhw128(short8, short8) pure @safe;
+
+    pragma(LDC_intrinsic, "llvm.x86.sse2.pmulhu.w")
+        short8 __builtin_ia32_pmulhuw128(short8, short8) pure @safe;
+
+    pragma(LDC_intrinsic, "llvm.x86.avx2.pmulh.w")
+        short16 __builtin_ia32_pmulhw256(short16, short16) pure @safe;
+
+    pragma(LDC_intrinsic, "llvm.x86.avx2.pmulhu.w")
+        short16 __builtin_ia32_pmulhuw256(short16, short16) pure @safe;
+}
+
+static if (LDC_with_BMI2 && LDC_LLVM_MAJOR >= 24) // or 23?
+{
+    pragma(LDC_intrinsic, "llvm.x86.bmi.pdep.32")
+        int __builtin_ia32_pdep_si(int, int) pure @safe;
+
+    pragma(LDC_intrinsic, "llvm.x86.bmi.pdep.64")
+        long __builtin_ia32_pdep_di(long, long) pure @safe;
+
+    pragma(LDC_intrinsic, "llvm.x86.bmi.pext.32")
+        int __builtin_ia32_pext_si(int, int) pure @safe;
+
+    pragma(LDC_intrinsic, "llvm.x86.bmi.pext.64")
+        long __builtin_ia32_pext_di(long, long) pure @safe;
 }
 
 // SOME NEON INTRINSICS

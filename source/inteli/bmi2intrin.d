@@ -200,7 +200,7 @@ ulong _mulx_u64 (ulong a, ulong b, ulong* hi)
 /// Deposit contiguous low bits from unsigned 32-bit integer `a` to dst at the corresponding bit locations specified by `mask`; all other bits in dst are set to zero.
 uint _pdep_u32 (uint a, uint mask)
 {
-    static if (GDC_or_LDC_with_BMI2 && !LDC_NEED_LLVM_24_FIX)
+    static if (GDC_or_LDC_with_BMI2)
     {
         // Note: this path is both LDC and GDC
         if (!__ctfe)
@@ -222,7 +222,7 @@ unittest
 /// Deposit contiguous low bits from unsigned 64-bit integer `a` to dst at the corresponding bit locations specified by `mask`; all other bits in dst are set to zero.
 ulong _pdep_u64 (ulong a, ulong mask)
 {
-    static if (GDC_or_LDC_with_BMI2 && !LDC_NEED_LLVM_24_FIX)
+    static if (GDC_or_LDC_with_BMI2)
     {
         if (!__ctfe)
         {
@@ -284,7 +284,7 @@ private T pdep(T)(T a, T mask)
 /// `mask` to contiguous low bits in dst; the remaining upper bits in dst are set to zero.
 uint _pext_u32 (uint a, uint mask)
 {
-    static if (GDC_or_LDC_with_BMI2 && !LDC_NEED_LLVM_24_FIX)
+    static if (GDC_or_LDC_with_BMI2)
     {
         if (!__ctfe)
             return __builtin_ia32_pext_si(a, mask);
@@ -306,7 +306,7 @@ unittest
 /// `mask` to contiguous low bits in dst; the remaining upper bits in dst are set to zero.
 ulong _pext_u64 (ulong a, ulong mask)
 {
-    static if (GDC_or_LDC_with_BMI2 && !LDC_NEED_LLVM_24_FIX)
+    static if (GDC_or_LDC_with_BMI2)
     {
         if (!__ctfe)
         {
